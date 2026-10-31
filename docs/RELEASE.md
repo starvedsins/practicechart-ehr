@@ -13,7 +13,9 @@ The new address is a project domain. It follows future production deployments. T
 
 Production uses the separate practicechart_ehr Neon database and private practicechart storage paths. Preview uses practicechart_preview. The runtime database role is separate from the operator connection. The existing ticket connection setting was kept for rollback. The EHR server uses EHR_DATABASE_URL.
 
-Vercel Hobby rejected a deployment with a Git commit author who was not a member of the Vercel team. The release used an isolated source artifact through the authorised Vercel CLI account. The public Git history keeps the group attribution. No person was added as an author merely to pass that restriction. GitHub automatic deployment is not configured.
+The first release used an isolated source artifact through the authorised Vercel CLI account. GitHub automatic deployment was then configured on October 31, 2026. The Vercel project is linked to starvedsins/practicechart-ehr, with main as its production branch. Pushes to main trigger production builds through that Git connection. The public Git history keeps the original author details.
+
+Use a task branch and pull request for group changes. Require a review and successful GitHub checks before merging. Vercel builds and GitHub checks can run at the same time after a push. The Git connection alone does not make production wait for those checks. The Hobby plan can reject builds when a commit author is not authorised. Keep each member's real authorship and review any rejected deployment.
 
 ## Verified evidence
 
