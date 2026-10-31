@@ -392,6 +392,7 @@ function PatientSelect({
   excludeId,
   includeArchived = false,
   onChange,
+  onSelect,
 }: {
   patients: Patient[];
   selected?: Patient;
@@ -401,6 +402,7 @@ function PatientSelect({
   excludeId?: string;
   includeArchived?: boolean;
   onChange?: (id: string) => void;
+  onSelect?: (patient: Patient | undefined) => void;
 }) {
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<Patient[]>(patients);
@@ -432,12 +434,15 @@ function PatientSelect({
     if (!selectedId || chosen) return;
     const controller = new AbortController();
     api<Detail>("patients/" + selectedId, undefined, "GET", controller.signal)
-      .then((d) => setChosen(d.patient))
+      .then((d) => {
+        setChosen(d.patient);
+        onSelect?.(d.patient);
+      })
       .catch((e) => {
         if (!controller.signal.aborted) setError(e.message);
       });
     return () => controller.abort();
-  }, [selectedId, chosen]);
+  }, [selectedId, chosen, onSelect]);
   const options =
     chosen && !matches.some((p) => p.id === chosen.id)
       ? [chosen, ...matches]
@@ -465,6 +470,7 @@ function PatientSelect({
           onChange={(e) => {
             setValue(e.target.value);
             setChosen(options.find((p) => p.id === e.target.value));
+            onSelect?.(options.find((p) => p.id === e.target.value));
             onChange?.(e.target.value);
           }}
           required
@@ -630,7 +636,15 @@ function BookingForm({
   );
   const [slots, setSlots] = useState<{ startAt: string; endAt: string }[]>([]);
   const [slot, setSlot] = useState("");
-  const [length, setLength] = useState(30);
+  const [length, setLength] = useState(
+    appointment
+      ? (Date.parse(appointment.endAt) - Date.parse(appointment.startAt)) /
+          60000
+      : 30,
+  );
+  const [selectedPatient, setSelectedPatient] = useState(
+    patient || patients.find((p) => p.id === appointment?.patientId),
+  );
   const [review, setReview] = useState<{
     patientId: string;
     doctorId: string;
@@ -645,9 +659,10 @@ function BookingForm({
     let active = true;
     setError("");
     setSlots([]);
+    setSlot("");
     if (doctor)
       api<{ startAt: string; endAt: string }[]>(
-        `availability?doctorId=${doctor}&date=${date}`,
+        `availability?doctorId=${doctor}&date=${date}&duration=${length}${selectedPatient ? "&patientId=" + selectedPatient.id : ""}${appointment ? "&excludeId=" + appointment.id : ""}`,
       )
         .then((v) => {
           if (active) setSlots(v);
@@ -658,7 +673,7 @@ function BookingForm({
     return () => {
       active = false;
     };
-  }, [doctor, date]);
+  }, [doctor, date, length, selectedPatient?.id, appointment?.id]);
   return (
     <Form
       label={review ? "Confirm appointment" : "Review appointment"}
@@ -675,6 +690,7 @@ function BookingForm({
       }
       submit={async (d) => {
         if (!review) {
+          if (!selectedPatient) throw Error("Choose a patient.");
           const start = field(d, "startAt");
           if (!start) throw Error("Choose an available time.");
           setReview({
@@ -701,6 +717,7 @@ function BookingForm({
         <PatientSelect
           patients={patients}
           selectedId={appointment?.patientId}
+          onSelect={setSelectedPatient}
           selected={
             patient || patients.find((p) => p.id === appointment?.patientId)
           }
@@ -772,10 +789,8 @@ function BookingForm({
         <div className="note-box">
           <h3>Ready to confirm?</h3>
           <p>
-            {patients.find((p) => p.id === review.patientId)?.firstName ||
-              patient?.firstName}{" "}
-            {patients.find((p) => p.id === review.patientId)?.lastName ||
-              patient?.lastName}
+            {selectedPatient?.firstName} {selectedPatient?.lastName} /{" "}
+            {selectedPatient?.mrn}
           </p>
           <p>{doctors.find((d) => d.id === review.doctorId)?.name}</p>
           <p>

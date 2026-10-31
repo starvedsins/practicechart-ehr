@@ -39,13 +39,189 @@ beforeAll(async () => {
 afterAll(async () => {
   await pool.end();
 });
-describe('additional independent service paths',()=>{
- it('reads a schedule, availability, dashboard, invoices, and administrative reports',async()=>{expect(await s.schedule(desk,'2032-01-05')).toBeInstanceOf(Array);expect(await s.availability(desk,doctorId,'2032-01-06')).toBeInstanceOf(Array);expect(await s.dashboard(desk)).toHaveProperty('counts');expect(await s.invoiceList(desk)).toBeInstanceOf(Array);expect(await s.reportData(desk,'schedule','2032-01-05')).toHaveProperty('appointments');expect(await s.reportData(desk,'visits','all')).toHaveProperty('counts');});
- it('rejects an invalid availability date and a missing patient',async()=>{await expect(s.availability(desk,doctorId,'bad-date')).rejects.toMatchObject({status:400});await expect(s.patientDetail(doctor,'11111111-1111-4111-8111-111111111111')).rejects.toMatchObject({status:404});});
- it('changes a private account password and revokes its session',async()=>{const u=await s.manageUser(doctor,{username:'password-test',name:'Fictional Password Tester',role:'front_desk',password:'OldPassword!2026'});const l=await login('password-test','OldPassword!2026','password-ip');const staff=(await db.select().from(users).where(eq(users.id,u.id)))[0];await expect(s.changePassword(staff,{currentPassword:'wrong',password:'NewPassword!2026'})).rejects.toMatchObject({status:400});await s.changePassword(staff,{currentPassword:'OldPassword!2026',password:'NewPassword!2026'});expect(await getSession(l.token)).toBeNull();await expect(login('password-test','NewPassword!2026','password-ip')).resolves.toHaveProperty('token');});
- it('protects supplied public demo accounts',async()=>{await db.update(users).set({protected:true}).where(eq(users.id,desk.id));process.env.DEMO_MODE='true';try{await expect(s.manageUser(doctor,{version:desk.version,role:'front_desk',active:false},desk.id)).rejects.toMatchObject({status:403});await expect(s.changePassword({...desk,protected:true},{currentPassword:'DeskDemo!2026',password:'Replacement!2026'})).rejects.toMatchObject({status:403});}finally{process.env.DEMO_MODE='false';await db.update(users).set({protected:false}).where(eq(users.id,desk.id));}});
- it('generates record numbers without truncating a long sequence value',async()=>{await db.execute(sql`CREATE TEMP SEQUENCE long_record_sequence START 1000000`);const result=await s.rows(sql`SELECT next_record_number('PC-','long_record_sequence') AS mrn`);expect(result[0].mrn).toBe('PC-1000000');});
- it('returns clinical outputs only after a final entry',async()=>{const v=await s.startVisit(doctor,{patientId,doctorId});await expect(s.reportData(doctor,'summary',v.id)).rejects.toMatchObject({status:404});await s.saveClinical(doctor,v.id,{...emptyClinical,expectedRevision:0,state:'draft'});await expect(s.reportData(doctor,'summary',v.id)).rejects.toMatchObject({status:400});await s.saveClinical(doctor,v.id,{...emptyClinical,expectedRevision:1,state:'final',diagnosis:'Fictional diagnosis'});for(const kind of ['summary','prescription','certificate'])expect(await s.reportData(doctor,kind,v.id)).toHaveProperty('clinical');expect(await s.reportData(desk,'attendance',v.id)).not.toHaveProperty('clinical');expect(await s.reportData(doctor,'history',patientId)).toHaveProperty('clinical');await expect(s.reportData(doctor,'unknown',patientId)).rejects.toMatchObject({status:404});});
+describe("additional independent service paths", () => {
+  it("checks the full appointment length at closing and rejects excessive availability durations", async () => {
+    const slots = await s.availability(desk, doctorId, "2032-01-06", {
+      duration: 120,
+      patientId,
+    });
+    expect(slots.length).toBeGreaterThan(0);
+    for (const slot of slots) {
+      expect(
+        Date.parse(String(slot.end_at)) - Date.parse(String(slot.start_at)),
+      ).toBe(120 * 60000);
+      expect(
+        new Date(String(slot.start_at)).toISOString().slice(11, 16) <= "20:00",
+      ).toBe(true);
+    }
+    await expect(
+      s.availability(desk, doctorId, "2032-01-06", { duration: 241 }),
+    ).rejects.toThrow();
+  });
+  it("excludes the current reschedule row and checks patient conflicts across doctors", async () => {
+    const start = "2032-01-07T08:00:00-05:00";
+    const a = await s.bookAppointment(desk, {
+      patientId,
+      doctorId,
+      startAt: start,
+      endAt: "2032-01-07T09:00:00-05:00",
+    });
+    const atStart = (rows: Record<string, unknown>[]) =>
+      rows.some((r) => Date.parse(String(r.start_at)) === Date.parse(start));
+    expect(
+      atStart(
+        await s.availability(desk, doctorId, "2032-01-07", {
+          duration: 60,
+          patientId,
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      atStart(
+        await s.availability(desk, doctorId, "2032-01-07", {
+          duration: 60,
+          patientId,
+          excludeId: a.id,
+        }),
+      ),
+    ).toBe(true);
+    const other = await s.manageUser(doctor, {
+      username: "availability-doctor",
+      name: "Fictional Availability Doctor",
+      role: "doctor",
+      password: "Availability!2026",
+    });
+    expect(
+      atStart(
+        await s.availability(desk, other.id, "2032-01-07", {
+          duration: 60,
+          patientId,
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      atStart(
+        await s.availability(desk, other.id, "2032-01-07", { duration: 60 }),
+      ),
+    ).toBe(true);
+    await s.manageUser(
+      doctor,
+      { version: 1, role: "doctor", active: false },
+      other.id,
+    );
+  });
+  it("reads a schedule, availability, dashboard, invoices, and administrative reports", async () => {
+    expect(await s.schedule(desk, "2032-01-05")).toBeInstanceOf(Array);
+    expect(await s.availability(desk, doctorId, "2032-01-06")).toBeInstanceOf(
+      Array,
+    );
+    expect(await s.dashboard(desk)).toHaveProperty("counts");
+    expect(await s.invoiceList(desk)).toBeInstanceOf(Array);
+    expect(await s.reportData(desk, "schedule", "2032-01-05")).toHaveProperty(
+      "appointments",
+    );
+    expect(await s.reportData(desk, "visits", "all")).toHaveProperty("counts");
+  });
+  it("rejects an invalid availability date and a missing patient", async () => {
+    await expect(
+      s.availability(desk, doctorId, "bad-date"),
+    ).rejects.toMatchObject({ status: 400 });
+    await expect(
+      s.patientDetail(doctor, "11111111-1111-4111-8111-111111111111"),
+    ).rejects.toMatchObject({ status: 404 });
+  });
+  it("changes a private account password and revokes its session", async () => {
+    const u = await s.manageUser(doctor, {
+      username: "password-test",
+      name: "Fictional Password Tester",
+      role: "front_desk",
+      password: "OldPassword!2026",
+    });
+    const l = await login("password-test", "OldPassword!2026", "password-ip");
+    const staff = (await db.select().from(users).where(eq(users.id, u.id)))[0];
+    await expect(
+      s.changePassword(staff, {
+        currentPassword: "wrong",
+        password: "NewPassword!2026",
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+    await s.changePassword(staff, {
+      currentPassword: "OldPassword!2026",
+      password: "NewPassword!2026",
+    });
+    expect(await getSession(l.token)).toBeNull();
+    await expect(
+      login("password-test", "NewPassword!2026", "password-ip"),
+    ).resolves.toHaveProperty("token");
+  });
+  it("protects supplied public demo accounts", async () => {
+    await db
+      .update(users)
+      .set({ protected: true })
+      .where(eq(users.id, desk.id));
+    process.env.DEMO_MODE = "true";
+    try {
+      await expect(
+        s.manageUser(
+          doctor,
+          { version: desk.version, role: "front_desk", active: false },
+          desk.id,
+        ),
+      ).rejects.toMatchObject({ status: 403 });
+      await expect(
+        s.changePassword(
+          { ...desk, protected: true },
+          { currentPassword: "DeskDemo!2026", password: "Replacement!2026" },
+        ),
+      ).rejects.toMatchObject({ status: 403 });
+    } finally {
+      process.env.DEMO_MODE = "false";
+      await db
+        .update(users)
+        .set({ protected: false })
+        .where(eq(users.id, desk.id));
+    }
+  });
+  it("generates record numbers without truncating a long sequence value", async () => {
+    await db.execute(
+      sql`CREATE TEMP SEQUENCE long_record_sequence START 1000000`,
+    );
+    const result = await s.rows(
+      sql`SELECT next_record_number('PC-','long_record_sequence') AS mrn`,
+    );
+    expect(result[0].mrn).toBe("PC-1000000");
+  });
+  it("returns clinical outputs only after a final entry", async () => {
+    const v = await s.startVisit(doctor, { patientId, doctorId });
+    await expect(s.reportData(doctor, "summary", v.id)).rejects.toMatchObject({
+      status: 404,
+    });
+    await s.saveClinical(doctor, v.id, {
+      ...emptyClinical,
+      expectedRevision: 0,
+      state: "draft",
+    });
+    await expect(s.reportData(doctor, "summary", v.id)).rejects.toMatchObject({
+      status: 400,
+    });
+    await s.saveClinical(doctor, v.id, {
+      ...emptyClinical,
+      expectedRevision: 1,
+      state: "final",
+      diagnosis: "Fictional diagnosis",
+    });
+    for (const kind of ["summary", "prescription", "certificate"])
+      expect(await s.reportData(doctor, kind, v.id)).toHaveProperty("clinical");
+    expect(await s.reportData(desk, "attendance", v.id)).not.toHaveProperty(
+      "clinical",
+    );
+    expect(await s.reportData(doctor, "history", patientId)).toHaveProperty(
+      "clinical",
+    );
+    await expect(
+      s.reportData(doctor, "unknown", patientId),
+    ).rejects.toMatchObject({ status: 404 });
+  });
 });
 describe("authentication and role enforcement", () => {
   it("rejects wrong and missing accounts with the same error", async () => {
@@ -67,13 +243,11 @@ describe("authentication and role enforcement", () => {
     expect(await getSession(result.token)).toBeNull();
   });
   it("rejects an expired session", async () => {
-    await db
-      .insert(sessions)
-      .values({
-        id: digest("expired"),
-        userId: doctor.id,
-        expiresAt: new Date(0),
-      });
+    await db.insert(sessions).values({
+      id: digest("expired"),
+      userId: doctor.id,
+      expiresAt: new Date(0),
+    });
     expect(await getSession("expired")).toBeNull();
   });
   it("enforces the login attempt limit", async () => {

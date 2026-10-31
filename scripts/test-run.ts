@@ -11,10 +11,18 @@ await p.end();
 const owner = new URL(original);
 owner.pathname = "/practicechart_test";
 const runtime = new URL(process.env.DATABASE_URL!);
+if (
+  !["localhost", "127.0.0.1"].includes(runtime.hostname) ||
+  runtime.port !== original.port
+)
+  throw Error(
+    "Test runtime and owner connections must use the same local PostgreSQL server.",
+  );
 runtime.pathname = "/practicechart_test";
 const env = {
   ...process.env,
   DATABASE_URL: runtime.toString(),
+  EHR_DATABASE_URL: runtime.toString(),
   DATABASE_URL_UNPOOLED: owner.toString(),
   PRIVATE_STORAGE_DIR: ".private/test-uploads",
   DEMO_MODE: "false",

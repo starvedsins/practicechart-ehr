@@ -6,6 +6,11 @@ const pool = new Pool({
   connectionString:
     process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL,
 });
+const target = new URL(
+  process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL!,
+);
+if (!/^practicechart[_a-z0-9]+$/.test(target.pathname.slice(1)))
+  throw Error("Migrations require a separate PracticeChart database.");
 const c = await pool.connect();
 try {
   await c.query("SELECT pg_advisory_lock(4001002)");

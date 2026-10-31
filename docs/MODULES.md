@@ -240,7 +240,7 @@ L10: Follow False branch
 
 ## availability
 
-Find future half-hour start slots inside doctor hours and outside bookings and blocked periods.
+Find half-hour start times for the full selected visit length. Exclude doctor and patient conflicts and blocked periods. Ignore the current appointment during rescheduling.
 
 Source: src/lib/service.ts. Graph: [availability](diagrams/cfg/availability.svg).
 
@@ -259,8 +259,25 @@ L5: RAISE new AppError(400, "Choose a valid date.")
   GO TO L2
 L6: await event(db, actor, "view", "availability");
   GO TO L7
-L7: RETURN rows( sql`SELECT slot AS start_at,slot+interval '30 minutes' AS end_at FROM doctor_hours h CROSS JOIN LATERAL generate_series((${date}::date+ma
+L7: const { duration, patientId, excludeId } = z .object({ duration: z.number().int().min(1).max(240).default(30), patientId: idSchema.optional(), exclude
+  GO TO L8
+L8: IF patientId is not null
+  THEN GO TO L9
+  ELSE GO TO L12
+L9: IF excludeId is not null
+  THEN GO TO L10
+  ELSE GO TO L13
+L10: IF excludeId is not null
+  THEN GO TO L11
+  ELSE GO TO L14
+L11: RETURN rows( sql`SELECT slot AS start_at,slot+make_interval(mins=>${duration}) AS end_at FROM doctor_hours h CROSS JOIN LATERAL generate_series((${dat
   GO TO L2
+L12: Follow False branch
+  GO TO L9
+L13: Follow False branch
+  GO TO L10
+L14: Follow False branch
+  GO TO L11
 ```
 
 ## bookAppointment

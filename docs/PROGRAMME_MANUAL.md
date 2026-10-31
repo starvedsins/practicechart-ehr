@@ -207,6 +207,6 @@ Run npm ci, npm run setup, and npm run dev. For the presentation, stop developme
 
 ## Verification
 
-Vitest recorded 74 passing tests and 0 failed tests. Playwright recorded 8 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 91.42% of statements and 81.08% of branches. This is not a claim of full path coverage.
+Vitest recorded 76 passing tests and 0 failed tests. Playwright recorded 8 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 92.08% of statements and 82.81% of branches. This is not a claim of full path coverage.
 
 The control flow appendix records actual source-linked graphs and calculations. The test plan identifies feasible path cases and limits. Safe evidence includes automated results, axe results, load results, and an actual restore result. No human test or training completion is inferred from these files.

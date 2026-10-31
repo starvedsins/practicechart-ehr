@@ -1,0 +1,12 @@
+{
+  "testedAt": "2026-10-31T05:45:25.675Z",
+  "status": "passed",
+  "database": "local Docker PostgreSQL 18 with a named volume",
+  "checks": [
+    "all seven record table fingerprints match across a database restart",
+    "private local file bytes persist",
+    "session remains valid",
+    "same app process reconnects after idle pool connection errors"
+  ],
+  "patientCount": 1023
+}

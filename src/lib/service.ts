@@ -205,13 +205,21 @@ export async function availability(
   actor: Staff,
   doctorId: string,
   date: string,
+  options: { duration?: number; patientId?: string; excludeId?: string } = {},
 ) {
   idSchema.parse(doctorId);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date))
     throw new AppError(400, "Choose a valid date.");
   await event(db, actor, "view", "availability");
+  const { duration, patientId, excludeId } = z
+    .object({
+      duration: z.number().int().min(1).max(240).default(30),
+      patientId: idSchema.optional(),
+      excludeId: idSchema.optional(),
+    })
+    .parse(options);
   return rows(
-    sql`SELECT slot AS start_at,slot+interval '30 minutes' AS end_at FROM doctor_hours h CROSS JOIN LATERAL generate_series((${date}::date+make_interval(mins=>h.start_min)) AT TIME ZONE 'America/Jamaica',(${date}::date+make_interval(mins=>h.end_min-30)) AT TIME ZONE 'America/Jamaica',interval '30 minutes') slot WHERE h.doctor_id=${doctorId}::uuid AND h.weekday=extract(isodow FROM ${date}::date) AND slot>now() AND NOT EXISTS(SELECT 1 FROM appointments a WHERE a.doctor_id=h.doctor_id AND a.status IN('confirmed','arrived','in_consultation') AND tstzrange(a.start_at,a.end_at,'[)') && tstzrange(slot,slot+interval '30 minutes','[)')) AND NOT EXISTS(SELECT 1 FROM schedule_blocks b WHERE b.doctor_id=h.doctor_id AND tstzrange(b.start_at,b.end_at,'[)') && tstzrange(slot,slot+interval '30 minutes','[)'))`,
+    sql`SELECT slot AS start_at,slot+make_interval(mins=>${duration}) AS end_at FROM doctor_hours h CROSS JOIN LATERAL generate_series((${date}::date+make_interval(mins=>h.start_min)) AT TIME ZONE 'America/Jamaica',(${date}::date+make_interval(mins=>h.end_min-${duration})) AT TIME ZONE 'America/Jamaica',interval '30 minutes') slot WHERE h.doctor_id=${doctorId}::uuid AND h.weekday=extract(isodow FROM ${date}::date) AND slot>now() AND NOT EXISTS(SELECT 1 FROM appointments a WHERE (a.doctor_id=h.doctor_id OR a.patient_id=${patientId ?? null}::uuid) AND (${excludeId ?? null}::uuid IS NULL OR a.id<>${excludeId ?? null}::uuid) AND a.status IN('confirmed','arrived','in_consultation') AND tstzrange(a.start_at,a.end_at,'[)') && tstzrange(slot,slot+make_interval(mins=>${duration}),'[)')) AND NOT EXISTS(SELECT 1 FROM schedule_blocks b WHERE b.doctor_id=h.doctor_id AND tstzrange(b.start_at,b.end_at,'[)') && tstzrange(slot,slot+make_interval(mins=>${duration}),'[)'))`,
   );
 }
 export async function bookAppointment(

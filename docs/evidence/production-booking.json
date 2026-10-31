@@ -1,0 +1,20 @@
+{
+  "testedAt": "2026-10-31T05:54:24.786Z",
+  "status": "passed",
+  "checks": [
+    {
+      "url": "https://practicechart-ehr.vercel.app",
+      "loginStatus": 200,
+      "availabilityStatus": 200,
+      "fullDurationMinutes": 120,
+      "availableIntervals": 15
+    },
+    {
+      "url": "https://campusfix-seven-iota.vercel.app",
+      "loginStatus": 200,
+      "availabilityStatus": 200,
+      "fullDurationMinutes": 120,
+      "availableIntervals": 15
+    }
+  ]
+}

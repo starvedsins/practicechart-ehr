@@ -66,3 +66,13 @@ Graph candidates can include contradictory state assumptions. Examples include s
 Type checking and the production build must pass. Unit, integration, and complete browser workflows must pass. Role and private file failures must be fixed before release. The full recovery test must pass. Scan Git contents for secrets and private source material. Record load results and axe results. Record any unmet long-term target as a limit.
 
 Human acceptance, actual staff training, legal review, and testing on a real phone remain separate tasks. Blank forms are supplied. No automated result is presented as completed human testing.
+
+## Separate operational probes
+
+database-outage.json records a real server connection failure in a separate local production process. It used an unavailable local database port. The login route returned 503 without a session cookie. The browser showed the service error and kept the entered fields. The normal presentation database stayed running.
+
+local-persistence.json records an actual Docker database restart. Fingerprints of all seven record tables matched before and after. A private local file matched byte for byte. The existing session remained valid. The same application process reconnected after its idle pool connections closed.
+
+private-blob.json records an unsigned request to a real private Blob object. It returned 403. The evidence omits the stored URL. cloud-smoke-production.json records both roles against the public domain without a deployment bypass.
+
+workflows.json records two actual cloud Workflow runs. They produced one reminder for one fictional appointment and recorded file integrity results. github-actions.json records successful remote verification and backup jobs. recovery-browser.json records a separate restored application drill. These probes are separate from the 76 Vitest tests and eight Playwright suite cases.

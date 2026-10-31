@@ -11,6 +11,7 @@ const read = async (file: string) => JSON.parse(await readFile(file, "utf8"));
 const unit = await read("docs/evidence/vitest-results.json");
 const browser = await read("docs/evidence/playwright-results.json");
 const perf = await read("docs/evidence/performance.json");
+const cold = await read("docs/evidence/cold-performance.json");
 const restore = await read("docs/evidence/restore-result.json");
 const coverage = await read("coverage/coverage-summary.json");
 await copyFile(
@@ -113,9 +114,11 @@ ${performanceTable}
 
 All measured browser logins were below three seconds. All measured warm record displays were below two seconds. Only one browser login was measured at each load. The server was a local production build. PostgreSQL ran in Docker on the same host. These results do not prove equivalent cloud performance or 99 percent availability.
 
+A separate process-cold check used three fresh local production Node processes and fresh browser sessions. A health probe preceded login. PostgreSQL and operating system caches remained warm. This is not a Vercel cold start test. The measured browser login times were ${cold.results.map((r: { loginMs: number }) => r.loginMs).join(", ")} ms. First patient display times were ${cold.results.map((r: { firstPatientDisplayMs: number }) => r.firstPatientDisplayMs).join(", ")} ms. Repeat display times were ${cold.results.map((r: { warmPatientDisplayMs: number }) => r.warmPatientDisplayMs).join(", ")} ms. Three samples do not establish a percentile guarantee. The full method and results are in cold-performance.json.
+
 ### Recovery
 
-The full encrypted EHR recovery bundle restored into an isolated local PostgreSQL 18 database. The actual result was ${restore.status}. The test compared ${restore.tablesCompared} tables and ${restore.documentsVerified} uploaded documents. The measured restore phase took ${restore.durationSeconds} seconds. It checked file hashes and bytes, MRN sequencing, immutable histories, and overlap rejection. RECOVERY.md explains key custody, daily scheduling, retention, and limits.
+The full encrypted EHR recovery bundle from the successful GitHub backup job restored into an isolated local PostgreSQL 18 database. The actual result was ${restore.status}. The test compared ${restore.tablesCompared} tables and ${restore.documentsVerified} uploaded documents. The measured restore phase took ${restore.durationSeconds} seconds. It compared all restored row values, file hashes and bytes, MRN and invoice sequencing, immutable histories, and overlap rejection. This duration excludes download, decryption, and the separate browser drill. The restored application also passed both role logins, patient search, and private file checks. RECOVERY.md explains key custody, daily scheduling, retention, and limits.
 
 ### Defects found and corrected
 
@@ -125,6 +128,8 @@ The full encrypted EHR recovery bundle restored into an isolated local PostgreSQ
 | Available times changed after a newer date was selected | A late response replaced newer state. Ignore superseded responses. | Booking and rescheduling pass |
 | Booking confirmation rejected a returned time | PostgreSQL timestamp output needed ISO normalisation. Normalise before submission. | Confirmation workflow passes |
 | Saved textarea label lookup was inconsistent | Default text entered the nested label text. Add explicit accessible names. | Clinical correction workflow passes |
+| Long bookings used a fixed half-hour availability interval | Check the full requested length, patient conflicts, and current reschedule row. Keep the existing visit length during rescheduling. | Duration, closing boundary, patient conflict, and reschedule tests pass |
+| A searched patient was missing from the booking review | Keep the selected patient object and show its name and MRN. | Browser review assertion passes |
 | A container did not trust the cloud certificate chain | Its trust store differed from Node. Supply the trusted Node CA set and retain hostname verification. | Cloud backup and restore evidence |
 
 ## Implementation method and maintenance

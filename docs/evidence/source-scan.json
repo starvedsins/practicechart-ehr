@@ -1,16 +1,16 @@
 {
-  "testedAt": "2026-10-31T02:08:10.055Z",
-  "filesScanned": 170,
+  "testedAt": "2026-10-31T05:55:42.878Z",
+  "filesScanned": 184,
   "privateCredentialMatches": 0,
   "privateStudentNumberMatches": 0,
   "forbiddenDashMatches": 0,
   "excluded": [
     "environment files",
-    "private cover files",
+    "private covers",
     "keys",
     "uploads",
     "backups",
-    "generated dependencies"
+    "dependencies"
   ],
   "status": "passed"
 }

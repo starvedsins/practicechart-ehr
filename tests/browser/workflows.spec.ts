@@ -20,7 +20,9 @@ async function login(page: Page, role = "doctor") {
 async function screenshot(page: Page, name: string) {
   await mkdir("docs/screenshots", { recursive: true });
   if (name === "patient-registration") {
-    await page.getByRole("dialog").screenshot({path: `docs/screenshots/${name}.png`});
+    await page
+      .getByRole("dialog")
+      .screenshot({ path: `docs/screenshots/${name}.png` });
     return;
   }
   await page.screenshot({
@@ -278,6 +280,7 @@ test("appointment can be rescheduled and cancelled with browser forms", async ({
     .toBeGreaterThan(1);
   await dialog.getByLabel("Available start time").selectOption({ index: 1 });
   await dialog.getByRole("button", { name: "Review appointment" }).click();
+  await expect(dialog.getByText(new RegExp(patient.mrn)).last()).toBeVisible();
   await dialog.getByRole("button", { name: "Confirm appointment" }).click();
   await expect(dialog).not.toBeVisible();
   await page.goto("/app/appointments");

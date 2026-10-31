@@ -1,0 +1,20 @@
+{
+  "testedAt": "2026-10-31T05:33:52.242Z",
+  "repository": "https://github.com/starvedsins/practicechart-ehr",
+  "runs": [
+    {
+      "name": "Daily private EHR backup",
+      "url": "https://github.com/starvedsins/practicechart-ehr/actions/runs/41159118159",
+      "conclusion": "success",
+      "headRevision": "676a309a620f5e7b630d2662e5fa8fa4a737d1f4"
+    },
+    {
+      "name": "Verify PracticeChart",
+      "url": "https://github.com/starvedsins/practicechart-ehr/actions/runs/41159078336",
+      "conclusion": "success",
+      "headRevision": "676a309a620f5e7b630d2662e5fa8fa4a737d1f4"
+    }
+  ],
+  "privateBackupDownloadedForRestore": true,
+  "backupUploadedAt": "2026-10-31T02:15:48.000Z"
+}

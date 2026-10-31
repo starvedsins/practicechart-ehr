@@ -12,7 +12,7 @@ Face counts use a planar half-edge traversal. Parallel directed edges add a lens
 | archivePatient | 13 | 14 | 3 | 2 | 3 | 3 | 3 |
 | reconcilePatient | 21 | 25 | 6 | 5 | 6 | 6 | 6 |
 | schedule | 10 | 11 | 3 | 2 | 3 | 3 | 3 |
-| availability | 7 | 7 | 2 | 1 | 2 | 2 | 2 |
+| availability | 14 | 17 | 5 | 4 | 5 | 5 | 5 |
 | bookAppointment | 20 | 23 | 5 | 4 | 5 | 5 | 5 |
 | appointmentStatus | 10 | 10 | 2 | 1 | 2 | 2 | 2 |
 | startVisit | 19 | 23 | 6 | 5 | 6 | 6 | 6 |
@@ -104,13 +104,16 @@ Face boundaries: 1 -> 3 -> 5 -> 4 -> 3; 2 -> 7 -> 9 -> 8 -> 6 -> 5 -> 10 -> 4 ->
 Source: src/lib/service.ts:204. [Graph](diagrams/cfg/availability.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 5 -> 2
-- Candidate 2: 1 -> 3 -> 4 -> 6 -> 7 -> 2
+- Candidate 2: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 2
+- Candidate 3: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 9 -> 10 -> 14 -> 11 -> 2
+- Candidate 4: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 9 -> 13 -> 10 -> 11 -> 2
+- Candidate 5: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 12 -> 9 -> 10 -> 11 -> 2
 
-Face boundaries: 1 -> 3 -> 4 -> 6 -> 7 -> 2 -> 5 -> 4 -> 3; 2 -> 7 -> 6 -> 4 -> 5. Additional parallel-edge lens faces: 0.
+Face boundaries: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 2 -> 5 -> 4 -> 3; 2 -> 11 -> 14 -> 10 -> 13 -> 9 -> 12 -> 8 -> 7 -> 6 -> 4 -> 5; 8 -> 12 -> 9; 9 -> 13 -> 10; 10 -> 14 -> 11. Additional parallel-edge lens faces: 0.
 
 ### bookAppointment
 
-Source: src/lib/service.ts:217. [Graph](diagrams/cfg/bookAppointment.svg).
+Source: src/lib/service.ts:225. [Graph](diagrams/cfg/bookAppointment.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 9 -> 2
 - Candidate 2: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 2
@@ -122,7 +125,7 @@ Face boundaries: 1 -> 3 -> 4 -> 6 -> 7 -> 9 -> 8 -> 7 -> 6 -> 4 -> 3; 2 -> 15 ->
 
 ### appointmentStatus
 
-Source: src/lib/service.ts:270. [Graph](diagrams/cfg/appointmentStatus.svg).
+Source: src/lib/service.ts:278. [Graph](diagrams/cfg/appointmentStatus.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 2
 - Candidate 2: 1 -> 3 -> 4 -> 6 -> 7 -> 9 -> 10 -> 5 -> 2
@@ -131,7 +134,7 @@ Face boundaries: 1 -> 3 -> 4 -> 6 -> 7 -> 9 -> 10 -> 5 -> 2 -> 8 -> 7 -> 6 -> 4 
 
 ### startVisit
 
-Source: src/lib/service.ts:302. [Graph](diagrams/cfg/startVisit.svg).
+Source: src/lib/service.ts:310. [Graph](diagrams/cfg/startVisit.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 2
 - Candidate 2: 1 -> 3 -> 4 -> 6 -> 7 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 2
@@ -144,7 +147,7 @@ Face boundaries: 1 -> 3 -> 4 -> 6 -> 7 -> 9 -> 10 -> 11 -> 12 -> 15 -> 2 -> 8 ->
 
 ### saveClinical
 
-Source: src/lib/service.ts:348. [Graph](diagrams/cfg/saveClinical.svg).
+Source: src/lib/service.ts:356. [Graph](diagrams/cfg/saveClinical.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 5 -> 6 -> 8 -> 9 -> 10 -> 2
 - Candidate 2: 1 -> 3 -> 4 -> 5 -> 6 -> 8 -> 9 -> 11 -> 12 -> 13 -> 14 -> 15 -> 2
@@ -161,7 +164,7 @@ Face boundaries: 1 -> 3 -> 4 -> 5 -> 6 -> 8 -> 9 -> 11 -> 12 -> 13 -> 15 -> 2 ->
 
 ### fileVisit
 
-Source: src/lib/service.ts:410. [Graph](diagrams/cfg/fileVisit.svg).
+Source: src/lib/service.ts:418. [Graph](diagrams/cfg/fileVisit.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 2
 - Candidate 2: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 13 -> 14 -> 15 -> 16 -> 17 -> 5 -> 2
@@ -174,7 +177,7 @@ Face boundaries: 1 -> 3 -> 4 -> 6 -> 7 -> 8 -> 12 -> 11 -> 10 -> 9 -> 8 -> 7 -> 
 
 ### saveInvoice
 
-Source: src/lib/service.ts:447. [Graph](diagrams/cfg/saveInvoice.svg).
+Source: src/lib/service.ts:455. [Graph](diagrams/cfg/saveInvoice.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10 -> 6 -> 2
 
@@ -182,7 +185,7 @@ Face boundaries: 1 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10 -> 6 -> 2 -> 6 -> 10 -> 9
 
 ### setInvoiceStatus
 
-Source: src/lib/service.ts:465. [Graph](diagrams/cfg/setInvoiceStatus.svg).
+Source: src/lib/service.ts:473. [Graph](diagrams/cfg/setInvoiceStatus.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 5 -> 6 -> 2
 - Candidate 2: 1 -> 3 -> 4 -> 5 -> 7 -> 9 -> 10 -> 11 -> 12 -> 2
@@ -194,7 +197,7 @@ Face boundaries: 1 -> 3 -> 4 -> 7 -> 9 -> 10 -> 11 -> 12 -> 2 -> 6 -> 5 -> 4 -> 
 
 ### invoiceList
 
-Source: src/lib/service.ts:500. [Graph](diagrams/cfg/invoiceList.svg).
+Source: src/lib/service.ts:508. [Graph](diagrams/cfg/invoiceList.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 2
 
@@ -202,7 +205,7 @@ Face boundaries: 1 -> 3 -> 4 -> 2 -> 4 -> 3. Additional parallel-edge lens faces
 
 ### manageUser
 
-Source: src/lib/service.ts:506. [Graph](diagrams/cfg/manageUser.svg).
+Source: src/lib/service.ts:514. [Graph](diagrams/cfg/manageUser.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 5 -> 6 -> 7 -> 9 -> 10 -> 11 -> 12 -> 13 -> 8 -> 2
 - Candidate 2: 1 -> 3 -> 4 -> 5 -> 6 -> 7 -> 9 -> 10 -> 12 -> 13 -> 8 -> 2
@@ -218,7 +221,7 @@ Face boundaries: 1 -> 3 -> 4 -> 14 -> 15 -> 16 -> 17 -> 19 -> 20 -> 21 -> 22 -> 
 
 ### changePassword
 
-Source: src/lib/service.ts:567. [Graph](diagrams/cfg/changePassword.svg).
+Source: src/lib/service.ts:575. [Graph](diagrams/cfg/changePassword.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 5 -> 6 -> 2
 - Candidate 2: 1 -> 3 -> 4 -> 5 -> 7 -> 8 -> 9 -> 10 -> 2
@@ -229,7 +232,7 @@ Face boundaries: 1 -> 3 -> 4 -> 7 -> 8 -> 9 -> 10 -> 2 -> 6 -> 5 -> 4 -> 3; 2 ->
 
 ### dashboard
 
-Source: src/lib/service.ts:591. [Graph](diagrams/cfg/dashboard.svg).
+Source: src/lib/service.ts:599. [Graph](diagrams/cfg/dashboard.svg).
 
 - Candidate 1: 1 -> 3 -> 5 -> 6 -> 7 -> 8 -> 9 -> 4 -> 2
 
@@ -237,7 +240,7 @@ Face boundaries: 1 -> 3 -> 5 -> 6 -> 7 -> 8 -> 9 -> 4 -> 2 -> 4 -> 9 -> 8 -> 7 -
 
 ### reportData
 
-Source: src/lib/service.ts:609. [Graph](diagrams/cfg/reportData.svg).
+Source: src/lib/service.ts:617. [Graph](diagrams/cfg/reportData.svg).
 
 - Candidate 1: 1 -> 3 -> 4 -> 2
 - Candidate 2: 1 -> 3 -> 5 -> 6 -> 7 -> 8 -> 2

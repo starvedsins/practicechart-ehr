@@ -1,0 +1,21 @@
+{
+  "testedAt": "2026-10-31T05:38:08.076Z",
+  "projectName": "practicechart-ehr",
+  "teamName": "PracticeChart",
+  "teamSlug": "practicechart7",
+  "framework": "nextjs",
+  "links": [
+    {
+      "url": "https://practicechart-ehr.vercel.app",
+      "status": 200,
+      "application": "PracticeChart EHR"
+    },
+    {
+      "url": "https://campusfix-seven-iota.vercel.app",
+      "status": 200,
+      "application": "PracticeChart EHR"
+    }
+  ],
+  "previousDeploymentRetained": true,
+  "separateEhrDatabase": true
+}

@@ -160,6 +160,11 @@ async function handle(req: NextRequest) {
           actor,
           req.nextUrl.searchParams.get("doctorId") || "",
           req.nextUrl.searchParams.get("date") || "",
+          {
+            duration: Number(req.nextUrl.searchParams.get("duration") || 30),
+            patientId: req.nextUrl.searchParams.get("patientId") || undefined,
+            excludeId: req.nextUrl.searchParams.get("excludeId") || undefined,
+          },
         ),
       );
     if (route === "visits" && post)

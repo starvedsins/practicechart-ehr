@@ -11,6 +11,10 @@ export const pool =
     connectionTimeoutMillis: 12000,
   });
 if (process.env.NODE_ENV !== "production") globalDb.practicePool = pool;
+if (pool.listenerCount("error") === 0)
+  pool.on("error", () =>
+    console.error("PracticeChart database connection closed."),
+  );
 export const db = drizzle(pool, { schema });
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type Executor = typeof db | Tx;

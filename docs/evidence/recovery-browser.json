@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "testedAt": "2026-10-31T02:13:00.561Z",
+  "target": "restored database and restored local files through a separate production app server",
+  "checks": [
+    "runtime grants",
+    "doctor login",
+    "front desk login",
+    "patient search",
+    "restored private file retrieval",
+    "front desk denied clinical files"
+  ]
+}

@@ -60,7 +60,7 @@ Only a doctor can use the Documents page or the Documents section of a patient r
 
 ![Private diagnostic reports](screenshots/private-diagnostic-documents.png)
 
-Select Retrieve report to download the stored bytes. The server checks your session and role before it returns the file. A direct Blob address is not a public download link. When a report replaces another, supply the earlier document ID. The earlier file remains available.
+Select Retrieve report to download the stored bytes. The server checks your session and role before it returns the file. A direct Blob address is not a public download link. To replace a report, select Add replacement beside that report. The form keeps its earlier document reference. The earlier file remains available.
 
 ## Invoices and reports
 

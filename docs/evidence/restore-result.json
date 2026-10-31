@@ -1,10 +1,10 @@
 {
   "status": "passed",
-  "testedAt": "2026-10-31T02:02:39.044Z",
-  "sourceCreatedAt": "2026-10-31T02:01:58.415Z",
+  "testedAt": "2026-10-31T05:33:54.741Z",
+  "sourceCreatedAt": "2026-10-31T02:15:26.996Z",
   "kind": "Full EHR database and uploaded files",
   "restoreTarget": "isolated local PostgreSQL 18 database",
-  "durationSeconds": 1.029,
+  "durationSeconds": 1.269,
   "tablesCompared": 16,
   "documentsVerified": 2,
   "checks": [
@@ -14,7 +14,8 @@
     "clinical history protection",
     "audit history protection",
     "overlapping appointment rejection",
-    "MRN sequence"
+    "MRN sequence",
+    "invoice sequence"
   ],
-  "retainedLocalDatabase": "practicechart_restore_1793412157944"
+  "retainedLocalDatabase": "practicechart_restore_1793424833271"
 }

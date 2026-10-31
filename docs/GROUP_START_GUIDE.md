@@ -2,6 +2,8 @@
 
 This guide lets group members install, test, present, and maintain the same application. It also identifies course work that still needs people.
 
+Website: https://practicechart-ehr.vercel.app. Repository: https://github.com/starvedsins/practicechart-ehr. These links can be shared with the group. Use only fictional data.
+
 ## Course purpose
 
 CIT4001 requires the group to implement and test the system from its earlier analysis work. The assignment guide requires a development report, programme manual, and user manual with colour pictures. The syllabus also requires a working demonstration, configuration management, training planning, and team participation. Each member must code at least one module. Generated source does not prove that a member completed that requirement.
@@ -32,6 +34,10 @@ Use versioned SQL migrations. Do not change a migration after it has run. Add a 
 ## Run the checks
 
 Run `npm run typecheck`, `npm test`, `npm run build`, and `npm run test:e2e`. Install the browser once with `npx playwright install chromium`. Run `npm audit --omit=dev` after dependency changes. Use `npx tsx scripts/performance.ts` for the stated local load test. Use a production server for performance work.
+
+Run `npx tsx scripts/cold-performance.ts` for the separate fresh-process timing check. The database and operating system caches stay warm. Do not describe it as a Vercel cold start test.
+
+To rebuild course documents, install the Python packages in scripts/docs-requirements.txt. Run `npx tsx scripts/course-analysis.ts`, `python scripts/regions.py`, `npx tsx scripts/diagram-details.ts`, `npx tsx scripts/report-content.ts`, and `python scripts/build-documents.py`. Run the tests and recovery drill first so the reports read actual evidence. Review the final PDF pages. Private cover details are read only from .private/group-cover.json when that local file exists.
 
 Unit and integration tests use a separate local test database. Browser tests use the local presentation database and add fictional records. Do not point the full browser test suite at a live practice. Public cloud smoke checks use the fictional demo only.
 
@@ -69,5 +75,6 @@ Use the local copy if the network is slow. Test the laptop, power, projector, Do
 | Confirm presentation and submission dates | Tutor confirmation | Pending |
 | Confirm private submission cover details | Group review | Pending |
 | Add GitHub collaborators | Member GitHub usernames | Pending usernames |
+| Store a separate recovery key copy | Controlled storage and operator record | Pending operator action |
 
 The schedule lists presentations in the weeks of November 9 to 13 and November 16 to 20, 2026. A group message mentions November 9 and a user manual before the presentation. Confirm the actual group slot and submission rules with the tutor. Do not treat the older brief milestone dates as the current CIT4001 deadline.

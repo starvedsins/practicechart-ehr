@@ -1,8 +1,8 @@
 {
   "application": "PracticeChart EHR",
-  "generatedAt": "2026-10-31T02:07:22.412Z",
+  "generatedAt": "2026-10-31T05:52:52.764Z",
   "unitTests": {
-    "passed": 74,
+    "passed": 76,
     "failed": 0
   },
   "browserTests": {
@@ -11,16 +11,16 @@
   },
   "coverage": {
     "lines": {
-      "total": 301,
-      "covered": 281,
+      "total": 302,
+      "covered": 284,
       "skipped": 0,
-      "pct": 93.35
+      "pct": 94.03
     },
     "statements": {
-      "total": 315,
-      "covered": 288,
+      "total": 316,
+      "covered": 291,
       "skipped": 0,
-      "pct": 91.42
+      "pct": 92.08
     },
     "functions": {
       "total": 62,
@@ -29,10 +29,10 @@
       "pct": 98.38
     },
     "branches": {
-      "total": 185,
-      "covered": 150,
+      "total": 192,
+      "covered": 159,
       "skipped": 0,
-      "pct": 81.08
+      "pct": 82.81
     },
     "branchesTrue": {
       "total": 0,
@@ -43,11 +43,11 @@
   },
   "restore": {
     "status": "passed",
-    "testedAt": "2026-10-31T02:02:39.044Z",
-    "sourceCreatedAt": "2026-10-31T02:01:58.415Z",
+    "testedAt": "2026-10-31T05:33:54.741Z",
+    "sourceCreatedAt": "2026-10-31T02:15:26.996Z",
     "kind": "Full EHR database and uploaded files",
     "restoreTarget": "isolated local PostgreSQL 18 database",
-    "durationSeconds": 1.029,
+    "durationSeconds": 1.269,
     "tablesCompared": 16,
     "documentsVerified": 2,
     "checks": [
@@ -57,9 +57,10 @@
       "clinical history protection",
       "audit history protection",
       "overlapping appointment rejection",
-      "MRN sequence"
+      "MRN sequence",
+      "invoice sequence"
     ],
-    "retainedLocalDatabase": "practicechart_restore_1793412157944"
+    "retainedLocalDatabase": "practicechart_restore_1793424833271"
   },
   "performanceSource": "performance.json",
   "humanAcceptance": "not performed",

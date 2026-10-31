@@ -1,0 +1,13 @@
+{
+  "testedAt": "2026-10-31T05:41:26.036Z",
+  "status": "passed",
+  "environment": "separate local production process with an unavailable local PostgreSQL port",
+  "checks": [
+    "503 response",
+    "no authentication cookie",
+    "no confirmed successful save",
+    "clear browser error",
+    "entered login fields retained"
+  ],
+  "realDatabaseStopped": false
+}

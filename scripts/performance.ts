@@ -5,6 +5,8 @@ import { cpus, totalmem, platform, release } from "node:os";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { hashPassword } from "../src/lib/auth";
 const base = process.env.PERF_BASE_URL || "http://localhost:3000";
+if (!["localhost", "127.0.0.1"].includes(new URL(base).hostname))
+  throw Error("The load test requires a local presentation server.");
 const duration = Number(process.env.PERF_SECONDS || 30);
 if (duration < 10 || duration > 300)
   throw Error("Use a duration from 10 to 300 seconds per load.");

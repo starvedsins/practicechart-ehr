@@ -25,7 +25,7 @@ const narratives: Record<string, string> = {
   schedule:
     "Read the appointments for one Jamaica calendar day and record the view.",
   availability:
-    "Find future half-hour start slots inside doctor hours and outside bookings and blocked periods.",
+    "Find half-hour start times for the full selected visit length. Exclude doctor and patient conflicts and blocked periods. Ignore the current appointment during rescheduling.",
   bookAppointment:
     "Validate the interval and active patient. Insert a confirmed booking or update a current confirmed booking. Audit only a committed change.",
   appointmentStatus:

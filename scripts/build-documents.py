@@ -141,7 +141,7 @@ def make(name, title, sections, private=False):
     print(target.relative_to(ROOT))
 
 documents = [
-    ('development-report.pdf', 'Software development and implementation report', ['DEVELOPMENT_REPORT.md', 'REQUIREMENTS.md']),
+    ('development-report.pdf', 'Software development and implementation report', ['DEVELOPMENT_REPORT.md', 'REQUIREMENTS.md', 'PERMISSIONS.md']),
     ('programme-manual.pdf', 'Programme manual and database design', ['PROGRAMME_MANUAL.md', 'RECOVERY.md']),
     ('user-manual.pdf', 'PracticeChart user manual', ['USER_MANUAL.md']),
     ('testing-and-control-flow.pdf', 'Testing and control flow appendix', ['TEST_PLAN.md', 'CONTROL_FLOW.md', 'MODULES.md']),

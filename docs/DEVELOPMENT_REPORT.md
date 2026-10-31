@@ -58,7 +58,7 @@ The Today page leads with a patient worklist. The patient record separates demog
 
 ## Testing and actual results
 
-Vitest recorded 74 passing tests and 0 failed tests. Playwright recorded 8 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 91.42% of statements and 81.08% of branches. This is not a claim of full path coverage.
+Vitest recorded 76 passing tests and 0 failed tests. Playwright recorded 8 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 92.08% of statements and 82.81% of branches. This is not a claim of full path coverage.
 
 Unit and database tests cover valid and invalid partitions, boundaries, session and account states, simultaneous bookings, stale changes, clinical corrections, document rules, and invoices. Complete browser tests cover both roles. Direct clinical and file routes are denied to the front desk. Axe recorded zero violations on the nine checked desktop pages and the checked emulated phone page. Automated scans do not replace a full accessibility review or a real phone test.
 
@@ -74,9 +74,11 @@ The fixture contained 1016 fictional patients and 5 clinical revisions. Each loa
 
 All measured browser logins were below three seconds. All measured warm record displays were below two seconds. Only one browser login was measured at each load. The server was a local production build. PostgreSQL ran in Docker on the same host. These results do not prove equivalent cloud performance or 99 percent availability.
 
+A separate process-cold check used three fresh local production Node processes and fresh browser sessions. A health probe preceded login. PostgreSQL and operating system caches remained warm. This is not a Vercel cold start test. The measured browser login times were 524.66, 528.83, 384.63 ms. First patient display times were 147.85, 152.11, 146.04 ms. Repeat display times were 176.09, 175.08, 185.18 ms. Three samples do not establish a percentile guarantee. The full method and results are in cold-performance.json.
+
 ### Recovery
 
-The full encrypted EHR recovery bundle restored into an isolated local PostgreSQL 18 database. The actual result was passed. The test compared 16 tables and 2 uploaded documents. The measured restore phase took 1.029 seconds. It checked file hashes and bytes, MRN sequencing, immutable histories, and overlap rejection. RECOVERY.md explains key custody, daily scheduling, retention, and limits.
+The full encrypted EHR recovery bundle from the successful GitHub backup job restored into an isolated local PostgreSQL 18 database. The actual result was passed. The test compared 16 tables and 2 uploaded documents. The measured restore phase took 1.269 seconds. It compared all restored row values, file hashes and bytes, MRN and invoice sequencing, immutable histories, and overlap rejection. This duration excludes download, decryption, and the separate browser drill. The restored application also passed both role logins, patient search, and private file checks. RECOVERY.md explains key custody, daily scheduling, retention, and limits.
 
 ### Defects found and corrected
 
@@ -86,6 +88,8 @@ The full encrypted EHR recovery bundle restored into an isolated local PostgreSQ
 | Available times changed after a newer date was selected | A late response replaced newer state. Ignore superseded responses. | Booking and rescheduling pass |
 | Booking confirmation rejected a returned time | PostgreSQL timestamp output needed ISO normalisation. Normalise before submission. | Confirmation workflow passes |
 | Saved textarea label lookup was inconsistent | Default text entered the nested label text. Add explicit accessible names. | Clinical correction workflow passes |
+| Long bookings used a fixed half-hour availability interval | Check the full requested length, patient conflicts, and current reschedule row. Keep the existing visit length during rescheduling. | Duration, closing boundary, patient conflict, and reschedule tests pass |
+| A searched patient was missing from the booking review | Keep the selected patient object and show its name and MRN. | Browser review assertion passes |
 | A container did not trust the cloud certificate chain | Its trust store differed from Node. Supply the trusted Node CA set and retain hostname verification. | Cloud backup and restore evidence |
 
 ## Implementation method and maintenance

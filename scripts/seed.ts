@@ -3,6 +3,11 @@ import { Pool } from "pg";
 import { hashPassword } from "../src/lib/auth";
 import { emptyClinical } from "../src/lib/validation";
 import { samplePdf, storeFile } from "../src/lib/storage";
+const target = new URL(
+  process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL!,
+);
+if (!/^practicechart[_a-z0-9]+$/.test(target.pathname.slice(1)))
+  throw Error("Fictional seeding requires a separate PracticeChart database.");
 const pool = new Pool({
   connectionString:
     process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL,

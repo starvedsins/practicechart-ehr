@@ -28,7 +28,7 @@ Keep a separate encrypted recovery copy and the private key in separate controll
 
 Start Docker, create a backup, and run `npm run restore:test`. The command decrypts the newest local bundle and creates a new local database named practicechart_restore followed by a timestamp. It refuses a remote restore target. It restores the full dump and writes files to an isolated `.private/restore-test` folder.
 
-The test checks table counts, file hashes and bytes, the MRN sequence, history protection, and overlap rejection. Its measured result is in `docs/evidence/restore-result.json`. The test database is retained for inspection. No successful restore is claimed merely because a dump file exists.
+The test checks table counts, all restored row values, file hashes and bytes, both record number sequences, history protection, and overlap rejection. Its measured result is in `docs/evidence/restore-result.json`. The test database is retained for inspection. No successful restore is claimed merely because a dump file exists. A separate restored application check is recorded in `docs/evidence/recovery-browser.json`.
 
 ## Recovery drill and limits
 
@@ -37,3 +37,5 @@ Before replacing a presentation copy, keep its current database and files. Resto
 Never restore into the live EHR database as a test. Cloud recovery requires a new empty database, operator access, the private key, and a controlled cutover. The automated restore script intentionally supplies no live overwrite command.
 
 Database availability and file storage can fail separately. A failed backup is recorded as failed. A missing file stops a complete backup. The app does not report a successful clinical save from an unconfirmed server response. The restore result is test evidence, not a guarantee of recovery time for a larger real database.
+
+The daily file check verifies the latest 100 referenced documents. A full backup verifies all referenced documents. An interrupted upload can leave an unreferenced private object before its database record commits. That object is not a patient document. Automatic orphan deletion is not enabled because the shared store also serves the isolated preview. An operator must review ownership before removing an unreferenced object.

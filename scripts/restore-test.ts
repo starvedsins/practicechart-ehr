@@ -108,6 +108,20 @@ try {
     (await restored.query("SELECT nextval('mrn_seq') AS n")).rows[0].n,
   );
   assert.ok(next > maximum, "MRN sequence remains ahead of existing records");
+  const invoiceMaximum = Number(
+    (
+      await restored.query(
+        "SELECT coalesce(max(substring(number FROM 5)::bigint),0) AS n FROM invoices",
+      )
+    ).rows[0].n,
+  );
+  const invoiceNext = Number(
+    (await restored.query("SELECT nextval('invoice_seq') AS n")).rows[0].n,
+  );
+  assert.ok(
+    invoiceNext > invoiceMaximum,
+    "Invoice sequence remains ahead of existing records",
+  );
   const result = {
     status: "passed",
     testedAt: new Date().toISOString(),
@@ -125,6 +139,7 @@ try {
       "audit history protection",
       "overlapping appointment rejection",
       "MRN sequence",
+      "invoice sequence",
     ],
     retainedLocalDatabase: name,
   };

@@ -4,11 +4,15 @@ A working electronic health records system for a fictional private medical pract
 
 Use fictional data only. This is a course demonstration. It has no clinical approval, live pilot, or completed user acceptance claim.
 
+[Open PracticeChart](https://practicechart-ehr.vercel.app) or [view the public source](https://github.com/starvedsins/practicechart-ehr). See [the release record](docs/RELEASE.md) for verified checks and limits.
+
 ## Start the local presentation copy
 
 Install Node.js 24 or later and Docker Desktop with Linux containers. Keep Docker running.
 
 ```powershell
+git clone https://github.com/starvedsins/practicechart-ehr.git
+cd practicechart-ehr
 npm ci
 npm run setup
 npm run dev
@@ -59,6 +63,8 @@ npm run restore:test
 The backup includes the whole separate EHR database and its uploaded files. A patient report is a reading copy for one patient. It cannot restore the application. See [the recovery guide](docs/RECOVERY.md).
 
 Read [the group start guide](docs/GROUP_START_GUIDE.md), [user manual](docs/USER_MANUAL.md), [development report](docs/DEVELOPMENT_REPORT.md), and [programme manual](docs/PROGRAMME_MANUAL.md). Generated submission PDFs are in `docs/submission`.
+
+Read [the server permission matrix](docs/PERMISSIONS.md). Full backups and patient reports are different operations.
 
 ## Stack
 
