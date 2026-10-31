@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: practicechart
+      POSTGRES_PASSWORD: local-owner-password
+      POSTGRES_DB: practicechart_ehr
+    ports:
+      - "127.0.0.1:5438:5432"
+    volumes:
+      - practicechart-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U practicechart -d practicechart_ehr"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+volumes:
+  practicechart-data:

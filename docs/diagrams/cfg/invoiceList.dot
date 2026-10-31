@@ -1,0 +1,6 @@
+digraph invoiceList { graph [label="invoiceList",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: await event(db, actor, \"view\", \"invoice_li\nst\");"];
+n4[shape=box,label="4: RETURN rows( sql`SELECT i.*,p.first_name,p\n.last_name,p.mrn FROM invoices i JOIN pati\nents p ON p.id=i.patient_id ORDER BY i.cre\nated_at DESC LIMIT 100`,"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n2[label=""];}

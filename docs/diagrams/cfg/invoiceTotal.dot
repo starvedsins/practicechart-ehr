@@ -1,0 +1,14 @@
+digraph invoiceTotal { graph [label="invoiceTotal",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: const total = lines.reduce((n, l) => n + l\n.quantity * l.unitCents, 0);"];
+n4[shape=diamond,label="4: Number.isSafeInteger(total)"];
+n5[shape=diamond,label="5: total > 2000000000"];
+n6[shape=box,label="6: RAISE new Error(\"Invoice total is too larg\ne.\")"];
+n7[shape=box,label="7: RETURN total"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n5[label="True"];
+n4->n6[label="False"];
+n5->n6[label="True"];
+n6->n2[label=""];
+n5->n7[label="False"];
+n7->n2[label=""];}

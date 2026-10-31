@@ -1,0 +1,27 @@
+digraph patientDetail { graph [label="patientDetail",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: idSchema.parse(id);"];
+n4[shape=box,label="4: BEGIN transaction"];
+n5[shape=box,label="5: COMMIT transaction"];
+n6[shape=box,label="6: const p = await found( await tx.select().f\nrom(patients).where(eq(patients.id, id)), \n);"];
+n7[shape=box,label="7: await event(tx, actor, \"view\", \"patient\", \nid);"];
+n8[shape=box,label="8: const visitList = await rows( sql`SELECT v\n.id,v.patient_id,v.doctor_id,v.status,v.re\nvision,v.visit_at,v.filed_at,u.name AS doc\ntor_name FROM visits v J"];
+n9[shape=box,label="9: const appointmentList = await rows( sql`SE\nLECT a.*,u.name AS doctor_name FROM appoin\ntments a JOIN users u ON u.id=a.doctor_id \nWHERE patient_id=${id} O"];
+n10[shape=diamond,label="10: actor.role !== \"doctor\""];
+n11[shape=box,label="11: RETURN { patient: p, visits: visitList, ap\npointments: appointmentList }"];
+n12[shape=box,label="12: const clinical = await rows( sql`SELECT c.\n*,u.name AS author_name FROM clinical_revi\nsions c JOIN users u ON u.id=c.author_id J\nOIN visits v ON v.id=c.v"];
+n13[shape=box,label="13: const files = await tx .select({ id: docum\nents.id, title: documents.title, kind: doc\numents.kind, mime: documents.mime, size: d\nocuments.size, createdAt"];
+n14[shape=box,label="14: RETURN { patient: p, visits: visitList, ap\npointments: appointmentList, clinical, doc\numents: files, }"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n6[label=""];
+n6->n7[label=""];
+n7->n8[label=""];
+n8->n9[label=""];
+n9->n10[label=""];
+n10->n11[label="True"];
+n11->n5[label=""];
+n10->n12[label="False"];
+n12->n13[label=""];
+n13->n14[label=""];
+n14->n5[label=""];
+n5->n2[label="Return"];}

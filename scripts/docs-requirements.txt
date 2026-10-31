@@ -1,0 +1,5 @@
+reportlab
+Pillow
+networkx
+pypdfium2
+pdfplumber

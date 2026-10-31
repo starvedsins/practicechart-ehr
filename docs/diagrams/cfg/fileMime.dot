@@ -1,0 +1,25 @@
+digraph fileMime { graph [label="fileMime",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=diamond,label="3: bytes.subarray(0, 5).toString() === \"%PDF-\n\""];
+n4[shape=box,label="4: RETURN \"application/pdf\""];
+n5[shape=diamond,label="5: bytes.subarray(0, 8).equals(Buffer.from([1\n37, 80, 78, 71, 13, 10, 26, 10]))"];
+n6[shape=box,label="6: RETURN \"image/png\""];
+n7[shape=diamond,label="7: bytes[0] === 255"];
+n8[shape=diamond,label="8: bytes[1] === 216"];
+n9[shape=diamond,label="9: bytes[2] === 255"];
+n10[shape=box,label="10: RETURN \"image/jpeg\""];
+n11[shape=box,label="11: RETURN null"];n1->n3[label=""];
+n3->n4[label="True"];
+n4->n2[label=""];
+n3->n5[label="False"];
+n5->n6[label="True"];
+n6->n2[label=""];
+n5->n7[label="False"];
+n7->n8[label="True"];
+n8->n9[label="True"];
+n9->n10[label="True"];
+n10->n2[label=""];
+n7->n11[label="False"];
+n8->n11[label="False"];
+n9->n11[label="False"];
+n11->n2[label=""];}

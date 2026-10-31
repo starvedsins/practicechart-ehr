@@ -1,0 +1,9 @@
+digraph requireRole { graph [label="requireRole",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=diamond,label="3: actor.role !== role"];
+n4[shape=box,label="4: await auditDenied(actor, \"clinical_or_admi\nn\");"];
+n5[shape=box,label="5: RAISE new AppError(403, \"Your account cann\not use this function.\")"];n1->n3[label=""];
+n3->n4[label="True"];
+n4->n5[label=""];
+n5->n2[label=""];
+n3->n2[label="False"];}

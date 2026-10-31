@@ -1,0 +1,16 @@
+digraph getSession { graph [label="getSession",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=diamond,label="3: token"];
+n4[shape=box,label="4: RETURN null"];
+n5[shape=box,label="5: const rows = await db .select({ id: users.\nid, username: users.username, name: users.\nname, role: users.role, protected: users.p\nrotected, version: users"];
+n6[shape=diamond,label="6: rows[0] is not null"];
+n7[shape=box,label="7: RETURN rows[0] ?? null"];
+n8[shape=box,label="8: Follow False branch"];n1->n3[label=""];
+n3->n4[label="False"];
+n4->n2[label=""];
+n3->n5[label="True"];
+n5->n6[label=""];
+n6->n7[label="True"];
+n6->n8[label="False"];
+n7->n2[label=""];
+n8->n7[label=""];}

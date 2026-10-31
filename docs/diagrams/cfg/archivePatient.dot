@@ -1,0 +1,26 @@
+digraph archivePatient { graph [label="archivePatient",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: await requireRole(actor);"];
+n4[shape=box,label="4: const { version, archived } = z .object({ \nversion: z.number().int(), archived: z.boo\nlean() }) .parse(input);"];
+n5[shape=box,label="5: BEGIN transaction"];
+n6[shape=box,label="6: COMMIT transaction"];
+n7[shape=box,label="7: const [p] = await tx .update(patients) .se\nt({ archived, version: version + 1 }) .whe\nre( and(eq(patients.id, idSchema.parse(id)\n), eq(patients.version, "];
+n8[shape=diamond,label="8: p"];
+n9[shape=box,label="9: RAISE new AppError(409, \"This record chang\ned. Reload it.\")"];
+n10[shape=diamond,label="10: archived"];
+n11[shape=box,label="11: await event(tx, actor, archived ? \"archive\n\" : \"restore\", \"patient\", id);"];
+n12[shape=box,label="12: RETURN p"];
+n13[shape=box,label="13: Follow False branch"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n5[label=""];
+n5->n7[label=""];
+n7->n8[label=""];
+n8->n9[label="False"];
+n9->n2[label=""];
+n8->n10[label="True"];
+n10->n11[label="True"];
+n10->n13[label="False"];
+n11->n12[label=""];
+n12->n6[label=""];
+n6->n2[label="Return"];
+n13->n11[label=""];}

@@ -1,0 +1,21 @@
+sequenceDiagram
+ participant FD as Front desk
+ participant UI as Booking form
+ participant S as Server
+ participant DB as PostgreSQL
+ FD->>UI: Choose patient and interval
+ UI->>S: Request availability
+ S->>DB: Read hours, bookings, and blocks
+ DB-->>S: Available slots
+ S-->>UI: Start times
+ UI-->>FD: Show review
+ FD->>UI: Confirm
+ UI->>S: Submit booking
+ S->>DB: Transaction: insert and audit
+ alt Valid interval
+ DB-->>S: Commit
+ S-->>UI: Confirmation
+ else Conflict
+ DB-->>S: Reject and roll back
+ S-->>UI: Conflict
+ end

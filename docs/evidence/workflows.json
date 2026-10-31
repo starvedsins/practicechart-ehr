@@ -1,0 +1,23 @@
+{
+  "testedAt": "2026-10-31T02:06:52.146Z",
+  "environment": "isolated Vercel preview with Neon and private Blob",
+  "workflowRuns": 2,
+  "remindersForOneAppointment": 1,
+  "fileReconciliations": [
+    {
+      "checked": 4,
+      "unavailable": 0
+    },
+    {
+      "checked": 4,
+      "unavailable": 0
+    }
+  ],
+  "status": "passed",
+  "checks": [
+    "actual Workflow execution",
+    "reminder deduplication across two runs",
+    "private file integrity checks",
+    "no clinical content in Workflow state"
+  ]
+}

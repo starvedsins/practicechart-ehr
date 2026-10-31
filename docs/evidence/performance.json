@@ -1,0 +1,111 @@
+{
+  "testedAt": "2026-10-31T01:28:43.268Z",
+  "environment": {
+    "target": "http://localhost:3000",
+    "server": "Local Next.js production build",
+    "platform": "win32",
+    "osRelease": "10.0.26300",
+    "cpu": "AMD Ryzen 5 7535HS with Radeon Graphics        ",
+    "logicalCpuCount": 12,
+    "memoryGiB": 31.2,
+    "node": "v26.12.1",
+    "next": "16.4.3",
+    "postgres": "PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+    "driver": "pg through Drizzle; maximum 5 connections per process",
+    "network": "Same Windows host; PostgreSQL 18 in Docker Desktop via localhost",
+    "dataset": {
+      "patients": 1016,
+      "clinicalRevisions": 5
+    }
+  },
+  "results": [
+    {
+      "concurrentSessions": 1,
+      "durationSeconds": 30,
+      "backgroundPattern": "Each background session requests patient search and patient detail, then waits 1 second.",
+      "uiPattern": "One authenticated browser opens the complete patient overview, then waits 1 second.",
+      "uiLoginMs": 258.99,
+      "firstRecordMs": 148.87,
+      "warmRecordDisplay": {
+        "samples": 25,
+        "minMs": 128.86,
+        "p50Ms": 145.52,
+        "p95Ms": 164.21,
+        "maxMs": 176.06
+      },
+      "api": {
+        "samples": 0,
+        "minMs": 0,
+        "p50Ms": 0,
+        "p95Ms": 0,
+        "maxMs": 0
+      },
+      "apiRequests": 0,
+      "errors": 0,
+      "loginWithin3000ms": true,
+      "warmDisplaysWithin2000ms": 25,
+      "totalWarmDisplays": 25
+    },
+    {
+      "concurrentSessions": 10,
+      "durationSeconds": 30,
+      "backgroundPattern": "Each background session requests patient search and patient detail, then waits 1 second.",
+      "uiPattern": "One authenticated browser opens the complete patient overview, then waits 1 second.",
+      "uiLoginMs": 255.45,
+      "firstRecordMs": 138.26,
+      "warmRecordDisplay": {
+        "samples": 25,
+        "minMs": 127.72,
+        "p50Ms": 167.12,
+        "p95Ms": 190.66,
+        "maxMs": 274.74
+      },
+      "api": {
+        "samples": 522,
+        "minMs": 9.05,
+        "p50Ms": 20.24,
+        "p95Ms": 39.91,
+        "maxMs": 66.53
+      },
+      "apiRequests": 522,
+      "errors": 0,
+      "loginWithin3000ms": true,
+      "warmDisplaysWithin2000ms": 25,
+      "totalWarmDisplays": 25
+    },
+    {
+      "concurrentSessions": 50,
+      "durationSeconds": 30,
+      "backgroundPattern": "Each background session requests patient search and patient detail, then waits 1 second.",
+      "uiPattern": "One authenticated browser opens the complete patient overview, then waits 1 second.",
+      "uiLoginMs": 625.71,
+      "firstRecordMs": 144.72,
+      "warmRecordDisplay": {
+        "samples": 24,
+        "minMs": 130.75,
+        "p50Ms": 166.56,
+        "p95Ms": 271.42,
+        "maxMs": 273.06
+      },
+      "api": {
+        "samples": 2818,
+        "minMs": 8.28,
+        "p50Ms": 19.06,
+        "p95Ms": 111.39,
+        "maxMs": 277.02
+      },
+      "apiRequests": 2818,
+      "errors": 0,
+      "loginWithin3000ms": true,
+      "warmDisplaysWithin2000ms": 24,
+      "totalWarmDisplays": 24
+    }
+  ],
+  "limits": [
+    "This is a local test, not a cloud capacity guarantee.",
+    "First record request is reported separately from later requests.",
+    "A browser sample includes rendering. API timings do not.",
+    "Only one browser login is measured at each load.",
+    "This short test does not prove 99 percent availability."
+  ]
+}

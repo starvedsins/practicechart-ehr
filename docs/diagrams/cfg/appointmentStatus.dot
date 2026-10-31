@@ -1,0 +1,19 @@
+digraph appointmentStatus { graph [label="appointmentStatus",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: const { version, status } = z .object({ ve\nrsion: z.number().int(), status: z.enum([\"\ncancelled\", \"arrived\"]), }) .parse(input);\n"];
+n4[shape=box,label="4: BEGIN transaction"];
+n5[shape=box,label="5: COMMIT transaction"];
+n6[shape=box,label="6: const [a] = await tx .update(appointments)\n .set({ status, version: version + 1 }) .w\nhere( and( eq(appointments.id, idSchema.pa\nrse(id)), eq(appointment"];
+n7[shape=diamond,label="7: a"];
+n8[shape=box,label="8: RAISE new AppError( 409, \"This appointment\n changed or cannot enter that state.\", )"];
+n9[shape=box,label="9: await event(tx, actor, status, \"appointmen\nt\", id);"];
+n10[shape=box,label="10: RETURN a"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n6[label=""];
+n6->n7[label=""];
+n7->n8[label="False"];
+n8->n2[label=""];
+n7->n9[label="True"];
+n9->n10[label=""];
+n10->n5[label=""];
+n5->n2[label="Return"];}

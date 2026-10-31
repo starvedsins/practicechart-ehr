@@ -1,0 +1,68 @@
+{
+  "application": "PracticeChart EHR",
+  "generatedAt": "2026-10-31T02:07:22.412Z",
+  "unitTests": {
+    "passed": 74,
+    "failed": 0
+  },
+  "browserTests": {
+    "passed": 8,
+    "failed": 0
+  },
+  "coverage": {
+    "lines": {
+      "total": 301,
+      "covered": 281,
+      "skipped": 0,
+      "pct": 93.35
+    },
+    "statements": {
+      "total": 315,
+      "covered": 288,
+      "skipped": 0,
+      "pct": 91.42
+    },
+    "functions": {
+      "total": 62,
+      "covered": 61,
+      "skipped": 0,
+      "pct": 98.38
+    },
+    "branches": {
+      "total": 185,
+      "covered": 150,
+      "skipped": 0,
+      "pct": 81.08
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": "Unknown"
+    }
+  },
+  "restore": {
+    "status": "passed",
+    "testedAt": "2026-10-31T02:02:39.044Z",
+    "sourceCreatedAt": "2026-10-31T02:01:58.415Z",
+    "kind": "Full EHR database and uploaded files",
+    "restoreTarget": "isolated local PostgreSQL 18 database",
+    "durationSeconds": 1.029,
+    "tablesCompared": 16,
+    "documentsVerified": 2,
+    "checks": [
+      "table row counts",
+      "all restored row values, including MRNs and clinical revisions",
+      "uploaded file hashes and bytes",
+      "clinical history protection",
+      "audit history protection",
+      "overlapping appointment rejection",
+      "MRN sequence"
+    ],
+    "retainedLocalDatabase": "practicechart_restore_1793412157944"
+  },
+  "performanceSource": "performance.json",
+  "humanAcceptance": "not performed",
+  "staffTraining": "planned, not completed",
+  "realDeviceTest": "pending"
+}

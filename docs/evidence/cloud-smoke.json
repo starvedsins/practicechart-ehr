@@ -1,0 +1,10 @@
+{
+  "testedAt": "2026-10-31T02:03:27.415Z",
+  "deployment": "https://campusfix-l9lzlz3bf-campusfix7.vercel.app",
+  "access": "Deployment protection bypass used for preview checks",
+  "checks": [
+    "doctor clinical history and exact private cloud file round trip",
+    "front desk demographic access with denied clinical, file, staff, and audit routes"
+  ],
+  "status": "passed"
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "path": "/app",
+    "violations": []
+  },
+  {
+    "path": "/app/patients",
+    "violations": []
+  },
+  {
+    "path": "/app/appointments",
+    "violations": []
+  },
+  {
+    "path": "/app/documents",
+    "violations": []
+  },
+  {
+    "path": "/app/invoices",
+    "violations": []
+  },
+  {
+    "path": "/app/reports",
+    "violations": []
+  },
+  {
+    "path": "/app/accounts",
+    "violations": []
+  },
+  {
+    "path": "/app/audit",
+    "violations": []
+  },
+  {
+    "path": "/app/settings",
+    "violations": []
+  }
+]

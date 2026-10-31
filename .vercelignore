@@ -1,0 +1,10 @@
+.private
+backups
+.env*
+docs
+tests
+test-results
+playwright-report
+coverage
+.git
+submission-private

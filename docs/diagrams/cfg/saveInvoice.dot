@@ -1,0 +1,18 @@
+digraph saveInvoice { graph [label="saveInvoice",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: const data = invoiceInput.parse(input);"];
+n4[shape=box,label="4: const totalCents = invoiceTotal(data.lines\n);"];
+n5[shape=box,label="5: BEGIN transaction"];
+n6[shape=box,label="6: COMMIT transaction"];
+n7[shape=box,label="7: await found( await tx .select({ id: patien\nts.id }) .from(patients) .where(eq(patient\ns.id, data.patientId)), );"];
+n8[shape=box,label="8: const [i] = await tx .insert(invoices) .va\nlues({ ...data, totalCents, number: sql`DE\nFAULT` }) .returning();"];
+n9[shape=box,label="9: await event(tx, actor, \"create\", \"invoice\"\n, i.id);"];
+n10[shape=box,label="10: RETURN i"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n5[label=""];
+n5->n7[label=""];
+n7->n8[label=""];
+n8->n9[label=""];
+n9->n10[label=""];
+n10->n6[label=""];
+n6->n2[label="Return"];}

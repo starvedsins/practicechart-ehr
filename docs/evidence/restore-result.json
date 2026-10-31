@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "testedAt": "2026-10-31T02:02:39.044Z",
+  "sourceCreatedAt": "2026-10-31T02:01:58.415Z",
+  "kind": "Full EHR database and uploaded files",
+  "restoreTarget": "isolated local PostgreSQL 18 database",
+  "durationSeconds": 1.029,
+  "tablesCompared": 16,
+  "documentsVerified": 2,
+  "checks": [
+    "table row counts",
+    "all restored row values, including MRNs and clinical revisions",
+    "uploaded file hashes and bytes",
+    "clinical history protection",
+    "audit history protection",
+    "overlapping appointment rejection",
+    "MRN sequence"
+  ],
+  "retainedLocalDatabase": "practicechart_restore_1793412157944"
+}

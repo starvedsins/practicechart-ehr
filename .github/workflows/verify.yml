@@ -1,0 +1,35 @@
+name: Verify PracticeChart
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: practicechart
+          POSTGRES_PASSWORD: local-owner-password
+          POSTGRES_DB: practicechart_ehr
+        ports: ['5438:5432']
+        options: --health-cmd "pg_isready -U practicechart -d practicechart_ehr" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://practicechart_app:local-demo-password@localhost:5438/practicechart_ehr
+      DATABASE_URL_UNPOOLED: postgresql://practicechart:local-owner-password@localhost:5438/practicechart_ehr
+      APP_URL: http://localhost:3000
+      STORAGE_DRIVER: local
+      DEMO_MODE: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: node --input-type=module -e "import pg from 'pg';const p=new pg.Pool({connectionString:process.env.DATABASE_URL_UNPOOLED});await p.query(\"CREATE ROLE practicechart_app LOGIN PASSWORD 'local-demo-password'\");await p.end();"
+      - run: npm run db:migrate && npx tsx scripts/grant-runtime.ts && npm run db:seed
+      - run: npm run typecheck && npm test && npm audit --omit=dev
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build && npm run test:e2e

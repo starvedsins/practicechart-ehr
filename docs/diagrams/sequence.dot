@@ -1,0 +1,8 @@
+digraph Sequence{graph[label="Appointment confirmation sequence",labelloc=t,rankdir=LR];node[shape=box,fontname="Arial",style=filled,fillcolor="#f3f6fa"];user[label="1 Front desk
+Select patient and time"];ui[label="2 Booking form
+Check availability
+Show review"];api[label="3 Server
+Authenticate and validate"];db[label="4 PostgreSQL transaction
+Check hours and exclusions
+Insert booking and audit"];response[label="5 Return committed result
+Show confirmation or conflict"];user->ui[label="request"];ui->api[label="confirm"];api->db[label="transaction"];db->response[label="commit or rollback"];response->user[label="result"];}

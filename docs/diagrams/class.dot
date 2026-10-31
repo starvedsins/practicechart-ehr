@@ -1,0 +1,10 @@
+digraph Classes{graph[label="Application domain classes and services",labelloc=t,rankdir=LR];node[shape=record,fontname="Arial"];User[label="Staff|id, role, active|requireRole()
+getSession()"];Patient[label="Patient|id, mrn, demographics, version|savePatient()
+archivePatient()
+reconcilePatient()"];Appointment[label="Appointment|doctor, patient, interval, status|availability()
+bookAppointment()
+appointmentStatus()"];Visit[label="Visit|patient, doctor, revision, state|startVisit()
+saveClinical()
+fileVisit()"];Clinical[label="Clinical revision|content, author, reason, state|append only"];Document[label="Diagnostic document|patient, path, digest|storeFile()
+readPrivateFile()"];Invoice[label="Invoice|lines, total cents, status|saveInvoice()
+setInvoiceStatus()"];User->Patient[label="uses"];User->Appointment[label="uses"];Patient->Visit[label="has"];Appointment->Visit[label="may start"];Visit->Clinical[label="has revisions"];Patient->Document[label="has"];Patient->Invoice[label="has"];}

@@ -1,0 +1,13 @@
+digraph availability { graph [label="availability",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: idSchema.parse(doctorId);"];
+n4[shape=diamond,label="4: /^\\d{4}-\\d{2}-\\d{2}$/.test(date)"];
+n5[shape=box,label="5: RAISE new AppError(400, \"Choose a valid da\nte.\")"];
+n6[shape=box,label="6: await event(db, actor, \"view\", \"availabili\nty\");"];
+n7[shape=box,label="7: RETURN rows( sql`SELECT slot AS start_at,s\nlot+interval '30 minutes' AS end_at FROM d\noctor_hours h CROSS JOIN LATERAL generate_\nseries((${date}::date+ma"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n5[label="False"];
+n5->n2[label=""];
+n4->n6[label="True"];
+n6->n7[label=""];
+n7->n2[label=""];}

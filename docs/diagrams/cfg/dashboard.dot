@@ -1,0 +1,16 @@
+digraph dashboard { graph [label="dashboard",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: BEGIN transaction"];
+n4[shape=box,label="4: COMMIT transaction"];
+n5[shape=box,label="5: await event(tx, actor, \"view\", \"dashboard\"\n);"];
+n6[shape=box,label="6: const counts = await rows( sql`SELECT (SEL\nECT count(*) FROM patients WHERE NOT archi\nved) AS patients,(SELECT count(*) FROM app\nointments WHERE status I"];
+n7[shape=box,label="7: const ready = await rows( sql`SELECT v.id,\nv.revision,v.status,v.patient_id,p.first_n\name,p.last_name,p.mrn FROM visits v JOIN p\natients p ON p.id=v.pati"];
+n8[shape=box,label="8: const reminders = await rows( sql`SELECT r\n.id,a.start_at,p.first_name,p.last_name,p.\nmrn FROM reminders r JOIN appointments a O\nN a.id=r.appointment_id "];
+n9[shape=box,label="9: RETURN { counts: counts[0], ready, reminde\nrs }"];n1->n3[label=""];
+n3->n5[label=""];
+n5->n6[label=""];
+n6->n7[label=""];
+n7->n8[label=""];
+n8->n9[label=""];
+n9->n4[label=""];
+n4->n2[label="Return"];}

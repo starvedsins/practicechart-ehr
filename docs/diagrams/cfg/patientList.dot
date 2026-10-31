@@ -1,0 +1,12 @@
+digraph patientList { graph [label="patientList",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: const term = `%${search.trim().slice(0, 10\n0).replace(/[%_]/g, \"\")}%`;"];
+n4[shape=box,label="4: BEGIN transaction"];
+n5[shape=box,label="5: COMMIT transaction"];
+n6[shape=box,label="6: await event(tx, actor, \"search\", \"patient\"\n);"];
+n7[shape=box,label="7: RETURN rows( sql`SELECT id,mrn,first_name,\nlast_name,dob,phone,address,gender,provisi\nonal_reason,merged_into,archived,version F\nROM patients WHERE (mrn "];n1->n3[label=""];
+n3->n4[label=""];
+n4->n6[label=""];
+n6->n7[label=""];
+n7->n5[label=""];
+n5->n2[label="Return"];}
