@@ -127,12 +127,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6628,
+                  "duration": 6223,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:50:38.986Z",
+                  "startTime": "2026-11-16T05:03:03.616Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -161,12 +161,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 992,
+                  "duration": 975,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:50:45.715Z",
+                  "startTime": "2026-11-16T05:03:09.937Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -195,12 +195,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1005,
+                  "duration": 1037,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:50:46.716Z",
+                  "startTime": "2026-11-16T05:03:10.921Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,12 +229,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2600,
+                  "duration": 2624,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:50:47.729Z",
+                  "startTime": "2026-11-16T05:03:11.967Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -263,12 +263,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7440,
+                  "duration": 7335,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:50:50.337Z",
+                  "startTime": "2026-11-16T05:03:14.598Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -297,12 +297,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2246,
+                  "duration": 2133,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:50:57.787Z",
+                  "startTime": "2026-11-16T05:03:21.941Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -331,12 +331,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 499,
+                  "duration": 441,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:51:00.041Z",
+                  "startTime": "2026-11-16T05:03:24.082Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -365,12 +365,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2962,
+                  "duration": 2932,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:51:00.547Z",
+                  "startTime": "2026-11-16T05:03:24.530Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -399,12 +399,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1117,
+                  "duration": 1186,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:51:03.516Z",
+                  "startTime": "2026-11-16T05:03:27.470Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -433,12 +433,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3174,
+                  "duration": 3352,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:51:04.642Z",
+                  "startTime": "2026-11-16T05:03:28.664Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -450,15 +450,49 @@
           "file": "workflows.spec.ts",
           "line": 572,
           "column": 1
+        },
+        {
+          "title": "reception creates an interim file, doctor reviews it, and reception links the primary record",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2187,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-16T05:03:32.025Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "26aa48cee8983222f549-9fbea65992b24db88e19",
+          "file": "workflows.spec.ts",
+          "line": 643,
+          "column": 1
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-11-16T04:50:37.963Z",
-    "duration": 29985.451,
-    "expected": 10,
+    "startTime": "2026-11-16T05:03:02.629Z",
+    "duration": 31707.809,
+    "expected": 11,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

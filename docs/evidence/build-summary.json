@@ -1,12 +1,12 @@
 {
   "application": "PracticeChart EHR",
-  "generatedAt": "2026-11-16T04:54:14.219Z",
+  "generatedAt": "2026-11-16T05:06:13.271Z",
   "unitTests": {
     "passed": 87,
     "failed": 0
   },
   "browserTests": {
-    "passed": 10,
+    "passed": 11,
     "failed": 0
   },
   "coverage": {

@@ -105,11 +105,11 @@ try {
     data: {
       patientId: patient.id,
       doctorId: doctor.id,
-      startAt: slot.startAt,
-      endAt: slot.endAt,
+      startAt: new Date(slot.startAt).toISOString(),
+      endAt: new Date(slot.endAt).toISOString(),
     },
   });
-  assert.equal(appointment.status(), 200);
+  assert.equal(appointment.status(), 200,appointment.ok()?"":await appointment.text());
   const saved = await appointment.json();
   const reminderExpected = Date.parse(slot.startAt) < Date.now() + 86400000;
   let notifications: {

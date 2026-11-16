@@ -1,4 +1,5 @@
 import {writeFile,mkdir,readdir}from 'node:fs/promises';
+import './use-case-svg';
 import {chromium}from '@playwright/test';
 await mkdir('docs/diagrams/png',{recursive:true});
 const esc=(s:string)=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');

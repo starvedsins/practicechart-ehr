@@ -506,14 +506,22 @@ function PatientSelect({
 function PatientForm({
   patient,
   done,
+  interim = false,
 }: {
   patient?: Patient;
+  interim?: boolean;
   done: (message: string, id?: string) => void;
 }) {
   const [duplicates, setDuplicates] = useState<Patient[]>([]);
   return (
     <Form
-      label={patient ? "Save changes" : "Register patient"}
+      label={
+        patient
+          ? "Save changes"
+          : interim
+            ? "Create interim record"
+            : "Register patient"
+      }
       submit={async (d) => {
         const values = {
           ...Object.fromEntries(d),
@@ -659,9 +667,11 @@ function PatientForm({
           />
         </label>
         <label className="full">
-          Provisional record reason (optional)
+          Provisional record reason {interim?"(required)":"(optional)"}
           <textarea
             name="provisionalReason"
+            required={interim}
+            minLength={interim ? 3 : undefined}
             defaultValue={patient?.provisionalReason}
             maxLength={500}
           />
@@ -1516,6 +1526,14 @@ export default function Workspace({
                 >
                   <UserPlus size={16} />
                   Register patient
+                </button>
+              )}
+              {page === "patients" && !patientId && reception && (
+                <button
+                  className="button"
+                  onClick={() => setModal({ kind: "interim" })}
+                >
+                  Create interim record
                 </button>
               )}
               {patientId && current && reception && (
@@ -2804,6 +2822,8 @@ export default function Workspace({
                   ? "Reschedule appointment"
                   : "Book appointment",
                 "appointment-actions": "Appointment actions",
+                interim: "Create interim record",
+                "review-provisional": "Review provisional record",
                 invoice: "Create manual invoice",
                 void: "Void invoice",
                 user: "Add staff account",
@@ -2822,8 +2842,12 @@ export default function Workspace({
           }
           close={() => setModal(null)}
         >
-          {modal.kind === "patient" && (
-            <PatientForm patient={modal.patient} done={done} />
+          {(modal.kind === "patient" || modal.kind === "interim") && (
+            <PatientForm
+              patient={modal.patient}
+              interim={modal.kind === "interim"}
+              done={done}
+            />
           )}
           {modal.kind === "appointment" && (
             <BookingForm

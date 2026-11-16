@@ -1,13 +1,14 @@
 {
+  "testedAt": "2026-11-16T04:55:49.407Z",
   "status": "passed",
-  "testedAt": "2026-10-31T02:13:00.561Z",
-  "target": "restored database and restored local files through a separate production app server",
+  "target": "isolated restored local database and file folder",
   "checks": [
-    "runtime grants",
-    "doctor login",
-    "front desk login",
+    "restored doctor login",
     "patient search",
-    "restored private file retrieval",
-    "front desk denied clinical files"
+    "clinical history",
+    "private restored file bytes",
+    "restored receptionist login",
+    "restored registration intake table",
+    "receptionist private-file denial"
   ]
 }

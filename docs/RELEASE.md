@@ -72,3 +72,9 @@ The correction preserves database records and clinical history. It changes serve
 The user manual was rewritten with the corrected tasks, matching colour screenshots under each section, implementation guidance, and a planned training section. No completed human training or acceptance is claimed. The group chat reports a presentation on November 17 at noon; confirm that course arrangement with the tutor. The private chat files and raw source images are not included in public source.
 
 Commit 03a9e5f deployed through the GitHub integration. Both hosted role smoke checks passed, including doctor office-action denial, receptionist upload, doctor private retrieval, and receptionist clinical denial. Evidence is in docs/evidence/cloud-smoke-production.json. SPEC_AUDIT.md lists remaining gaps, including the patient-facing registration form.
+
+## Patient registration and email release
+
+The patient can complete /register without a staff login. Reception reviews submitted forms and can also register directly. A clear Create interim record action, doctor review, and receptionist reconciliation preserve the original MRNs and linked clinical history. Lab uploads now select a visit. Booking transactions queue email confirmations and reminders. The public demo accepts only the fixed fictional intake, sample uploads, and provider test mail.
+
+Local verification passed 87 automated tests and 11 browser workflows. The three complexity methods agree for 36 documented functions. The new local load and fresh-process measurements are in performance.json and cold-performance.json. The new isolated restore checked 19 tables and 15 files, then passed a restored-application browser check. Hosted preview role, intake, and mail checks passed. The provider confirmed delivery of both mail types to its test inbox. See AUDIT_RESOLUTION.md for exact scope and external verification limits.

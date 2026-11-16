@@ -182,3 +182,11 @@ Sent means the provider accepted the request. Queued, failed, and skipped have d
 ![Appointment email queue](screenshots/email-status.png)
 
 For a lab report upload, choose Report type set to Lab report and select the matching visit. The server rejects a visit belonging to another patient. Other diagnostic documents can be stored at patient level. Earlier files remain available when a replacement is added.
+
+## 21. Create and review an interim record
+
+Reception opens Patients and selects Create interim record. Complete the demographic fields and the required provisional reason. A possible name and birth-date match still needs review before saving. The doctor opens the provisional record and selects Review provisional record. The doctor enters an administrative review reason, with no clinical details. Reception can then select Link to primary record, choose the primary MRN, give a linking reason, and select Link records.
+
+Changing demographics clears an earlier doctor review. The doctor must review the record again before linking. Linking keeps both MRNs and shows their combined clinical history to the doctor. Reception sees visit state and demographic information only.
+
+![Doctor review of a fictional interim record](screenshots/doctor-interim-review.png)

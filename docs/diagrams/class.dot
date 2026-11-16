@@ -7,4 +7,4 @@ appointmentStatus()"];Visit[label="Visit|patient, doctor, revision, state|startV
 saveClinical()
 fileVisit()"];Clinical[label="Clinical revision|content, author, reason, state|append only"];Document[label="Diagnostic document|patient, path, digest|storeFile()
 readPrivateFile()"];Invoice[label="Invoice|lines, total cents, status|saveInvoice()
-setInvoiceStatus()"];User->Patient[label="uses"];User->Appointment[label="uses"];Patient->Visit[label="has"];Appointment->Visit[label="may start"];Visit->Clinical[label="has revisions"];Patient->Document[label="has"];Patient->Invoice[label="has"];}
+setInvoiceStatus()"];User->Patient[label="uses"];User->Appointment[label="uses"];Patient->Visit[label="has"];Appointment->Visit[label="may start"];Visit->Clinical[label="has revisions"];Patient->Document[label="has"];Patient->Invoice[label="has"];Intake[label="Registration intake|payload, status, version|submitIntake()\nreviewIntake()"];Notification[label="Appointment notification|booking version, kind, status|queueEmailReminders()\ndeliverQueuedEmails()"];Intake->Patient[label="accepted as"];Appointment->Notification[label="queues"];Visit->Document[label="lab association"]; }

@@ -1,0 +1,14 @@
+{
+  "testedAt": "2026-11-16T04:58:23.894Z",
+  "deployment": "https://practicechart-25sx6lnh9-practicechart7.vercel.app",
+  "status": "passed",
+  "checks": [
+    "public fictional form accepted without staff login",
+    "receptionist review before MRN creation, or existing record reused",
+    "email consent recorded",
+    "booking confirmation accepted by the provider",
+    "appointment reminder accepted by the provider"
+  ],
+  "destination": "Provider test inbox only",
+  "reminderExpected": true
+}

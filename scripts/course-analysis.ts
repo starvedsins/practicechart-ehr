@@ -480,6 +480,15 @@ const diagrams: Record<string, string> = {
 diagrams.data =
   diagrams.data.slice(0, -1) +
   'intakes[label="registration_intakes|id PK|payload JSONB|status and version|patient_id FK after review"];outbox[label="notification_outbox|appointment_id FK|version and kind UNIQUE|delivery snapshot and retry status"];intakes->patients;appointments->outbox;visits->documents[label="visit_id optional for diagnostic files"]; }';
+diagrams.dfd =
+  diagrams.dfd.slice(0, -1) +
+  'publicPatient[label="Patient"];intake[label="6 Submit and review intake",shape=ellipse];mail[label="7 Process appointment mail",shape=ellipse];provider[label="Email notification provider"];publicPatient->intake[label="form and consent"];intake->publicPatient[label="reference only"];staff->intake[label="receptionist review"];intake->database[label="pending form or accepted registration"];database->mail[label="queued booking IDs"];mail->provider[label="appointment time, no clinical text"];provider->mail[label="acceptance or failure"];mail->database[label="queue status"]; }';
+diagrams.class =
+  diagrams.class.slice(0, -1) +
+  'Intake[label="Registration intake|payload, status, version|submitIntake()\\nreviewIntake()"];Notification[label="Appointment notification|booking version, kind, status|queueEmailReminders()\\ndeliverQueuedEmails()"];Intake->Patient[label="accepted as"];Appointment->Notification[label="queues"];Visit->Document[label="lab association"]; }';
+diagrams.ipo =
+  diagrams.ipo.slice(0, -1) +
+  'intakeInput[label="Patient form and consent"];invoiceInput[label="Manual invoice lines"];input->{intakeInput invoiceInput};intakeProcess[label="Reception review and duplicate checks"];mailProcess[label="Email queue and retries"];process->{intakeProcess mailProcess};reference[label="Public submission reference"];mailOutput[label="Appointment confirmations and reminders"];output->{reference mailOutput}; }';
 for (const [name, dot] of Object.entries(diagrams)) {
   await writeFile(`docs/diagrams/${name}.dot`, dot);
   await writeFile(

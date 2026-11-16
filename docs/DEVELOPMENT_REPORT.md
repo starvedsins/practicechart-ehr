@@ -62,7 +62,7 @@ The Today page leads with a patient worklist. The patient record separates demog
 
 ## Testing and actual results
 
-Vitest recorded 87 passing tests and 0 failed tests. Playwright recorded 10 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 91.88% of statements and 85.27% of branches. This is not a claim of full path coverage.
+Vitest recorded 87 passing tests and 0 failed tests. Playwright recorded 11 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 91.88% of statements and 85.27% of branches. This is not a claim of full path coverage.
 
 Unit and database tests cover valid and invalid partitions, boundaries, session and account states, simultaneous bookings, stale changes, clinical corrections, document rules, and invoices. Complete browser tests cover both roles. Direct clinical and file routes are denied to the front desk. Axe recorded zero violations on the nine checked desktop role/page combinations and the checked emulated phone page. Automated scans do not replace a full accessibility review or a real phone test.
 

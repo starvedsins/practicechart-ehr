@@ -605,11 +605,9 @@ test("patient completes registration and reception reviews it before an MRN is c
   ).json();
   expect(before).toHaveLength(0);
   await page.goto("/app/intakes");
-  const card = page
-    .locator("article")
-    .filter({
-      has: page.getByRole("heading", { name: "Avery " + name, exact: true }),
-    });
+  const card = page.locator("article").filter({
+    has: page.getByRole("heading", { name: "Avery " + name, exact: true }),
+  });
   await expect(card).toBeVisible();
   await screenshot(page, "reception-registration-review");
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -641,4 +639,69 @@ test("patient completes registration and reception reviews it before an MRN is c
   ).toBe(true);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await screenshot(page, "phone-patient-registration");
+});
+test("reception creates an interim file, doctor reviews it, and reception links the primary record", async ({
+  page,
+}) => {
+  await login(page, "frontdesk");
+  await page.goto("/app/patients");
+  await page
+    .getByRole("button", { name: "Create interim record", exact: true })
+    .click();
+  let dialog = page.getByRole("dialog");
+  const surname = "InterimBrowser" + Date.now();
+  await dialog.getByLabel("First name", { exact: true }).fill("Remy");
+  await dialog.getByLabel("Last name", { exact: true }).fill(surname);
+  await dialog.getByLabel("Date of birth", { exact: true }).fill("2000-01-01");
+  await dialog.getByLabel("Phone", { exact: true }).fill("876-555-0189");
+  await dialog
+    .getByLabel("Address", { exact: true })
+    .fill("Fictional Interim Lane");
+  await dialog
+    .getByLabel(/Provisional record reason/)
+    .fill("Primary file could not be located at reception");
+  await dialog
+    .getByRole("button", { name: "Create interim record", exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  const p = (
+    await (await page.request.get("/api/patients?q=" + surname)).json()
+  )[0];
+  await page.context().clearCookies();
+  await login(page, "doctor");
+  await page.goto("/app/patients/" + p.id);
+  await page
+    .getByRole("button", { name: "Review provisional record", exact: true })
+    .click();
+  dialog = page.getByRole("dialog");
+  await dialog
+    .getByLabel("Review reason")
+    .fill("Fictional identity checked before linking");
+  await screenshot(page, "doctor-interim-review");
+  await dialog
+    .getByRole("button", { name: "Confirm doctor review", exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  await page.context().clearCookies();
+  await login(page, "frontdesk");
+  await page.goto("/app/patients/" + p.id);
+  await page
+    .getByRole("button", { name: "Link to primary record", exact: true })
+    .click();
+  dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Find patient by name or MRN").fill("Lena");
+  const target = (
+    await (await page.request.get("/api/patients?q=Lena")).json()
+  )[0];
+  await dialog.getByLabel("Primary record").selectOption(target.id);
+  await dialog
+    .getByLabel("Reason", { exact: true })
+    .fill("Primary fictional record is available again");
+  await dialog
+    .getByRole("button", { name: "Link records", exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  const detail = await (await page.request.get("/api/patients/" + p.id)).json();
+  expect(detail.patient.mergedInto).toBe(target.id);
+  expect(detail.patient.mrn).toBe(p.mrn);
 });
