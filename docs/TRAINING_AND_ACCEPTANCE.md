@@ -7,11 +7,11 @@ Training is planned. No completed staff training is claimed.
 | Session | Audience | Method | Planned task check |
 | --- | --- | --- | --- |
 | Access and privacy, 20 minutes | Both roles | Demonstration and guided practice | Log in, explain role limits, log out |
-| Patient administration, 30 minutes | Front desk and doctor | Fictional task exercises | Register, find, and change a patient |
-| Scheduling, 30 minutes | Front desk and doctor | Guided practice with conflicts | Confirm, reschedule, cancel, and mark arrival |
+| Patient administration, 30 minutes | Receptionist | Fictional task exercises | Register, find, and change a patient |
+| Scheduling, 30 minutes | Receptionist | Guided practice with conflicts | Confirm, reschedule, cancel, and mark arrival |
 | Clinical records, 40 minutes | Doctor | Fictional consultation exercises | Save draft, final entry, and correction |
-| Documents and outputs, 25 minutes | Doctor; front desk for administrative outputs | Demonstration and practice | Retrieve a lab report; print allowed outputs |
-| Filing and invoices, 20 minutes | Front desk | Task practice | File a ready visit and issue an invoice |
+| Documents and outputs, 25 minutes | Receptionist for uploads and office outputs; doctor for clinical outputs | Demonstration and practice | Retrieve a lab report; print allowed outputs |
+| Filing and invoices, 20 minutes | Receptionist | Task practice | File a ready visit and issue an invoice |
 | Recovery, 30 minutes | Technical operator | Recovery drill | Restore a backup into an isolated local copy |
 
 Use fictional records. Let the trainee perform each task without step-by-step help after the guided example. Record errors and questions. Repeat failed tasks. Supply the user manual. Keep a named support contact and issue log. Schedule a follow-up session after actual use begins. No live start date is claimed.

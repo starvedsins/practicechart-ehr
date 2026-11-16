@@ -5,7 +5,10 @@ import sys
 from pathlib import Path
 try:
     import networkx as nx
+    if not hasattr(nx, 'Graph'):
+        raise ImportError('Incomplete networkx package')
 except ImportError:
+    sys.modules.pop('networkx', None)
     sys.path.insert(0, str(Path(os.environ.get('TEMP', '/tmp')) / 'practicechart-doc-libs'))
     import networkx as nx
 

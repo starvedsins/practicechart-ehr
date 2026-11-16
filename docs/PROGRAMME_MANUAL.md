@@ -37,7 +37,7 @@ The cloud uses a separate practicechart_ehr database. Preview uses practicechart
 
 MRNs and invoice numbers use independent sequences. The number formatting function does not truncate longer sequence values. Patient birth dates cannot exceed the Jamaica calendar day. Appointment intervals are positive and at most four hours. PostgreSQL GiST exclusion constraints reject active overlaps for both doctor and patient. Trigger checks serialize doctor availability changes and reject blocked or outside-hours bookings. A doctor account guard keeps at least one active doctor. Clinical, prescription, and audit histories reject update and delete operations.
 
-The runtime role has no schema creation permission. It cannot update or delete protected history. The migration owner connection is separate from the runtime connection. Password hashes are never returned in staff API responses. Front desk patient queries omit clinical content and document metadata.
+The runtime role has no schema creation permission. It cannot update or delete protected history. The migration owner connection is separate from the runtime connection. Password hashes are never returned in staff API responses. Front desk patient queries omit clinical content and private file paths. Receptionists may view document metadata and upload files. Diagnostic bytes remain doctor-only.
 
 ## Column dictionary
 
@@ -161,8 +161,8 @@ All application data routes require a current session except login and health. T
 | POST /api/password | currentPassword and replacement password; closes existing sessions |
 | GET or POST /api/patients | optional q search, or validated demographic fields |
 | POST /api/patients/id | demographic fields and current version |
-| POST /api/patients/id/archive | version and archived boolean; doctor only |
-| POST /api/patients/id/reconcile | targetId and reason; doctor only |
+| POST /api/patients/id/archive | version and archived boolean; receptionist only |
+| POST /api/patients/id/reconcile | targetId and reason; receptionist only |
 | GET /api/availability | doctorId and Jamaica date |
 | POST /api/appointments | patientId, doctorId, ISO startAt and endAt; confirms transactionally |
 | POST /api/appointments/id | booking fields and current version; confirmed bookings only |
@@ -170,15 +170,15 @@ All application data routes require a current session except login and health. T
 | POST /api/visits | patientId, doctorId, optional matching appointmentId |
 | POST /api/visits/id/clinical | expectedRevision, state, structured content, and correction reason; doctor only |
 | POST /api/visits/id/file | expectedRevision; server requires the final diagnosis |
-| GET or POST /api/documents | doctor-only listing or multipart patientId, title, kind, file, optional replacesId |
+| GET or POST /api/documents | staff metadata listing; receptionist multipart upload with patientId, title, kind, file, optional replacesId |
 | GET /api/documents/id | authorised private file bytes, not a public storage URL |
 | POST /api/invoices | patientId and description, quantity, unitCents line items |
 | POST /api/invoices/id | version, issued or void state, and void reason |
-| GET or POST /api/users | doctor-only account listing, creation, and versioned changes |
-| GET /api/audit | doctor-only recent audit events |
+| GET or POST /api/users | blocked for both employee roles; operator provisioning only |
+| GET /api/audit | blocked for both employee roles; operator review only |
 | GET /api/reports/type | type-specific record ID and server role check |
-| GET or POST /api/hours | read doctor hours; doctor-only guarded hour changes |
-| POST /api/blocks | doctor-only interval creation or removal |
+| GET or POST /api/hours | read doctor hours; receptionist-only guarded hour changes |
+| POST /api/blocks | receptionist-only interval creation or removal |
 | GET /api/cron | secret-authenticated daily workflow start |
 
 ## Clinical and invoice payloads
@@ -207,6 +207,6 @@ Run npm ci, npm run setup, and npm run dev. For the presentation, stop developme
 
 ## Verification
 
-Vitest recorded 76 passing tests and 0 failed tests. Playwright recorded 8 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 92.08% of statements and 82.81% of branches. This is not a claim of full path coverage.
+Vitest recorded 78 passing tests and 0 failed tests. Playwright recorded 9 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 92.35% of statements and 83.16% of branches. This is not a claim of full path coverage.
 
 The control flow appendix records actual source-linked graphs and calculations. The test plan identifies feasible path cases and limits. Safe evidence includes automated results, axe results, load results, and an actual restore result. No human test or training completion is inferred from these files.

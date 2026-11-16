@@ -160,7 +160,7 @@ export default function Login() {
                     "DeskDemo!2026";
                 }}
               >
-                Front desk account <ArrowUpRight size={14} />
+                Receptionist account <ArrowUpRight size={14} />
               </button>
             </div>
           </div>

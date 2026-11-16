@@ -45,14 +45,42 @@ for (const role of ["doctor", "frontdesk"]) {
     assert.equal(d.status(), 200);
     assert.equal((await d.body()).subarray(0, 5).toString(), "%PDF-");
     assert.ok(d.headers()["cache-control"].includes("no-store"));
+    checks.push("doctor clinical history and private file retrieval");
+    for (const endpoint of [
+      "patients",
+      "appointments",
+      "visits",
+      "invoices",
+      "users",
+      "hours",
+      "blocks",
+    ]) {
+      const denied = await context.request.post(base + "/api/" + endpoint, {
+        headers: { origin: base },
+        data: {},
+      });
+      assert.equal(denied.status(), 403);
+    }
+  } else {
+    assert.equal(detail.clinical, undefined);
+    assert.ok(Array.isArray(detail.documents));
+    for (const endpoint of [
+      "users",
+      "audit",
+      "reports/history?id=" + patient.id,
+    ])
+      assert.equal(
+        (await context.request.get(base + "/api/" + endpoint)).status(),
+        403,
+      );
     const sample = await context.request.get(base + "/api/sample-report");
     const bytes = await sample.body();
     const up = await context.request.post(base + "/api/documents", {
       headers: { origin: base },
       multipart: {
         patientId: patient.id,
-        title: "Fictional cloud verification report",
-        kind: "Lab report",
+        title: "Fictional receptionist upload check",
+        kind: "Diagnostic report",
         file: {
           name: "sample.pdf",
           mimeType: "application/pdf",
@@ -62,28 +90,14 @@ for (const role of ["doctor", "frontdesk"]) {
     });
     assert.equal(up.status(), 201);
     const uploaded = await up.json();
-    const exact = await context.request.get(
-      base + "/api/documents/" + uploaded.id,
+    assert.equal(
+      (
+        await context.request.get(base + "/api/documents/" + uploaded.id)
+      ).status(),
+      403,
     );
-    assert.deepEqual(await exact.body(), bytes);
     checks.push(
-      "doctor clinical history and exact private cloud file round trip",
-    );
-  } else {
-    assert.equal(detail.clinical, undefined);
-    assert.equal(detail.documents, undefined);
-    for (const path of [
-      "documents",
-      "users",
-      "audit",
-      "reports/history?id=" + patient.id,
-    ])
-      assert.equal(
-        (await context.request.get(base + "/api/" + path)).status(),
-        403,
-      );
-    checks.push(
-      "front desk demographic access with denied clinical, file, staff, and audit routes",
+      "receptionist upload allowed; clinical notes, diagnostic bytes, staff management, and audit denied",
     );
   }
   await context.close();

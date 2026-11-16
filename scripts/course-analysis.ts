@@ -15,13 +15,13 @@ const narratives: Record<string, string> = {
   patientList:
     "Search demographic records with parameters and record the search event.",
   patientDetail:
-    "Read a patient and visits. Add clinical history and documents only for a doctor.",
+    "Read a patient and visits. Return document metadata to staff and clinical history only to a doctor.",
   savePatient:
     "Validate demographics. Create an MRN or update the expected record version. Warn about possible duplicates.",
   archivePatient:
-    "Require a doctor and the current version before changing patient archive status.",
+    "Require a receptionist and the current version before changing patient archive status.",
   reconcilePatient:
-    "Require a doctor. Lock both records and link an unresolved provisional record to its primary record.",
+    "Require a receptionist. Lock both records and link an unresolved provisional record to its primary record.",
   schedule:
     "Read the appointments for one Jamaica calendar day and record the view.",
   availability:
@@ -42,7 +42,7 @@ const narratives: Record<string, string> = {
     "Issue a draft or void an issued invoice with a reason. Reject stale versions.",
   invoiceList: "Read administrative invoice data and record the view.",
   manageUser:
-    "Require doctor access. Create or change an account. Protect demo accounts, keep a doctor active, and revoke changed sessions.",
+    "Require a trusted operator context, not an employee login. Create or change an account. Protect demo accounts, keep a doctor active, and revoke changed sessions.",
   changePassword:
     "Verify the current password, hash the replacement, and revoke existing sessions.",
   dashboard:
@@ -446,7 +446,8 @@ console.log(
 );
 
 const diagrams: Record<string, string> = {
-  use_case: `graph UseCases{graph[label="PracticeChart use cases",labelloc=t,rankdir=LR];node[fontname="Arial",fontsize=12];desk[shape=plaintext,label="Front desk"];doctor[shape=plaintext,label="Doctor"];subgraph cluster_system{label="PracticeChart EHR";node[shape=ellipse];login[label="Log in"];patient[label="Register and update patient"];schedule[label="Manage appointment"];file[label="File completed visit"];invoice[label="Create manual invoice"];clinical[label="Record and correct care"];lab[label="Store and retrieve lab report"];report[label="Print clinical patient report"];accounts[label="Manage staff access"];audit[label="View audit history"];}desk--login;desk--patient;desk--schedule;desk--file;desk--invoice;doctor--login;doctor--patient;doctor--schedule;doctor--file;doctor--invoice;doctor--clinical;doctor--lab;doctor--report;doctor--accounts;doctor--audit;}`,
+  use_case: `graph UseCases{graph[label="PracticeChart role use cases",labelloc=t,rankdir=LR];node[fontname="Arial",fontsize=12];desk[shape=plaintext,label="Receptionist"];doctor[shape=plaintext,label="Doctor"];subgraph cluster_system{label="PracticeChart EHR";node[shape=ellipse];login[label="Log in / log out"];patient[label="Register and update patient"];find[label="Find patient / interim record"];schedule[label="Manage appointments"];schedreport[label="Print schedule"];file[label="Start and file ready visit"];invoice[label="Create manual invoice"];upload[label="Upload medical documents"];counts[label="Review visit counts"];clinical[label="Record and correct care"];lab[label="Enter lab results"];report[label="Print clinical reports"];retrieve[label="Retrieve diagnostic report"];prescription[label="Create prescription"];certificate[label="Create medical certificate"];}desk--{login patient find schedule schedreport file invoice upload counts};doctor--{login clinical lab report retrieve prescription certificate};}`,
+
   sequence: `digraph Sequence{graph[label="Appointment confirmation sequence",labelloc=t,rankdir=LR];node[shape=box,fontname="Arial",style=filled,fillcolor="#f3f6fa"];user[label="1 Front desk\nSelect patient and time"];ui[label="2 Booking form\nCheck availability\nShow review"];api[label="3 Server\nAuthenticate and validate"];db[label="4 PostgreSQL transaction\nCheck hours and exclusions\nInsert booking and audit"];response[label="5 Return committed result\nShow confirmation or conflict"];user->ui[label="request"];ui->api[label="confirm"];api->db[label="transaction"];db->response[label="commit or rollback"];response->user[label="result"];}`,
   swimlane: `digraph Swimlane{graph[label="Visit workflow by role",labelloc=t,rankdir=LR];node[shape=box,fontname="Arial"];subgraph cluster_desk{label="Front desk";register[label="Register or find patient"];arrival[label="Mark arrival and start visit"];file[label="File ready visit"];invoice[label="Create invoice or attendance slip"];}subgraph cluster_doctor{label="Doctor";review[label="Review patient history"];record[label="Enter notes, diagnosis, and treatment"];final[label="Save final clinical revision"];}subgraph cluster_system{label="System and PostgreSQL";guard[label="Require final diagnosis"];log[label="Commit filed state and audit"];}register->arrival;arrival->review;review->record;record->final;final->guard;guard->file[label="ready state only"];file->log;log->invoice;}`,
   data: `digraph Data{graph[label="PracticeChart data relationships",labelloc=t,rankdir=LR];node[shape=record,fontname="Arial",fontsize=11];users[label="users|id PK|username UNIQUE|role and password hash"];patients[label="patients|id PK|mrn UNIQUE|demographics and version"];appointments[label="appointments|id PK|patient_id FK|doctor_id FK|start_at and end_at|overlap exclusions"];visits[label="visits|id PK|patient_id FK|doctor_id FK|appointment_id FK UNIQUE|revision and status"];revisions[label="clinical_revisions|id PK|visit_id FK|author_id FK|revision UNIQUE per visit|content JSONB and state"];prescriptions[label="prescriptions|revision_id FK|visit_id FK|patient_id FK|doctor-entered content"];documents[label="documents|id PK|patient_id FK|replaces_id FK|private path and SHA256"];invoices[label="invoices|id PK|number UNIQUE|patient_id FK|lines and integer cents"];audit[label="audit_events|id PK|actor_id FK|action and record reference"];sessions[label="sessions|token hash PK|user_id FK|expiry"];users->sessions[label="1 to many"];patients->appointments[label="1 to many"];users->appointments[label="doctor"];patients->visits[label="1 to many"];appointments->visits[label="0 or 1"];users->visits[label="doctor"];visits->revisions[label="1 to many"];revisions->prescriptions[label="0 to many"];patients->documents[label="1 to many"];patients->invoices[label="1 to many"];users->audit[label="actor"];}`,

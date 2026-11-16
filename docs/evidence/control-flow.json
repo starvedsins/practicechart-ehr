@@ -173,33 +173,33 @@
       },
       {
         "id": 10,
-        "label": "actor.role !== \"doctor\"",
-        "kind": "decision",
+        "label": "const files = await tx .select({ id: documents.id, title: documents.title, kind: documents.kind, mime: documents.mime, size: documents.size, createdAt",
+        "kind": "action",
         "line": 71
       },
       {
         "id": 11,
-        "label": "RETURN { patient: p, visits: visitList, appointments: appointmentList }",
-        "kind": "action",
-        "line": 72
+        "label": "actor.role !== \"doctor\"",
+        "kind": "decision",
+        "line": 83
       },
       {
         "id": 12,
-        "label": "const clinical = await rows( sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.v",
+        "label": "RETURN { patient: p, visits: visitList, appointments: appointmentList, documents: files, }",
         "kind": "action",
-        "line": 73
+        "line": 84
       },
       {
         "id": 13,
-        "label": "const files = await tx .select({ id: documents.id, title: documents.title, kind: documents.kind, mime: documents.mime, size: documents.size, createdAt",
+        "label": "const clinical = await rows( sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.v",
         "kind": "action",
-        "line": 77
+        "line": 90
       },
       {
         "id": 14,
         "label": "RETURN { patient: p, visits: visitList, appointments: appointmentList, clinical, documents: files, }",
         "kind": "action",
-        "line": 89
+        "line": 94
       }
     ],
     "edges": [
@@ -241,22 +241,22 @@
       {
         "from": 10,
         "to": 11,
-        "label": "True"
+        "label": ""
       },
       {
         "from": 11,
+        "to": 12,
+        "label": "True"
+      },
+      {
+        "from": 12,
         "to": 5,
         "label": ""
       },
       {
-        "from": 10,
-        "to": 12,
-        "label": "False"
-      },
-      {
-        "from": 12,
+        "from": 11,
         "to": 13,
-        "label": ""
+        "label": "False"
       },
       {
         "from": 13,
@@ -288,6 +288,7 @@
         9,
         10,
         11,
+        12,
         5,
         2
       ],
@@ -300,7 +301,7 @@
         8,
         9,
         10,
-        12,
+        11,
         13,
         14,
         5,
@@ -318,10 +319,11 @@
         8,
         9,
         10,
-        12,
+        11,
         13,
         14,
         5,
+        12,
         11,
         10,
         9,
@@ -336,9 +338,8 @@
         5,
         14,
         13,
-        12,
-        10,
         11,
+        12,
         5
       ]
     ],
@@ -347,7 +348,7 @@
   {
     "name": "savePatient",
     "file": "src/lib/service.ts",
-    "line": 98,
+    "line": 103,
     "nodes": [
       {
         "id": 1,
@@ -363,93 +364,99 @@
       },
       {
         "id": 3,
-        "label": "const data = patientInput.parse(input);",
+        "label": "await requireRole(actor, \"front_desk\");",
         "kind": "action",
-        "line": 99
+        "line": 104
       },
       {
         "id": 4,
-        "label": "BEGIN transaction",
+        "label": "const data = patientInput.parse(input);",
         "kind": "action",
-        "line": 100
+        "line": 105
       },
       {
         "id": 5,
+        "label": "BEGIN transaction",
+        "kind": "action",
+        "line": 106
+      },
+      {
+        "id": 6,
         "label": "COMMIT transaction",
         "kind": "action",
         "line": 0
       },
       {
-        "id": 6,
+        "id": 7,
         "label": "id",
         "kind": "decision",
-        "line": 101
-      },
-      {
-        "id": 7,
-        "label": "idSchema.parse(id);",
-        "kind": "action",
-        "line": 102
+        "line": 107
       },
       {
         "id": 8,
-        "label": "const version = z .object({ version: z.number().int().positive() }) .parse(input).version;",
+        "label": "idSchema.parse(id);",
         "kind": "action",
-        "line": 103
+        "line": 108
       },
       {
         "id": 9,
-        "label": "const [p] = await tx .update(patients) .set({ ...data, version: version + 1 }) .where(and(eq(patients.id, id), eq(patients.version, version))) .return",
+        "label": "const version = z .object({ version: z.number().int().positive() }) .parse(input).version;",
         "kind": "action",
-        "line": 106
+        "line": 109
       },
       {
         "id": 10,
-        "label": "p",
-        "kind": "decision",
-        "line": 111
-      },
-      {
-        "id": 11,
-        "label": "RAISE new AppError( 409, \"This patient changed. Reload the record before you save.\", )",
+        "label": "const [p] = await tx .update(patients) .set({ ...data, version: version + 1 }) .where(and(eq(patients.id, id), eq(patients.version, version))) .return",
         "kind": "action",
         "line": 112
       },
       {
-        "id": 12,
-        "label": "await event(tx, actor, \"update\", \"patient\", id, { version });",
-        "kind": "action",
-        "line": 116
-      },
-      {
-        "id": 13,
-        "label": "RETURN { patient: p }",
-        "kind": "action",
+        "id": 11,
+        "label": "p",
+        "kind": "decision",
         "line": 117
       },
       {
-        "id": 14,
-        "label": "const duplicates = await rows( sql`SELECT id,mrn FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.last",
+        "id": 12,
+        "label": "RAISE new AppError( 409, \"This patient changed. Reload the record before you save.\", )",
         "kind": "action",
-        "line": 119
+        "line": 118
       },
       {
-        "id": 15,
-        "label": "const [p] = await tx .insert(patients) .values({ ...data, mrn: sql`DEFAULT` }) .returning();",
+        "id": 13,
+        "label": "await event(tx, actor, \"update\", \"patient\", id, { version });",
+        "kind": "action",
+        "line": 122
+      },
+      {
+        "id": 14,
+        "label": "RETURN { patient: p }",
         "kind": "action",
         "line": 123
       },
       {
-        "id": 16,
-        "label": "await event(tx, actor, \"create\", \"patient\", p.id);",
+        "id": 15,
+        "label": "const duplicates = await rows( sql`SELECT id,mrn FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.last",
         "kind": "action",
-        "line": 127
+        "line": 125
+      },
+      {
+        "id": 16,
+        "label": "const [p] = await tx .insert(patients) .values({ ...data, mrn: sql`DEFAULT` }) .returning();",
+        "kind": "action",
+        "line": 129
       },
       {
         "id": 17,
+        "label": "await event(tx, actor, \"create\", \"patient\", p.id);",
+        "kind": "action",
+        "line": 133
+      },
+      {
+        "id": 18,
         "label": "RETURN { patient: p, duplicates }",
         "kind": "action",
-        "line": 128
+        "line": 134
       }
     ],
     "edges": [
@@ -465,18 +472,18 @@
       },
       {
         "from": 4,
-        "to": 6,
+        "to": 5,
         "label": ""
       },
       {
-        "from": 6,
+        "from": 5,
         "to": 7,
-        "label": "True"
+        "label": ""
       },
       {
         "from": 7,
         "to": 8,
-        "label": ""
+        "label": "True"
       },
       {
         "from": 8,
@@ -491,37 +498,37 @@
       {
         "from": 10,
         "to": 11,
-        "label": "False"
+        "label": ""
       },
       {
         "from": 11,
+        "to": 12,
+        "label": "False"
+      },
+      {
+        "from": 12,
         "to": 2,
         "label": ""
       },
       {
-        "from": 10,
-        "to": 12,
+        "from": 11,
+        "to": 13,
         "label": "True"
       },
       {
-        "from": 12,
-        "to": 13,
-        "label": ""
-      },
-      {
         "from": 13,
-        "to": 5,
-        "label": ""
-      },
-      {
-        "from": 6,
         "to": 14,
-        "label": "False"
+        "label": ""
       },
       {
         "from": 14,
-        "to": 15,
+        "to": 6,
         "label": ""
+      },
+      {
+        "from": 7,
+        "to": 15,
+        "label": "False"
       },
       {
         "from": 15,
@@ -535,11 +542,16 @@
       },
       {
         "from": 17,
-        "to": 5,
+        "to": 18,
         "label": ""
       },
       {
-        "from": 5,
+        "from": 18,
+        "to": 6,
+        "label": ""
+      },
+      {
+        "from": 6,
         "to": 2,
         "label": "Return"
       }
@@ -552,38 +564,41 @@
         1,
         3,
         4,
-        6,
+        5,
         7,
         8,
         9,
         10,
         11,
+        12,
         2
       ],
       [
         1,
         3,
         4,
-        6,
+        5,
         7,
         8,
         9,
         10,
-        12,
+        11,
         13,
-        5,
+        14,
+        6,
         2
       ],
       [
         1,
         3,
         4,
-        6,
-        14,
+        5,
+        7,
         15,
         16,
         17,
-        5,
+        18,
+        6,
         2
       ]
     ],
@@ -593,43 +608,45 @@
         1,
         3,
         4,
-        6,
-        14,
+        5,
+        7,
         15,
         16,
         17,
-        5,
+        18,
+        6,
         2,
+        12,
         11,
         10,
         9,
         8,
         7,
-        6,
+        5,
         4,
         3
       ],
       [
         2,
-        5,
+        6,
+        14,
         13,
-        12,
-        10,
-        11
+        11,
+        12
       ],
       [
-        5,
+        6,
+        18,
         17,
         16,
         15,
-        14,
-        6,
         7,
         8,
         9,
         10,
-        12,
-        13
+        11,
+        13,
+        14
       ]
     ],
     "parallelLensFaces": 0
@@ -637,7 +654,7 @@
   {
     "name": "archivePatient",
     "file": "src/lib/service.ts",
-    "line": 131,
+    "line": 137,
     "nodes": [
       {
         "id": 1,
@@ -653,21 +670,21 @@
       },
       {
         "id": 3,
-        "label": "await requireRole(actor);",
+        "label": "await requireRole(actor, \"front_desk\");",
         "kind": "action",
-        "line": 132
+        "line": 138
       },
       {
         "id": 4,
         "label": "const { version, archived } = z .object({ version: z.number().int(), archived: z.boolean() }) .parse(input);",
         "kind": "action",
-        "line": 133
+        "line": 139
       },
       {
         "id": 5,
         "label": "BEGIN transaction",
         "kind": "action",
-        "line": 136
+        "line": 142
       },
       {
         "id": 6,
@@ -679,37 +696,37 @@
         "id": 7,
         "label": "const [p] = await tx .update(patients) .set({ archived, version: version + 1 }) .where( and(eq(patients.id, idSchema.parse(id)), eq(patients.version, ",
         "kind": "action",
-        "line": 137
+        "line": 143
       },
       {
         "id": 8,
         "label": "p",
         "kind": "decision",
-        "line": 144
+        "line": 150
       },
       {
         "id": 9,
         "label": "RAISE new AppError(409, \"This record changed. Reload it.\")",
         "kind": "action",
-        "line": 144
+        "line": 150
       },
       {
         "id": 10,
         "label": "archived",
         "kind": "decision",
-        "line": 145
+        "line": 151
       },
       {
         "id": 11,
         "label": "await event(tx, actor, archived ? \"archive\" : \"restore\", \"patient\", id);",
         "kind": "action",
-        "line": 145
+        "line": 151
       },
       {
         "id": 12,
         "label": "RETURN p",
         "kind": "action",
-        "line": 146
+        "line": 152
       },
       {
         "id": 13,
@@ -874,7 +891,7 @@
   {
     "name": "reconcilePatient",
     "file": "src/lib/service.ts",
-    "line": 149,
+    "line": 155,
     "nodes": [
       {
         "id": 1,
@@ -890,39 +907,39 @@
       },
       {
         "id": 3,
-        "label": "await requireRole(actor);",
+        "label": "await requireRole(actor, \"front_desk\");",
         "kind": "action",
-        "line": 154
+        "line": 160
       },
       {
         "id": 4,
         "label": "const { targetId, reason } = z .object({ targetId: idSchema, reason: z.string().trim().min(3).max(500) }) .parse(input);",
         "kind": "action",
-        "line": 155
+        "line": 161
       },
       {
         "id": 5,
         "label": "idSchema.parse(id);",
         "kind": "action",
-        "line": 158
+        "line": 164
       },
       {
         "id": 6,
         "label": "id === targetId",
         "kind": "decision",
-        "line": 159
+        "line": 165
       },
       {
         "id": 7,
         "label": "RAISE new AppError(400, \"Choose a different patient.\")",
         "kind": "action",
-        "line": 159
+        "line": 165
       },
       {
         "id": 8,
         "label": "BEGIN transaction",
         "kind": "action",
-        "line": 160
+        "line": 166
       },
       {
         "id": 9,
@@ -934,73 +951,73 @@
         "id": 10,
         "label": "const list = await rows( sql`SELECT * FROM patients WHERE id IN(${id}::uuid,${targetId}::uuid) ORDER BY id FOR UPDATE`, tx, );",
         "kind": "action",
-        "line": 161
+        "line": 167
       },
       {
         "id": 11,
         "label": "list.length !== 2",
         "kind": "decision",
-        "line": 165
+        "line": 171
       },
       {
         "id": 12,
         "label": "RAISE new AppError(404, \"Both patients must exist.\")",
         "kind": "action",
-        "line": 165
+        "line": 171
       },
       {
         "id": 13,
         "label": "const source = list.find((p) => p.id === id);",
         "kind": "action",
-        "line": 166
+        "line": 172
       },
       {
         "id": 14,
         "label": "const target = list.find((p) => p.id === targetId);",
         "kind": "action",
-        "line": 167
+        "line": 173
       },
       {
         "id": 15,
         "label": "source?.provisional_reason",
         "kind": "decision",
-        "line": 169
+        "line": 175
       },
       {
         "id": 16,
         "label": "source.merged_into",
         "kind": "decision",
-        "line": 170
+        "line": 176
       },
       {
         "id": 17,
         "label": "target?.merged_into",
         "kind": "decision",
-        "line": 171
+        "line": 177
       },
       {
         "id": 18,
         "label": "RAISE new AppError( 400, \"Use an unresolved provisional record and an active primary record.\", )",
         "kind": "action",
-        "line": 173
+        "line": 179
       },
       {
         "id": 19,
         "label": "await tx .update(patients) .set({ mergedInto: targetId, archived: true, version: Number(source.version) + 1, }) .where(eq(patients.id, id));",
         "kind": "action",
-        "line": 177
+        "line": 183
       },
       {
         "id": 20,
         "label": "await event(tx, actor, \"reconcile\", \"patient\", id, { targetId, reason });",
         "kind": "action",
-        "line": 185
+        "line": 191
       },
       {
         "id": 21,
         "label": "RETURN { targetId }",
         "kind": "action",
-        "line": 186
+        "line": 192
       }
     ],
     "edges": [
@@ -1294,7 +1311,7 @@
   {
     "name": "schedule",
     "file": "src/lib/service.ts",
-    "line": 189,
+    "line": 195,
     "nodes": [
       {
         "id": 1,
@@ -1312,25 +1329,25 @@
         "id": 3,
         "label": "date",
         "kind": "decision",
-        "line": 191
+        "line": 197
       },
       {
         "id": 4,
         "label": "/^\\d{4}-\\d{2}-\\d{2}$/.test(date)",
         "kind": "decision",
-        "line": 191
+        "line": 197
       },
       {
         "id": 5,
         "label": "const day = date && /^\\d{4}-\\d{2}-\\d{2}$/.test(date) ? date : new Intl.DateTimeFormat(\"en-CA\", { timeZone: \"America/Jamaica\", }).format(new Date());",
         "kind": "action",
-        "line": 190
+        "line": 196
       },
       {
         "id": 6,
         "label": "BEGIN transaction",
         "kind": "action",
-        "line": 196
+        "line": 202
       },
       {
         "id": 7,
@@ -1342,13 +1359,13 @@
         "id": 8,
         "label": "await event(tx, actor, \"view\", \"schedule\");",
         "kind": "action",
-        "line": 197
+        "line": 203
       },
       {
         "id": 9,
         "label": "RETURN rows( sql`SELECT a.*,p.mrn,p.first_name,p.last_name,u.name AS doctor_name FROM appointments a JOIN patients p ON p.id=a.patient_id JOIN users u",
         "kind": "action",
-        "line": 198
+        "line": 204
       },
       {
         "id": 10,
@@ -1488,7 +1505,7 @@
   {
     "name": "availability",
     "file": "src/lib/service.ts",
-    "line": 204,
+    "line": 210,
     "nodes": [
       {
         "id": 1,
@@ -1506,55 +1523,55 @@
         "id": 3,
         "label": "idSchema.parse(doctorId);",
         "kind": "action",
-        "line": 210
+        "line": 216
       },
       {
         "id": 4,
         "label": "/^\\d{4}-\\d{2}-\\d{2}$/.test(date)",
         "kind": "decision",
-        "line": 211
+        "line": 217
       },
       {
         "id": 5,
         "label": "RAISE new AppError(400, \"Choose a valid date.\")",
         "kind": "action",
-        "line": 212
+        "line": 218
       },
       {
         "id": 6,
         "label": "await event(db, actor, \"view\", \"availability\");",
         "kind": "action",
-        "line": 213
+        "line": 219
       },
       {
         "id": 7,
         "label": "const { duration, patientId, excludeId } = z .object({ duration: z.number().int().min(1).max(240).default(30), patientId: idSchema.optional(), exclude",
         "kind": "action",
-        "line": 214
+        "line": 220
       },
       {
         "id": 8,
         "label": "patientId is not null",
         "kind": "decision",
-        "line": 222
+        "line": 228
       },
       {
         "id": 9,
         "label": "excludeId is not null",
         "kind": "decision",
-        "line": 222
+        "line": 228
       },
       {
         "id": 10,
         "label": "excludeId is not null",
         "kind": "decision",
-        "line": 222
+        "line": 228
       },
       {
         "id": 11,
         "label": "RETURN rows( sql`SELECT slot AS start_at,slot+make_interval(mins=>${duration}) AS end_at FROM doctor_hours h CROSS JOIN LATERAL generate_series((${dat",
         "kind": "action",
-        "line": 221
+        "line": 227
       },
       {
         "id": 12,
@@ -1777,7 +1794,7 @@
   {
     "name": "bookAppointment",
     "file": "src/lib/service.ts",
-    "line": 225,
+    "line": 231,
     "nodes": [
       {
         "id": 1,
@@ -1793,111 +1810,117 @@
       },
       {
         "id": 3,
-        "label": "const data = appointmentInput.parse(input);",
+        "label": "await requireRole(actor, \"front_desk\");",
         "kind": "action",
-        "line": 230
+        "line": 236
       },
       {
         "id": 4,
-        "label": "BEGIN transaction",
+        "label": "const data = appointmentInput.parse(input);",
         "kind": "action",
-        "line": 231
+        "line": 237
       },
       {
         "id": 5,
+        "label": "BEGIN transaction",
+        "kind": "action",
+        "line": 238
+      },
+      {
+        "id": 6,
         "label": "COMMIT transaction",
         "kind": "action",
         "line": 0
       },
       {
-        "id": 6,
-        "label": "const p = await found( await tx.select().from(patients).where(eq(patients.id, data.patientId)), );",
-        "kind": "action",
-        "line": 232
-      },
-      {
         "id": 7,
-        "label": "p.archived",
-        "kind": "decision",
-        "line": 235
-      },
-      {
-        "id": 8,
-        "label": "p.mergedInto",
-        "kind": "decision",
-        "line": 235
-      },
-      {
-        "id": 9,
-        "label": "RAISE new AppError(400, \"Choose an active patient record.\")",
-        "kind": "action",
-        "line": 236
-      },
-      {
-        "id": 10,
-        "label": "id",
-        "kind": "decision",
-        "line": 237
-      },
-      {
-        "id": 11,
-        "label": "idSchema.parse(id);",
-        "kind": "action",
-        "line": 238
-      },
-      {
-        "id": 12,
-        "label": "const { version } = z .object({ version: z.number().int().positive() }) .parse(input);",
+        "label": "const p = await found( await tx.select().from(patients).where(eq(patients.id, data.patientId)), );",
         "kind": "action",
         "line": 239
       },
       {
-        "id": 13,
-        "label": "const [a] = await tx .update(appointments) .set({ ...data, startAt: new Date(data.startAt), endAt: new Date(data.endAt), version: version + 1, }) .whe",
-        "kind": "action",
+        "id": 8,
+        "label": "p.archived",
+        "kind": "decision",
         "line": 242
       },
       {
-        "id": 14,
-        "label": "a",
+        "id": 9,
+        "label": "p.mergedInto",
         "kind": "decision",
-        "line": 258
+        "line": 242
+      },
+      {
+        "id": 10,
+        "label": "RAISE new AppError(400, \"Choose an active patient record.\")",
+        "kind": "action",
+        "line": 243
+      },
+      {
+        "id": 11,
+        "label": "id",
+        "kind": "decision",
+        "line": 244
+      },
+      {
+        "id": 12,
+        "label": "idSchema.parse(id);",
+        "kind": "action",
+        "line": 245
+      },
+      {
+        "id": 13,
+        "label": "const { version } = z .object({ version: z.number().int().positive() }) .parse(input);",
+        "kind": "action",
+        "line": 246
+      },
+      {
+        "id": 14,
+        "label": "const [a] = await tx .update(appointments) .set({ ...data, startAt: new Date(data.startAt), endAt: new Date(data.endAt), version: version + 1, }) .whe",
+        "kind": "action",
+        "line": 249
       },
       {
         "id": 15,
-        "label": "RAISE new AppError( 409, \"This appointment changed or has started. Reload the schedule.\", )",
-        "kind": "action",
-        "line": 259
+        "label": "a",
+        "kind": "decision",
+        "line": 265
       },
       {
         "id": 16,
-        "label": "await event(tx, actor, \"reschedule\", \"appointment\", id, { version });",
-        "kind": "action",
-        "line": 263
-      },
-      {
-        "id": 17,
-        "label": "RETURN a",
-        "kind": "action",
-        "line": 264
-      },
-      {
-        "id": 18,
-        "label": "const [a] = await tx .insert(appointments) .values({ ...data, startAt: new Date(data.startAt), endAt: new Date(data.endAt), }) .returning();",
+        "label": "RAISE new AppError( 409, \"This appointment changed or has started. Reload the schedule.\", )",
         "kind": "action",
         "line": 266
       },
       {
-        "id": 19,
-        "label": "await event(tx, actor, \"confirm\", \"appointment\", a.id);",
+        "id": 17,
+        "label": "await event(tx, actor, \"reschedule\", \"appointment\", id, { version });",
         "kind": "action",
-        "line": 274
+        "line": 270
+      },
+      {
+        "id": 18,
+        "label": "RETURN a",
+        "kind": "action",
+        "line": 271
+      },
+      {
+        "id": 19,
+        "label": "const [a] = await tx .insert(appointments) .values({ ...data, startAt: new Date(data.startAt), endAt: new Date(data.endAt), }) .returning();",
+        "kind": "action",
+        "line": 273
       },
       {
         "id": 20,
+        "label": "await event(tx, actor, \"confirm\", \"appointment\", a.id);",
+        "kind": "action",
+        "line": 281
+      },
+      {
+        "id": 21,
         "label": "RETURN a",
         "kind": "action",
-        "line": 275
+        "line": 282
       }
     ],
     "edges": [
@@ -1913,23 +1936,591 @@
       },
       {
         "from": 4,
-        "to": 6,
+        "to": 5,
         "label": ""
       },
       {
-        "from": 6,
+        "from": 5,
         "to": 7,
         "label": ""
       },
       {
         "from": 7,
         "to": 8,
+        "label": ""
+      },
+      {
+        "from": 8,
+        "to": 9,
         "label": "False"
       },
       {
-        "from": 7,
-        "to": 9,
+        "from": 8,
+        "to": 10,
         "label": "True"
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "label": "True"
+      },
+      {
+        "from": 10,
+        "to": 2,
+        "label": ""
+      },
+      {
+        "from": 9,
+        "to": 11,
+        "label": "False"
+      },
+      {
+        "from": 11,
+        "to": 12,
+        "label": "True"
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "label": ""
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "label": ""
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "label": ""
+      },
+      {
+        "from": 15,
+        "to": 16,
+        "label": "False"
+      },
+      {
+        "from": 16,
+        "to": 2,
+        "label": ""
+      },
+      {
+        "from": 15,
+        "to": 17,
+        "label": "True"
+      },
+      {
+        "from": 17,
+        "to": 18,
+        "label": ""
+      },
+      {
+        "from": 18,
+        "to": 6,
+        "label": ""
+      },
+      {
+        "from": 11,
+        "to": 19,
+        "label": "False"
+      },
+      {
+        "from": 19,
+        "to": 20,
+        "label": ""
+      },
+      {
+        "from": 20,
+        "to": 21,
+        "label": ""
+      },
+      {
+        "from": 21,
+        "to": 6,
+        "label": ""
+      },
+      {
+        "from": 6,
+        "to": 2,
+        "label": "Return"
+      }
+    ],
+    "predicates": 4,
+    "edgeNodeComplexity": 5,
+    "predicateComplexity": 5,
+    "syntacticBasisCandidates": [
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        10,
+        2
+      ],
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        2
+      ],
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        6,
+        2
+      ],
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        11,
+        19,
+        20,
+        21,
+        6,
+        2
+      ],
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        10,
+        2
+      ]
+    ],
+    "regionCount": 5,
+    "faceBoundaries": [
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        10,
+        9,
+        8,
+        7,
+        5,
+        4,
+        3
+      ],
+      [
+        2,
+        16,
+        15,
+        17,
+        18,
+        6
+      ],
+      [
+        2,
+        6,
+        21,
+        20,
+        19,
+        11,
+        9,
+        10
+      ],
+      [
+        2,
+        10,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      [
+        6,
+        18,
+        17,
+        15,
+        14,
+        13,
+        12,
+        11,
+        19,
+        20,
+        21
+      ]
+    ],
+    "parallelLensFaces": 0
+  },
+  {
+    "name": "appointmentStatus",
+    "file": "src/lib/service.ts",
+    "line": 285,
+    "nodes": [
+      {
+        "id": 1,
+        "label": "START",
+        "kind": "end",
+        "line": 0
+      },
+      {
+        "id": 2,
+        "label": "END",
+        "kind": "end",
+        "line": 0
+      },
+      {
+        "id": 3,
+        "label": "await requireRole(actor, \"front_desk\");",
+        "kind": "action",
+        "line": 290
+      },
+      {
+        "id": 4,
+        "label": "const { version, status } = z .object({ version: z.number().int(), status: z.enum([\"cancelled\", \"arrived\"]), }) .parse(input);",
+        "kind": "action",
+        "line": 291
+      },
+      {
+        "id": 5,
+        "label": "BEGIN transaction",
+        "kind": "action",
+        "line": 297
+      },
+      {
+        "id": 6,
+        "label": "COMMIT transaction",
+        "kind": "action",
+        "line": 0
+      },
+      {
+        "id": 7,
+        "label": "const [a] = await tx .update(appointments) .set({ status, version: version + 1 }) .where( and( eq(appointments.id, idSchema.parse(id)), eq(appointment",
+        "kind": "action",
+        "line": 298
+      },
+      {
+        "id": 8,
+        "label": "a",
+        "kind": "decision",
+        "line": 309
+      },
+      {
+        "id": 9,
+        "label": "RAISE new AppError( 409, \"This appointment changed or cannot enter that state.\", )",
+        "kind": "action",
+        "line": 310
+      },
+      {
+        "id": 10,
+        "label": "await event(tx, actor, status, \"appointment\", id);",
+        "kind": "action",
+        "line": 314
+      },
+      {
+        "id": 11,
+        "label": "RETURN a",
+        "kind": "action",
+        "line": 315
+      }
+    ],
+    "edges": [
+      {
+        "from": 1,
+        "to": 3,
+        "label": ""
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "label": ""
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "label": ""
+      },
+      {
+        "from": 5,
+        "to": 7,
+        "label": ""
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "label": ""
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "label": "False"
+      },
+      {
+        "from": 9,
+        "to": 2,
+        "label": ""
+      },
+      {
+        "from": 8,
+        "to": 10,
+        "label": "True"
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "label": ""
+      },
+      {
+        "from": 11,
+        "to": 6,
+        "label": ""
+      },
+      {
+        "from": 6,
+        "to": 2,
+        "label": "Return"
+      }
+    ],
+    "predicates": 1,
+    "edgeNodeComplexity": 2,
+    "predicateComplexity": 2,
+    "syntacticBasisCandidates": [
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        2
+      ],
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        10,
+        11,
+        6,
+        2
+      ]
+    ],
+    "regionCount": 2,
+    "faceBoundaries": [
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        10,
+        11,
+        6,
+        2,
+        9,
+        8,
+        7,
+        5,
+        4,
+        3
+      ],
+      [
+        2,
+        6,
+        11,
+        10,
+        8,
+        9
+      ]
+    ],
+    "parallelLensFaces": 0
+  },
+  {
+    "name": "startVisit",
+    "file": "src/lib/service.ts",
+    "line": 318,
+    "nodes": [
+      {
+        "id": 1,
+        "label": "START",
+        "kind": "end",
+        "line": 0
+      },
+      {
+        "id": 2,
+        "label": "END",
+        "kind": "end",
+        "line": 0
+      },
+      {
+        "id": 3,
+        "label": "await requireRole(actor, \"front_desk\");",
+        "kind": "action",
+        "line": 319
+      },
+      {
+        "id": 4,
+        "label": "const data = z .object({ patientId: idSchema, doctorId: idSchema, appointmentId: idSchema.optional(), }) .parse(input);",
+        "kind": "action",
+        "line": 320
+      },
+      {
+        "id": 5,
+        "label": "BEGIN transaction",
+        "kind": "action",
+        "line": 327
+      },
+      {
+        "id": 6,
+        "label": "COMMIT transaction",
+        "kind": "action",
+        "line": 0
+      },
+      {
+        "id": 7,
+        "label": "const p = await found( await tx.select().from(patients).where(eq(patients.id, data.patientId)), );",
+        "kind": "action",
+        "line": 328
+      },
+      {
+        "id": 8,
+        "label": "p.archived",
+        "kind": "decision",
+        "line": 331
+      },
+      {
+        "id": 9,
+        "label": "RAISE new AppError(400, \"This patient record is archived.\")",
+        "kind": "action",
+        "line": 331
+      },
+      {
+        "id": 10,
+        "label": "await found( await rows( sql`SELECT id FROM users WHERE id=${data.doctorId}::uuid AND active AND role='doctor'`, tx, ), \"Choose an active doctor.\", );",
+        "kind": "action",
+        "line": 332
+      },
+      {
+        "id": 11,
+        "label": "data.appointmentId",
+        "kind": "decision",
+        "line": 339
+      },
+      {
+        "id": 12,
+        "label": "const a = await found( await rows( sql`SELECT * FROM appointments WHERE id=${data.appointmentId}::uuid FOR UPDATE`, tx, ), );",
+        "kind": "action",
+        "line": 340
+      },
+      {
+        "id": 13,
+        "label": "a.patient_id !== data.patientId",
+        "kind": "decision",
+        "line": 347
+      },
+      {
+        "id": 14,
+        "label": "a.doctor_id !== data.doctorId",
+        "kind": "decision",
+        "line": 348
+      },
+      {
+        "id": 15,
+        "label": "[\"confirmed\", \"arrived\"].includes(String(a.status))",
+        "kind": "decision",
+        "line": 349
+      },
+      {
+        "id": 16,
+        "label": "RAISE new AppError( 400, \"Use a matching confirmed or arrived appointment.\", )",
+        "kind": "action",
+        "line": 351
+      },
+      {
+        "id": 17,
+        "label": "await tx .update(appointments) .set({ status: \"in_consultation\", version: Number(a.version) + 1 }) .where(eq(appointments.id, data.appointmentId));",
+        "kind": "action",
+        "line": 355
+      },
+      {
+        "id": 18,
+        "label": "const [v] = await tx.insert(visits).values(data).returning();",
+        "kind": "action",
+        "line": 360
+      },
+      {
+        "id": 19,
+        "label": "await event(tx, actor, \"start\", \"visit\", v.id);",
+        "kind": "action",
+        "line": 361
+      },
+      {
+        "id": 20,
+        "label": "RETURN v",
+        "kind": "action",
+        "line": 362
+      }
+    ],
+    "edges": [
+      {
+        "from": 1,
+        "to": 3,
+        "label": ""
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "label": ""
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "label": ""
+      },
+      {
+        "from": 5,
+        "to": 7,
+        "label": ""
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "label": ""
       },
       {
         "from": 8,
@@ -1949,12 +2540,12 @@
       {
         "from": 10,
         "to": 11,
-        "label": "True"
+        "label": ""
       },
       {
         "from": 11,
         "to": 12,
-        "label": ""
+        "label": "True"
       },
       {
         "from": 12,
@@ -1964,7 +2555,7 @@
       {
         "from": 13,
         "to": 14,
-        "label": ""
+        "label": "False"
       },
       {
         "from": 14,
@@ -1972,9 +2563,9 @@
         "label": "False"
       },
       {
-        "from": 15,
-        "to": 2,
-        "label": ""
+        "from": 13,
+        "to": 16,
+        "label": "True"
       },
       {
         "from": 14,
@@ -1982,17 +2573,27 @@
         "label": "True"
       },
       {
+        "from": 15,
+        "to": 16,
+        "label": "False"
+      },
+      {
         "from": 16,
-        "to": 17,
+        "to": 2,
         "label": ""
+      },
+      {
+        "from": 15,
+        "to": 17,
+        "label": "True"
       },
       {
         "from": 17,
-        "to": 5,
+        "to": 18,
         "label": ""
       },
       {
-        "from": 10,
+        "from": 11,
         "to": 18,
         "label": "False"
       },
@@ -2008,551 +2609,11 @@
       },
       {
         "from": 20,
-        "to": 5,
-        "label": ""
-      },
-      {
-        "from": 5,
-        "to": 2,
-        "label": "Return"
-      }
-    ],
-    "predicates": 4,
-    "edgeNodeComplexity": 5,
-    "predicateComplexity": 5,
-    "syntacticBasisCandidates": [
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        8,
-        9,
-        2
-      ],
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        8,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        2
-      ],
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        8,
-        10,
-        11,
-        12,
-        13,
-        14,
-        16,
-        17,
-        5,
-        2
-      ],
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        8,
-        10,
-        18,
-        19,
-        20,
-        5,
-        2
-      ],
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        9,
-        2
-      ]
-    ],
-    "regionCount": 5,
-    "faceBoundaries": [
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        9,
-        8,
-        7,
-        6,
-        4,
-        3
-      ],
-      [
-        2,
-        15,
-        14,
-        16,
-        17,
-        5
-      ],
-      [
-        2,
-        5,
-        20,
-        19,
-        18,
-        10,
-        8,
-        9
-      ],
-      [
-        2,
-        9,
-        7,
-        8,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15
-      ],
-      [
-        5,
-        17,
-        16,
-        14,
-        13,
-        12,
-        11,
-        10,
-        18,
-        19,
-        20
-      ]
-    ],
-    "parallelLensFaces": 0
-  },
-  {
-    "name": "appointmentStatus",
-    "file": "src/lib/service.ts",
-    "line": 278,
-    "nodes": [
-      {
-        "id": 1,
-        "label": "START",
-        "kind": "end",
-        "line": 0
-      },
-      {
-        "id": 2,
-        "label": "END",
-        "kind": "end",
-        "line": 0
-      },
-      {
-        "id": 3,
-        "label": "const { version, status } = z .object({ version: z.number().int(), status: z.enum([\"cancelled\", \"arrived\"]), }) .parse(input);",
-        "kind": "action",
-        "line": 283
-      },
-      {
-        "id": 4,
-        "label": "BEGIN transaction",
-        "kind": "action",
-        "line": 289
-      },
-      {
-        "id": 5,
-        "label": "COMMIT transaction",
-        "kind": "action",
-        "line": 0
-      },
-      {
-        "id": 6,
-        "label": "const [a] = await tx .update(appointments) .set({ status, version: version + 1 }) .where( and( eq(appointments.id, idSchema.parse(id)), eq(appointment",
-        "kind": "action",
-        "line": 290
-      },
-      {
-        "id": 7,
-        "label": "a",
-        "kind": "decision",
-        "line": 301
-      },
-      {
-        "id": 8,
-        "label": "RAISE new AppError( 409, \"This appointment changed or cannot enter that state.\", )",
-        "kind": "action",
-        "line": 302
-      },
-      {
-        "id": 9,
-        "label": "await event(tx, actor, status, \"appointment\", id);",
-        "kind": "action",
-        "line": 306
-      },
-      {
-        "id": 10,
-        "label": "RETURN a",
-        "kind": "action",
-        "line": 307
-      }
-    ],
-    "edges": [
-      {
-        "from": 1,
-        "to": 3,
-        "label": ""
-      },
-      {
-        "from": 3,
-        "to": 4,
-        "label": ""
-      },
-      {
-        "from": 4,
         "to": 6,
         "label": ""
       },
       {
         "from": 6,
-        "to": 7,
-        "label": ""
-      },
-      {
-        "from": 7,
-        "to": 8,
-        "label": "False"
-      },
-      {
-        "from": 8,
-        "to": 2,
-        "label": ""
-      },
-      {
-        "from": 7,
-        "to": 9,
-        "label": "True"
-      },
-      {
-        "from": 9,
-        "to": 10,
-        "label": ""
-      },
-      {
-        "from": 10,
-        "to": 5,
-        "label": ""
-      },
-      {
-        "from": 5,
-        "to": 2,
-        "label": "Return"
-      }
-    ],
-    "predicates": 1,
-    "edgeNodeComplexity": 2,
-    "predicateComplexity": 2,
-    "syntacticBasisCandidates": [
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        8,
-        2
-      ],
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        9,
-        10,
-        5,
-        2
-      ]
-    ],
-    "regionCount": 2,
-    "faceBoundaries": [
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        9,
-        10,
-        5,
-        2,
-        8,
-        7,
-        6,
-        4,
-        3
-      ],
-      [
-        2,
-        5,
-        10,
-        9,
-        7,
-        8
-      ]
-    ],
-    "parallelLensFaces": 0
-  },
-  {
-    "name": "startVisit",
-    "file": "src/lib/service.ts",
-    "line": 310,
-    "nodes": [
-      {
-        "id": 1,
-        "label": "START",
-        "kind": "end",
-        "line": 0
-      },
-      {
-        "id": 2,
-        "label": "END",
-        "kind": "end",
-        "line": 0
-      },
-      {
-        "id": 3,
-        "label": "const data = z .object({ patientId: idSchema, doctorId: idSchema, appointmentId: idSchema.optional(), }) .parse(input);",
-        "kind": "action",
-        "line": 311
-      },
-      {
-        "id": 4,
-        "label": "BEGIN transaction",
-        "kind": "action",
-        "line": 318
-      },
-      {
-        "id": 5,
-        "label": "COMMIT transaction",
-        "kind": "action",
-        "line": 0
-      },
-      {
-        "id": 6,
-        "label": "const p = await found( await tx.select().from(patients).where(eq(patients.id, data.patientId)), );",
-        "kind": "action",
-        "line": 319
-      },
-      {
-        "id": 7,
-        "label": "p.archived",
-        "kind": "decision",
-        "line": 322
-      },
-      {
-        "id": 8,
-        "label": "RAISE new AppError(400, \"This patient record is archived.\")",
-        "kind": "action",
-        "line": 322
-      },
-      {
-        "id": 9,
-        "label": "await found( await rows( sql`SELECT id FROM users WHERE id=${data.doctorId}::uuid AND active AND role='doctor'`, tx, ), \"Choose an active doctor.\", );",
-        "kind": "action",
-        "line": 323
-      },
-      {
-        "id": 10,
-        "label": "data.appointmentId",
-        "kind": "decision",
-        "line": 330
-      },
-      {
-        "id": 11,
-        "label": "const a = await found( await rows( sql`SELECT * FROM appointments WHERE id=${data.appointmentId}::uuid FOR UPDATE`, tx, ), );",
-        "kind": "action",
-        "line": 331
-      },
-      {
-        "id": 12,
-        "label": "a.patient_id !== data.patientId",
-        "kind": "decision",
-        "line": 338
-      },
-      {
-        "id": 13,
-        "label": "a.doctor_id !== data.doctorId",
-        "kind": "decision",
-        "line": 339
-      },
-      {
-        "id": 14,
-        "label": "[\"confirmed\", \"arrived\"].includes(String(a.status))",
-        "kind": "decision",
-        "line": 340
-      },
-      {
-        "id": 15,
-        "label": "RAISE new AppError( 400, \"Use a matching confirmed or arrived appointment.\", )",
-        "kind": "action",
-        "line": 342
-      },
-      {
-        "id": 16,
-        "label": "await tx .update(appointments) .set({ status: \"in_consultation\", version: Number(a.version) + 1 }) .where(eq(appointments.id, data.appointmentId));",
-        "kind": "action",
-        "line": 346
-      },
-      {
-        "id": 17,
-        "label": "const [v] = await tx.insert(visits).values(data).returning();",
-        "kind": "action",
-        "line": 351
-      },
-      {
-        "id": 18,
-        "label": "await event(tx, actor, \"start\", \"visit\", v.id);",
-        "kind": "action",
-        "line": 352
-      },
-      {
-        "id": 19,
-        "label": "RETURN v",
-        "kind": "action",
-        "line": 353
-      }
-    ],
-    "edges": [
-      {
-        "from": 1,
-        "to": 3,
-        "label": ""
-      },
-      {
-        "from": 3,
-        "to": 4,
-        "label": ""
-      },
-      {
-        "from": 4,
-        "to": 6,
-        "label": ""
-      },
-      {
-        "from": 6,
-        "to": 7,
-        "label": ""
-      },
-      {
-        "from": 7,
-        "to": 8,
-        "label": "True"
-      },
-      {
-        "from": 8,
-        "to": 2,
-        "label": ""
-      },
-      {
-        "from": 7,
-        "to": 9,
-        "label": "False"
-      },
-      {
-        "from": 9,
-        "to": 10,
-        "label": ""
-      },
-      {
-        "from": 10,
-        "to": 11,
-        "label": "True"
-      },
-      {
-        "from": 11,
-        "to": 12,
-        "label": ""
-      },
-      {
-        "from": 12,
-        "to": 13,
-        "label": "False"
-      },
-      {
-        "from": 13,
-        "to": 14,
-        "label": "False"
-      },
-      {
-        "from": 12,
-        "to": 15,
-        "label": "True"
-      },
-      {
-        "from": 13,
-        "to": 15,
-        "label": "True"
-      },
-      {
-        "from": 14,
-        "to": 15,
-        "label": "False"
-      },
-      {
-        "from": 15,
-        "to": 2,
-        "label": ""
-      },
-      {
-        "from": 14,
-        "to": 16,
-        "label": "True"
-      },
-      {
-        "from": 16,
-        "to": 17,
-        "label": ""
-      },
-      {
-        "from": 10,
-        "to": 17,
-        "label": "False"
-      },
-      {
-        "from": 17,
-        "to": 18,
-        "label": ""
-      },
-      {
-        "from": 18,
-        "to": 19,
-        "label": ""
-      },
-      {
-        "from": 19,
-        "to": 5,
-        "label": ""
-      },
-      {
-        "from": 5,
         "to": 2,
         "label": "Return"
       }
@@ -2565,84 +2626,90 @@
         1,
         3,
         4,
-        6,
+        5,
         7,
         8,
+        9,
         2
       ],
       [
         1,
         3,
         4,
-        6,
+        5,
         7,
-        9,
+        8,
         10,
         11,
         12,
         13,
         14,
         15,
+        16,
         2
       ],
       [
         1,
         3,
         4,
-        6,
+        5,
         7,
-        9,
+        8,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19,
+        20,
+        6,
+        2
+      ],
+      [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
         10,
         11,
         12,
         13,
         14,
         16,
-        17,
-        18,
-        19,
-        5,
         2
       ],
       [
         1,
         3,
         4,
-        6,
+        5,
         7,
-        9,
+        8,
         10,
         11,
         12,
         13,
-        15,
+        16,
         2
       ],
       [
         1,
         3,
         4,
-        6,
+        5,
         7,
-        9,
+        8,
         10,
         11,
-        12,
-        15,
-        2
-      ],
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        9,
-        10,
-        17,
         18,
         19,
-        5,
+        20,
+        6,
         2
       ]
     ],
@@ -2652,59 +2719,61 @@
         1,
         3,
         4,
-        6,
+        5,
         7,
-        9,
+        8,
         10,
         11,
         12,
-        15,
+        13,
+        16,
         2,
+        9,
         8,
         7,
-        6,
+        5,
         4,
         3
       ],
       [
         2,
-        15,
-        14,
         16,
+        15,
         17,
         18,
         19,
-        5
+        20,
+        6
       ],
       [
         2,
-        5,
+        6,
+        20,
         19,
         18,
-        17,
+        11,
         10,
-        9,
-        7,
-        8
+        8,
+        9
       ],
       [
-        10,
+        11,
+        18,
         17,
-        16,
+        15,
         14,
         13,
-        12,
-        11
-      ],
-      [
-        12,
-        13,
-        15
+        12
       ],
       [
         13,
         14,
-        15
+        16
+      ],
+      [
+        14,
+        15,
+        16
       ]
     ],
     "parallelLensFaces": 0
@@ -2712,7 +2781,7 @@
   {
     "name": "saveClinical",
     "file": "src/lib/service.ts",
-    "line": 356,
+    "line": 365,
     "nodes": [
       {
         "id": 1,
@@ -2730,25 +2799,25 @@
         "id": 3,
         "label": "await requireRole(actor);",
         "kind": "action",
-        "line": 357
+        "line": 366
       },
       {
         "id": 4,
         "label": "idSchema.parse(id);",
         "kind": "action",
-        "line": 358
+        "line": 367
       },
       {
         "id": 5,
         "label": "const data = clinicalInput.parse(input);",
         "kind": "action",
-        "line": 359
+        "line": 368
       },
       {
         "id": 6,
         "label": "BEGIN transaction",
         "kind": "action",
-        "line": 360
+        "line": 369
       },
       {
         "id": 7,
@@ -2760,121 +2829,121 @@
         "id": 8,
         "label": "const v = await found( await rows(sql`SELECT * FROM visits WHERE id=${id}::uuid FOR UPDATE`, tx), );",
         "kind": "action",
-        "line": 361
+        "line": 370
       },
       {
         "id": 9,
         "label": "Number(v.revision) !== data.expectedRevision",
         "kind": "decision",
-        "line": 364
+        "line": 373
       },
       {
         "id": 10,
         "label": "RAISE new AppError( 409, \"Another doctor saved a revision. Reload this visit.\", )",
         "kind": "action",
-        "line": 365
+        "line": 374
       },
       {
         "id": 11,
         "label": "const previous = await rows( sql`SELECT state FROM clinical_revisions WHERE visit_id=${id}::uuid ORDER BY revision DESC LIMIT 1`, tx, );",
         "kind": "action",
-        "line": 369
+        "line": 378
       },
       {
         "id": 12,
         "label": "previous[0]?.state === \"final\"",
         "kind": "decision",
-        "line": 374
+        "line": 383
       },
       {
         "id": 13,
         "label": "data.reason",
         "kind": "decision",
-        "line": 375
+        "line": 384
       },
       {
         "id": 14,
         "label": "data.state !== \"final\"",
         "kind": "decision",
-        "line": 375
+        "line": 384
       },
       {
         "id": 15,
         "label": "RAISE new AppError( 400, \"Add a correction reason and save a final correction.\", )",
         "kind": "action",
-        "line": 377
+        "line": 386
       },
       {
         "id": 16,
         "label": "const { expectedRevision, state, reason, ...content } = data;",
         "kind": "action",
-        "line": 381
+        "line": 390
       },
       {
         "id": 17,
         "label": "const revision = expectedRevision + 1;",
         "kind": "action",
-        "line": 382
+        "line": 391
       },
       {
         "id": 18,
         "label": "const [r] = await tx .insert(clinicalRevisions) .values({ visitId: id, revision, authorId: actor.id, state, reason, content, }) .returning();",
         "kind": "action",
-        "line": 383
+        "line": 392
       },
       {
         "id": 19,
         "label": "v.status === \"filed\"",
         "kind": "decision",
-        "line": 399
+        "line": 408
       },
       {
         "id": 20,
         "label": "state === \"final\"",
         "kind": "decision",
-        "line": 399
+        "line": 408
       },
       {
         "id": 21,
         "label": "await tx .update(visits) .set({ revision, status: v.status === \"filed\" ? \"filed\" : state === \"final\" ? \"ready\" : \"open\", }) .where(eq(visits.id, id));",
         "kind": "action",
-        "line": 394
+        "line": 403
       },
       {
         "id": 22,
         "label": "state === \"final\"",
         "kind": "decision",
-        "line": 402
+        "line": 411
       },
       {
         "id": 23,
         "label": "More items in content.medications",
         "kind": "decision",
-        "line": 403
+        "line": 412
       },
       {
         "id": 24,
         "label": "await tx.execute( sql`INSERT INTO prescriptions(visit_id,revision_id,patient_id,content) VALUES(${id},${r.id},${v.patient_id}::uuid,${JSON.stringify(m",
         "kind": "action",
-        "line": 404
+        "line": 413
       },
       {
         "id": 25,
         "label": "previous[0]?.state === \"final\"",
         "kind": "decision",
-        "line": 410
+        "line": 419
       },
       {
         "id": 26,
         "label": "await event( tx, actor, previous[0]?.state === \"final\" ? \"correct\" : \"save_revision\", \"visit\", id, { revision, state, reason }, );",
         "kind": "action",
-        "line": 407
+        "line": 416
       },
       {
         "id": 27,
         "label": "RETURN r",
         "kind": "action",
-        "line": 415
+        "line": 424
       },
       {
         "id": 28,
@@ -3409,7 +3478,7 @@
   {
     "name": "fileVisit",
     "file": "src/lib/service.ts",
-    "line": 418,
+    "line": 427,
     "nodes": [
       {
         "id": 1,
@@ -3425,93 +3494,99 @@
       },
       {
         "id": 3,
-        "label": "const { expectedRevision } = z .object({ expectedRevision: z.number().int().positive() }) .parse(input);",
+        "label": "await requireRole(actor, \"front_desk\");",
         "kind": "action",
-        "line": 419
+        "line": 428
       },
       {
         "id": 4,
-        "label": "BEGIN transaction",
+        "label": "const { expectedRevision } = z .object({ expectedRevision: z.number().int().positive() }) .parse(input);",
         "kind": "action",
-        "line": 422
+        "line": 429
       },
       {
         "id": 5,
+        "label": "BEGIN transaction",
+        "kind": "action",
+        "line": 432
+      },
+      {
+        "id": 6,
         "label": "COMMIT transaction",
         "kind": "action",
         "line": 0
       },
       {
-        "id": 6,
+        "id": 7,
         "label": "const v = await found( await rows( sql`SELECT * FROM visits WHERE id=${idSchema.parse(id)}::uuid FOR UPDATE`, tx, ), );",
         "kind": "action",
-        "line": 423
-      },
-      {
-        "id": 7,
-        "label": "const c = await rows( sql`SELECT content,state FROM clinical_revisions WHERE visit_id=${id}::uuid AND revision=${expectedRevision}`, tx, );",
-        "kind": "action",
-        "line": 429
+        "line": 433
       },
       {
         "id": 8,
-        "label": "v.status !== \"ready\"",
-        "kind": "decision",
-        "line": 434
-      },
-      {
-        "id": 9,
-        "label": "Number(v.revision) !== expectedRevision",
-        "kind": "decision",
-        "line": 435
-      },
-      {
-        "id": 10,
-        "label": "c[0]?.state !== \"final\"",
-        "kind": "decision",
-        "line": 436
-      },
-      {
-        "id": 11,
-        "label": "(c[0].content as Row)?.diagnosis",
-        "kind": "decision",
-        "line": 437
-      },
-      {
-        "id": 12,
-        "label": "RAISE new AppError( 409, \"The doctor must complete the diagnosis before this visit can be filed.\", )",
+        "label": "const c = await rows( sql`SELECT content,state FROM clinical_revisions WHERE visit_id=${id}::uuid AND revision=${expectedRevision}`, tx, );",
         "kind": "action",
         "line": 439
       },
       {
-        "id": 13,
-        "label": "await tx .update(visits) .set({ status: \"filed\", filedAt: new Date() }) .where(eq(visits.id, id));",
-        "kind": "action",
-        "line": 443
+        "id": 9,
+        "label": "v.status !== \"ready\"",
+        "kind": "decision",
+        "line": 444
       },
       {
-        "id": 14,
-        "label": "v.appointment_id",
+        "id": 10,
+        "label": "Number(v.revision) !== expectedRevision",
+        "kind": "decision",
+        "line": 445
+      },
+      {
+        "id": 11,
+        "label": "c[0]?.state !== \"final\"",
+        "kind": "decision",
+        "line": 446
+      },
+      {
+        "id": 12,
+        "label": "(c[0].content as Row)?.diagnosis",
         "kind": "decision",
         "line": 447
       },
       {
-        "id": 15,
-        "label": "await tx.execute( sql`UPDATE appointments SET status='completed',version=version+1 WHERE id=${v.appointment_id}::uuid`, );",
+        "id": 13,
+        "label": "RAISE new AppError( 409, \"The doctor must complete the diagnosis before this visit can be filed.\", )",
         "kind": "action",
-        "line": 448
+        "line": 449
+      },
+      {
+        "id": 14,
+        "label": "await tx .update(visits) .set({ status: \"filed\", filedAt: new Date() }) .where(eq(visits.id, id));",
+        "kind": "action",
+        "line": 453
+      },
+      {
+        "id": 15,
+        "label": "v.appointment_id",
+        "kind": "decision",
+        "line": 457
       },
       {
         "id": 16,
-        "label": "await event(tx, actor, \"file\", \"visit\", id);",
+        "label": "await tx.execute( sql`UPDATE appointments SET status='completed',version=version+1 WHERE id=${v.appointment_id}::uuid`, );",
         "kind": "action",
-        "line": 451
+        "line": 458
       },
       {
         "id": 17,
+        "label": "await event(tx, actor, \"file\", \"visit\", id);",
+        "kind": "action",
+        "line": 461
+      },
+      {
+        "id": 18,
         "label": "RETURN { filed: true }",
         "kind": "action",
-        "line": 452
+        "line": 462
       }
     ],
     "edges": [
@@ -3527,11 +3602,11 @@
       },
       {
         "from": 4,
-        "to": 6,
+        "to": 5,
         "label": ""
       },
       {
-        "from": 6,
+        "from": 5,
         "to": 7,
         "label": ""
       },
@@ -3543,7 +3618,7 @@
       {
         "from": 8,
         "to": 9,
-        "label": "False"
+        "label": ""
       },
       {
         "from": 9,
@@ -3556,29 +3631,19 @@
         "label": "False"
       },
       {
-        "from": 8,
-        "to": 12,
-        "label": "True"
-      },
-      {
-        "from": 9,
-        "to": 12,
-        "label": "True"
-      },
-      {
-        "from": 10,
-        "to": 12,
-        "label": "True"
-      },
-      {
         "from": 11,
         "to": 12,
         "label": "False"
       },
       {
-        "from": 12,
-        "to": 2,
-        "label": ""
+        "from": 9,
+        "to": 13,
+        "label": "True"
+      },
+      {
+        "from": 10,
+        "to": 13,
+        "label": "True"
       },
       {
         "from": 11,
@@ -3586,24 +3651,29 @@
         "label": "True"
       },
       {
+        "from": 12,
+        "to": 13,
+        "label": "False"
+      },
+      {
         "from": 13,
-        "to": 14,
+        "to": 2,
         "label": ""
+      },
+      {
+        "from": 12,
+        "to": 14,
+        "label": "True"
       },
       {
         "from": 14,
         "to": 15,
-        "label": "True"
+        "label": ""
       },
       {
         "from": 15,
         "to": 16,
-        "label": ""
-      },
-      {
-        "from": 14,
-        "to": 16,
-        "label": "False"
+        "label": "True"
       },
       {
         "from": 16,
@@ -3611,12 +3681,22 @@
         "label": ""
       },
       {
+        "from": 15,
+        "to": 17,
+        "label": "False"
+      },
+      {
         "from": 17,
-        "to": 5,
+        "to": 18,
         "label": ""
       },
       {
-        "from": 5,
+        "from": 18,
+        "to": 6,
+        "label": ""
+      },
+      {
+        "from": 6,
         "to": 2,
         "label": "Return"
       }
@@ -3629,81 +3709,87 @@
         1,
         3,
         4,
-        6,
+        5,
         7,
         8,
         9,
         10,
         11,
         12,
+        13,
         2
       ],
       [
         1,
         3,
         4,
-        6,
+        5,
         7,
         8,
         9,
         10,
         11,
-        13,
+        12,
         14,
         15,
         16,
         17,
-        5,
+        18,
+        6,
         2
       ],
       [
         1,
         3,
         4,
+        5,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        17,
+        18,
         6,
+        2
+      ],
+      [
+        1,
+        3,
+        4,
+        5,
         7,
         8,
         9,
         10,
         11,
         13,
-        14,
-        16,
-        17,
-        5,
         2
       ],
       [
         1,
         3,
         4,
-        6,
+        5,
         7,
         8,
         9,
         10,
-        12,
+        13,
         2
       ],
       [
         1,
         3,
         4,
-        6,
+        5,
         7,
         8,
         9,
-        12,
-        2
-      ],
-      [
-        1,
-        3,
-        4,
-        6,
-        7,
-        8,
-        12,
+        13,
         2
       ]
     ],
@@ -3713,55 +3799,57 @@
         1,
         3,
         4,
-        6,
+        5,
         7,
         8,
+        9,
+        13,
         12,
         11,
         10,
         9,
         8,
         7,
-        6,
+        5,
         4,
         3
       ],
       [
         2,
-        5,
+        6,
+        18,
         17,
         16,
         15,
         14,
-        13,
-        11,
-        12
+        12,
+        13
       ],
       [
         2,
-        12,
-        10,
-        11,
         13,
-        14,
-        16,
-        17,
-        5
-      ],
-      [
-        8,
-        9,
-        12
-      ],
-      [
-        9,
-        10,
-        12
-      ],
-      [
+        11,
+        12,
         14,
         15,
-        16
+        17,
+        18,
+        6
+      ],
+      [
+        9,
+        10,
+        13
+      ],
+      [
+        10,
+        11,
+        13
+      ],
+      [
+        15,
+        16,
+        17
       ]
     ],
     "parallelLensFaces": 0
@@ -3769,7 +3857,7 @@
   {
     "name": "saveInvoice",
     "file": "src/lib/service.ts",
-    "line": 455,
+    "line": 465,
     "nodes": [
       {
         "id": 1,
@@ -3785,51 +3873,57 @@
       },
       {
         "id": 3,
-        "label": "const data = invoiceInput.parse(input);",
+        "label": "await requireRole(actor, \"front_desk\");",
         "kind": "action",
-        "line": 456
+        "line": 466
       },
       {
         "id": 4,
-        "label": "const totalCents = invoiceTotal(data.lines);",
+        "label": "const data = invoiceInput.parse(input);",
         "kind": "action",
-        "line": 457
+        "line": 467
       },
       {
         "id": 5,
-        "label": "BEGIN transaction",
+        "label": "const totalCents = invoiceTotal(data.lines);",
         "kind": "action",
-        "line": 458
+        "line": 468
       },
       {
         "id": 6,
+        "label": "BEGIN transaction",
+        "kind": "action",
+        "line": 469
+      },
+      {
+        "id": 7,
         "label": "COMMIT transaction",
         "kind": "action",
         "line": 0
       },
       {
-        "id": 7,
+        "id": 8,
         "label": "await found( await tx .select({ id: patients.id }) .from(patients) .where(eq(patients.id, data.patientId)), );",
         "kind": "action",
-        "line": 459
-      },
-      {
-        "id": 8,
-        "label": "const [i] = await tx .insert(invoices) .values({ ...data, totalCents, number: sql`DEFAULT` }) .returning();",
-        "kind": "action",
-        "line": 465
+        "line": 470
       },
       {
         "id": 9,
-        "label": "await event(tx, actor, \"create\", \"invoice\", i.id);",
+        "label": "const [i] = await tx .insert(invoices) .values({ ...data, totalCents, number: sql`DEFAULT` }) .returning();",
         "kind": "action",
-        "line": 469
+        "line": 476
       },
       {
         "id": 10,
+        "label": "await event(tx, actor, \"create\", \"invoice\", i.id);",
+        "kind": "action",
+        "line": 480
+      },
+      {
+        "id": 11,
         "label": "RETURN i",
         "kind": "action",
-        "line": 470
+        "line": 481
       }
     ],
     "edges": [
@@ -3850,11 +3944,11 @@
       },
       {
         "from": 5,
-        "to": 7,
+        "to": 6,
         "label": ""
       },
       {
-        "from": 7,
+        "from": 6,
         "to": 8,
         "label": ""
       },
@@ -3870,11 +3964,16 @@
       },
       {
         "from": 10,
-        "to": 6,
+        "to": 11,
         "label": ""
       },
       {
-        "from": 6,
+        "from": 11,
+        "to": 7,
+        "label": ""
+      },
+      {
+        "from": 7,
         "to": 2,
         "label": "Return"
       }
@@ -3888,11 +3987,12 @@
         3,
         4,
         5,
-        7,
+        6,
         8,
         9,
         10,
-        6,
+        11,
+        7,
         2
       ]
     ],
@@ -3903,17 +4003,19 @@
         3,
         4,
         5,
-        7,
+        6,
         8,
         9,
         10,
-        6,
+        11,
+        7,
         2,
-        6,
+        7,
+        11,
         10,
         9,
         8,
-        7,
+        6,
         5,
         4,
         3
@@ -3924,7 +4026,7 @@
   {
     "name": "setInvoiceStatus",
     "file": "src/lib/service.ts",
-    "line": 473,
+    "line": 484,
     "nodes": [
       {
         "id": 1,
@@ -3940,78 +4042,84 @@
       },
       {
         "id": 3,
-        "label": "const { version, status, reason } = z .object({ version: z.number().int(), status: z.enum([\"issued\", \"void\"]), reason: z.string().trim().max(500).defa",
+        "label": "await requireRole(actor, \"front_desk\");",
         "kind": "action",
-        "line": 478
+        "line": 489
       },
       {
         "id": 4,
-        "label": "status === \"void\"",
-        "kind": "decision",
-        "line": 485
+        "label": "const { version, status, reason } = z .object({ version: z.number().int(), status: z.enum([\"issued\", \"void\"]), reason: z.string().trim().max(500).defa",
+        "kind": "action",
+        "line": 490
       },
       {
         "id": 5,
-        "label": "reason",
+        "label": "status === \"void\"",
         "kind": "decision",
-        "line": 485
+        "line": 497
       },
       {
         "id": 6,
-        "label": "RAISE new AppError(400, \"Enter a reason to void the invoice.\")",
-        "kind": "action",
-        "line": 486
+        "label": "reason",
+        "kind": "decision",
+        "line": 497
       },
       {
         "id": 7,
-        "label": "BEGIN transaction",
+        "label": "RAISE new AppError(400, \"Enter a reason to void the invoice.\")",
         "kind": "action",
-        "line": 487
+        "line": 498
       },
       {
         "id": 8,
+        "label": "BEGIN transaction",
+        "kind": "action",
+        "line": 499
+      },
+      {
+        "id": 9,
         "label": "COMMIT transaction",
         "kind": "action",
         "line": 0
       },
       {
-        "id": 9,
+        "id": 10,
         "label": "status === \"issued\"",
         "kind": "decision",
-        "line": 495
-      },
-      {
-        "id": 10,
-        "label": "const [i] = await tx .update(invoices) .set({ status, reason, version: version + 1 }) .where( and( eq(invoices.id, idSchema.parse(id)), eq(invoices.ve",
-        "kind": "action",
-        "line": 488
+        "line": 507
       },
       {
         "id": 11,
-        "label": "i",
-        "kind": "decision",
-        "line": 499
-      },
-      {
-        "id": 12,
-        "label": "RAISE new AppError( 409, \"This invoice changed or cannot enter that state.\", )",
+        "label": "const [i] = await tx .update(invoices) .set({ status, reason, version: version + 1 }) .where( and( eq(invoices.id, idSchema.parse(id)), eq(invoices.ve",
         "kind": "action",
         "line": 500
       },
       {
+        "id": 12,
+        "label": "i",
+        "kind": "decision",
+        "line": 511
+      },
+      {
         "id": 13,
-        "label": "await event(tx, actor, status, \"invoice\", id, { reason });",
+        "label": "RAISE new AppError( 409, \"This invoice changed or cannot enter that state.\", )",
         "kind": "action",
-        "line": 504
+        "line": 512
       },
       {
         "id": 14,
-        "label": "RETURN i",
+        "label": "await event(tx, actor, status, \"invoice\", id, { reason });",
         "kind": "action",
-        "line": 505
+        "line": 516
       },
       {
         "id": 15,
+        "label": "RETURN i",
+        "kind": "action",
+        "line": 517
+      },
+      {
+        "id": 16,
         "label": "Follow False branch",
         "kind": "action",
         "line": 0
@@ -4031,81 +4139,86 @@
       {
         "from": 4,
         "to": 5,
-        "label": "True"
+        "label": ""
       },
       {
         "from": 5,
         "to": 6,
-        "label": "False"
+        "label": "True"
       },
       {
         "from": 6,
+        "to": 7,
+        "label": "False"
+      },
+      {
+        "from": 7,
         "to": 2,
         "label": ""
       },
       {
-        "from": 4,
-        "to": 7,
+        "from": 5,
+        "to": 8,
         "label": "False"
       },
       {
-        "from": 5,
-        "to": 7,
+        "from": 6,
+        "to": 8,
         "label": "True"
       },
       {
-        "from": 7,
+        "from": 8,
+        "to": 10,
+        "label": ""
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "label": "True"
+      },
+      {
+        "from": 10,
+        "to": 16,
+        "label": "False"
+      },
+      {
+        "from": 11,
+        "to": 12,
+        "label": ""
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "label": "False"
+      },
+      {
+        "from": 13,
+        "to": 2,
+        "label": ""
+      },
+      {
+        "from": 12,
+        "to": 14,
+        "label": "True"
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "label": ""
+      },
+      {
+        "from": 15,
         "to": 9,
         "label": ""
       },
       {
         "from": 9,
-        "to": 10,
-        "label": "True"
-      },
-      {
-        "from": 9,
-        "to": 15,
-        "label": "False"
-      },
-      {
-        "from": 10,
-        "to": 11,
-        "label": ""
-      },
-      {
-        "from": 11,
-        "to": 12,
-        "label": "False"
-      },
-      {
-        "from": 12,
-        "to": 2,
-        "label": ""
-      },
-      {
-        "from": 11,
-        "to": 13,
-        "label": "True"
-      },
-      {
-        "from": 13,
-        "to": 14,
-        "label": ""
-      },
-      {
-        "from": 14,
-        "to": 8,
-        "label": ""
-      },
-      {
-        "from": 8,
         "to": 2,
         "label": "Return"
       },
       {
-        "from": 15,
-        "to": 10,
+        "from": 16,
+        "to": 11,
         "label": ""
       }
     ],
@@ -4119,6 +4232,7 @@
         4,
         5,
         6,
+        7,
         2
       ],
       [
@@ -4126,25 +4240,12 @@
         3,
         4,
         5,
-        7,
-        9,
-        10,
-        11,
-        12,
-        2
-      ],
-      [
-        1,
-        3,
-        4,
-        5,
-        7,
-        9,
-        10,
-        11,
-        13,
-        14,
+        6,
         8,
+        10,
+        11,
+        12,
+        13,
         2
       ],
       [
@@ -4152,23 +4253,40 @@
         3,
         4,
         5,
-        7,
-        9,
-        15,
+        6,
+        8,
         10,
         11,
         12,
+        14,
+        15,
+        9,
         2
       ],
       [
         1,
         3,
         4,
-        7,
-        9,
+        5,
+        6,
+        8,
+        10,
+        16,
+        11,
+        12,
+        13,
+        2
+      ],
+      [
+        1,
+        3,
+        4,
+        5,
+        8,
         10,
         11,
         12,
+        13,
         2
       ]
     ],
@@ -4178,12 +4296,14 @@
         1,
         3,
         4,
-        7,
-        9,
+        5,
+        8,
         10,
         11,
         12,
+        13,
         2,
+        7,
         6,
         5,
         4,
@@ -4191,34 +4311,34 @@
       ],
       [
         2,
-        12,
-        11,
         13,
+        12,
         14,
-        8
+        15,
+        9
       ],
       [
         2,
-        8,
-        14,
-        13,
-        11,
-        10,
-        15,
         9,
-        7,
-        5,
-        6
-      ],
-      [
-        4,
-        5,
+        15,
+        14,
+        12,
+        11,
+        16,
+        10,
+        8,
+        6,
         7
       ],
       [
-        9,
-        15,
-        10
+        5,
+        6,
+        8
+      ],
+      [
+        10,
+        16,
+        11
       ]
     ],
     "parallelLensFaces": 0
@@ -4226,7 +4346,7 @@
   {
     "name": "invoiceList",
     "file": "src/lib/service.ts",
-    "line": 508,
+    "line": 520,
     "nodes": [
       {
         "id": 1,
@@ -4242,15 +4362,21 @@
       },
       {
         "id": 3,
-        "label": "await event(db, actor, \"view\", \"invoice_list\");",
+        "label": "await requireRole(actor, \"front_desk\");",
         "kind": "action",
-        "line": 509
+        "line": 521
       },
       {
         "id": 4,
+        "label": "await event(db, actor, \"view\", \"invoice_list\");",
+        "kind": "action",
+        "line": 522
+      },
+      {
+        "id": 5,
         "label": "RETURN rows( sql`SELECT i.*,p.first_name,p.last_name,p.mrn FROM invoices i JOIN patients p ON p.id=i.patient_id ORDER BY i.created_at DESC LIMIT 100`,",
         "kind": "action",
-        "line": 510
+        "line": 523
       }
     ],
     "edges": [
@@ -4266,6 +4392,11 @@
       },
       {
         "from": 4,
+        "to": 5,
+        "label": ""
+      },
+      {
+        "from": 5,
         "to": 2,
         "label": ""
       }
@@ -4278,6 +4409,7 @@
         1,
         3,
         4,
+        5,
         2
       ]
     ],
@@ -4287,7 +4419,9 @@
         1,
         3,
         4,
+        5,
         2,
+        5,
         4,
         3
       ]
@@ -4297,7 +4431,7 @@
   {
     "name": "manageUser",
     "file": "src/lib/service.ts",
-    "line": 514,
+    "line": 527,
     "nodes": [
       {
         "id": 1,
@@ -4313,33 +4447,33 @@
       },
       {
         "id": 3,
-        "label": "await requireRole(actor);",
+        "label": "await requireRole(actor, \"operator\");",
         "kind": "action",
-        "line": 515
+        "line": 529
       },
       {
         "id": 4,
         "label": "id",
         "kind": "decision",
-        "line": 516
+        "line": 530
       },
       {
         "id": 5,
         "label": "const d = userInput.parse(input);",
         "kind": "action",
-        "line": 517
+        "line": 531
       },
       {
         "id": 6,
         "label": "const passwordHash = await hashPassword(d.password);",
         "kind": "action",
-        "line": 518
+        "line": 532
       },
       {
         "id": 7,
         "label": "BEGIN transaction",
         "kind": "action",
-        "line": 519
+        "line": 533
       },
       {
         "id": 8,
@@ -4351,55 +4485,55 @@
         "id": 9,
         "label": "const [u] = await tx .insert(users) .values({ username: d.username, name: d.name, role: d.role, passwordHash, }) .returning({ id: users.id });",
         "kind": "action",
-        "line": 520
+        "line": 534
       },
       {
         "id": 10,
         "label": "d.role === \"doctor\"",
         "kind": "decision",
-        "line": 529
+        "line": 543
       },
       {
         "id": 11,
         "label": "await tx.execute( sql`INSERT INTO doctor_hours(doctor_id,weekday,start_min,end_min) SELECT ${u.id}::uuid,n,480,1020 FROM generate_series(1,5)n`, );",
         "kind": "action",
-        "line": 530
+        "line": 544
       },
       {
         "id": 12,
         "label": "await event(tx, actor, \"create\", \"user\", u.id);",
         "kind": "action",
-        "line": 533
+        "line": 547
       },
       {
         "id": 13,
         "label": "RETURN u",
         "kind": "action",
-        "line": 534
+        "line": 548
       },
       {
         "id": 14,
         "label": "const d = z .object({ role: z.enum([\"doctor\", \"front_desk\"]), active: z.boolean(), version: z.number().int(), password: z.string().min(12).max(128).op",
         "kind": "action",
-        "line": 537
+        "line": 551
       },
       {
         "id": 15,
         "label": "d.password",
         "kind": "decision",
-        "line": 545
+        "line": 559
       },
       {
         "id": 16,
         "label": "const passwordHash = d.password ? await hashPassword(d.password) : undefined;",
         "kind": "action",
-        "line": 545
+        "line": 559
       },
       {
         "id": 17,
         "label": "BEGIN transaction",
         "kind": "action",
-        "line": 546
+        "line": 560
       },
       {
         "id": 18,
@@ -4411,79 +4545,79 @@
         "id": 19,
         "label": "const old = await found( await tx .select() .from(users) .where(eq(users.id, idSchema.parse(id))), );",
         "kind": "action",
-        "line": 547
+        "line": 561
       },
       {
         "id": 20,
         "label": "old.protected",
         "kind": "decision",
-        "line": 553
+        "line": 567
       },
       {
         "id": 21,
         "label": "process.env.DEMO_MODE === \"true\"",
         "kind": "decision",
-        "line": 553
+        "line": 567
       },
       {
         "id": 22,
         "label": "RAISE new AppError(403, \"The supplied demo accounts cannot be changed.\")",
         "kind": "action",
-        "line": 554
+        "line": 568
       },
       {
         "id": 23,
         "label": "passwordHash",
         "kind": "decision",
-        "line": 561
+        "line": 575
       },
       {
         "id": 24,
         "label": "const [u] = await tx .update(users) .set({ role: d.role, active: d.active, version: d.version + 1, ...(passwordHash ? { passwordHash } : {}), }) .wher",
         "kind": "action",
-        "line": 555
+        "line": 569
       },
       {
         "id": 25,
         "label": "u",
         "kind": "decision",
-        "line": 565
+        "line": 579
       },
       {
         "id": 26,
         "label": "RAISE new AppError(409, \"This account changed. Reload the list.\")",
         "kind": "action",
-        "line": 565
+        "line": 579
       },
       {
         "id": 27,
         "label": "d.role === \"doctor\"",
         "kind": "decision",
-        "line": 566
+        "line": 580
       },
       {
         "id": 28,
         "label": "await tx.execute( sql`INSERT INTO doctor_hours(doctor_id,weekday,start_min,end_min) SELECT ${id}::uuid,n,480,1020 FROM generate_series(1,5)n ON CONFLI",
         "kind": "action",
-        "line": 567
+        "line": 581
       },
       {
         "id": 29,
         "label": "await tx.delete(sessions).where(eq(sessions.userId, id));",
         "kind": "action",
-        "line": 570
+        "line": 584
       },
       {
         "id": 30,
         "label": "await event(tx, actor, \"update\", \"user\", id);",
         "kind": "action",
-        "line": 571
+        "line": 585
       },
       {
         "id": 31,
         "label": "RETURN u",
         "kind": "action",
-        "line": 572
+        "line": 586
       },
       {
         "id": 32,
@@ -4963,7 +5097,7 @@
   {
     "name": "changePassword",
     "file": "src/lib/service.ts",
-    "line": 575,
+    "line": 589,
     "nodes": [
       {
         "id": 1,
@@ -4981,61 +5115,61 @@
         "id": 3,
         "label": "const { currentPassword, password } = z .object({ currentPassword: z.string().max(128), password: z.string().min(12).max(128), }) .parse(input);",
         "kind": "action",
-        "line": 576
+        "line": 590
       },
       {
         "id": 4,
         "label": "actor.protected",
         "kind": "decision",
-        "line": 582
+        "line": 596
       },
       {
         "id": 5,
         "label": "process.env.DEMO_MODE === \"true\"",
         "kind": "decision",
-        "line": 582
+        "line": 596
       },
       {
         "id": 6,
         "label": "RAISE new AppError(403, \"The supplied demo password cannot be changed.\")",
         "kind": "action",
-        "line": 583
+        "line": 597
       },
       {
         "id": 7,
         "label": "const [u] = await db.select().from(users).where(eq(users.id, actor.id));",
         "kind": "action",
-        "line": 584
+        "line": 598
       },
       {
         "id": 8,
         "label": "const { verify } = await import(\"@node-rs/argon2\");",
         "kind": "action",
-        "line": 585
+        "line": 599
       },
       {
         "id": 9,
         "label": "await verify(u.passwordHash, currentPassword)",
         "kind": "decision",
-        "line": 586
+        "line": 600
       },
       {
         "id": 10,
         "label": "RAISE new AppError(400, \"The current password is incorrect.\")",
         "kind": "action",
-        "line": 587
+        "line": 601
       },
       {
         "id": 11,
         "label": "const passwordHash = await hashPassword(password);",
         "kind": "action",
-        "line": 588
+        "line": 602
       },
       {
         "id": 12,
         "label": "BEGIN transaction",
         "kind": "action",
-        "line": 589
+        "line": 603
       },
       {
         "id": 13,
@@ -5047,25 +5181,25 @@
         "id": 14,
         "label": "await tx .update(users) .set({ passwordHash, version: u.version + 1 }) .where(eq(users.id, actor.id));",
         "kind": "action",
-        "line": 590
+        "line": 604
       },
       {
         "id": 15,
         "label": "await tx.delete(sessions).where(eq(sessions.userId, actor.id));",
         "kind": "action",
-        "line": 594
+        "line": 608
       },
       {
         "id": 16,
         "label": "await event(tx, actor, \"password_change\", \"user\", actor.id);",
         "kind": "action",
-        "line": 595
+        "line": 609
       },
       {
         "id": 17,
         "label": "RETURN { logout: true }",
         "kind": "action",
-        "line": 597
+        "line": 611
       }
     ],
     "edges": [
@@ -5270,7 +5404,7 @@
   {
     "name": "dashboard",
     "file": "src/lib/service.ts",
-    "line": 599,
+    "line": 613,
     "nodes": [
       {
         "id": 1,
@@ -5288,7 +5422,7 @@
         "id": 3,
         "label": "BEGIN transaction",
         "kind": "action",
-        "line": 600
+        "line": 614
       },
       {
         "id": 4,
@@ -5300,31 +5434,43 @@
         "id": 5,
         "label": "await event(tx, actor, \"view\", \"dashboard\");",
         "kind": "action",
-        "line": 601
+        "line": 615
       },
       {
         "id": 6,
         "label": "const counts = await rows( sql`SELECT (SELECT count(*) FROM patients WHERE NOT archived) AS patients,(SELECT count(*) FROM appointments WHERE status I",
         "kind": "action",
-        "line": 602
+        "line": 616
       },
       {
         "id": 7,
         "label": "const ready = await rows( sql`SELECT v.id,v.revision,v.status,v.patient_id,p.first_name,p.last_name,p.mrn FROM visits v JOIN patients p ON p.id=v.pati",
         "kind": "action",
-        "line": 606
+        "line": 620
       },
       {
         "id": 8,
         "label": "const reminders = await rows( sql`SELECT r.id,a.start_at,p.first_name,p.last_name,p.mrn FROM reminders r JOIN appointments a ON a.id=r.appointment_id ",
         "kind": "action",
-        "line": 610
+        "line": 624
       },
       {
         "id": 9,
-        "label": "RETURN { counts: counts[0], ready, reminders }",
+        "label": "actor.role === \"doctor\"",
+        "kind": "decision",
+        "line": 630
+      },
+      {
+        "id": 10,
+        "label": "RETURN { counts: actor.role === \"doctor\" ? { appointments: counts[0].appointments } : counts[0], ready, reminders, }",
         "kind": "action",
-        "line": 614
+        "line": 628
+      },
+      {
+        "id": 11,
+        "label": "Follow False branch",
+        "kind": "action",
+        "line": 0
       }
     ],
     "edges": [
@@ -5360,6 +5506,16 @@
       },
       {
         "from": 9,
+        "to": 10,
+        "label": "True"
+      },
+      {
+        "from": 9,
+        "to": 11,
+        "label": "False"
+      },
+      {
+        "from": 10,
         "to": 4,
         "label": ""
       },
@@ -5367,11 +5523,16 @@
         "from": 4,
         "to": 2,
         "label": "Return"
+      },
+      {
+        "from": 11,
+        "to": 10,
+        "label": ""
       }
     ],
-    "predicates": 0,
-    "edgeNodeComplexity": 1,
-    "predicateComplexity": 1,
+    "predicates": 1,
+    "edgeNodeComplexity": 2,
+    "predicateComplexity": 2,
     "syntacticBasisCandidates": [
       [
         1,
@@ -5381,11 +5542,25 @@
         7,
         8,
         9,
+        10,
+        4,
+        2
+      ],
+      [
+        1,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        10,
         4,
         2
       ]
     ],
-    "regionCount": 1,
+    "regionCount": 2,
     "faceBoundaries": [
       [
         1,
@@ -5395,15 +5570,23 @@
         7,
         8,
         9,
-        4,
-        2,
-        4,
+        11,
+        10,
         9,
         8,
         7,
         6,
         5,
         3
+      ],
+      [
+        2,
+        4,
+        10,
+        11,
+        9,
+        10,
+        4
       ]
     ],
     "parallelLensFaces": 0
@@ -5411,7 +5594,7 @@
   {
     "name": "reportData",
     "file": "src/lib/service.ts",
-    "line": 617,
+    "line": 638,
     "nodes": [
       {
         "id": 1,
@@ -5429,133 +5612,151 @@
         "id": 3,
         "label": "[ \"schedule\", \"attendance\", \"invoice\", \"history\", \"prescription\", \"certificate\", \"summary\", \"visits\", ].includes(type)",
         "kind": "decision",
-        "line": 619
+        "line": 640
       },
       {
         "id": 4,
         "label": "RAISE new AppError(404, \"The report was not found.\")",
         "kind": "action",
-        "line": 630
+        "line": 651
       },
       {
         "id": 5,
         "label": "[\"history\", \"prescription\", \"certificate\", \"summary\"].includes(type)",
         "kind": "decision",
-        "line": 631
+        "line": 652
       },
       {
         "id": 6,
         "label": "await requireRole(actor);",
         "kind": "action",
-        "line": 632
+        "line": 653
       },
       {
         "id": 7,
         "label": "type === \"schedule\"",
         "kind": "decision",
-        "line": 633
+        "line": 654
       },
       {
         "id": 8,
         "label": "RETURN { type, appointments: await schedule(actor, id) }",
         "kind": "action",
-        "line": 634
+        "line": 655
       },
       {
         "id": 9,
         "label": "type === \"visits\"",
         "kind": "decision",
-        "line": 635
-      },
-      {
-        "id": 10,
-        "label": "await event(db, actor, \"export\", \"visit_counts\");",
-        "kind": "action",
-        "line": 636
-      },
-      {
-        "id": 11,
-        "label": "RETURN { type, counts: await rows( sql`SELECT (visit_at AT TIME ZONE 'America/Jamaica')::date AS day,count(*) AS visits,count(*) FILTER(WHERE status='",
-        "kind": "action",
-        "line": 637
-      },
-      {
-        "id": 12,
-        "label": "idSchema.parse(id);",
-        "kind": "action",
-        "line": 644
-      },
-      {
-        "id": 13,
-        "label": "await event(db, actor, \"export\", type, id);",
-        "kind": "action",
-        "line": 645
-      },
-      {
-        "id": 14,
-        "label": "type === \"invoice\"",
-        "kind": "decision",
-        "line": 646
-      },
-      {
-        "id": 15,
-        "label": "RETURN { type, invoice: await found( await rows( sql`SELECT i.*,p.first_name,p.last_name,p.mrn,p.address FROM invoices i JOIN patients p ON p.id=i.pat",
-        "kind": "action",
-        "line": 647
-      },
-      {
-        "id": 16,
-        "label": "type === \"history\"",
-        "kind": "decision",
-        "line": 655
-      },
-      {
-        "id": 17,
-        "label": "RETURN { type, ...(await patientDetail(actor, id)) }",
-        "kind": "action",
-        "line": 655
-      },
-      {
-        "id": 18,
-        "label": "const v = await found( await rows( sql`SELECT v.*,p.first_name,p.last_name,p.mrn,u.name AS doctor_name FROM visits v JOIN patients p ON p.id=v.patient",
-        "kind": "action",
         "line": 656
       },
       {
-        "id": 19,
-        "label": "type === \"attendance\"",
+        "id": 10,
+        "label": "await requireRole(actor, \"front_desk\");",
+        "kind": "action",
+        "line": 657
+      },
+      {
+        "id": 11,
+        "label": "await event(db, actor, \"export\", \"visit_counts\");",
+        "kind": "action",
+        "line": 658
+      },
+      {
+        "id": 12,
+        "label": "RETURN { type, counts: await rows( sql`SELECT (visit_at AT TIME ZONE 'America/Jamaica')::date AS day,count(*) AS visits,count(*) FILTER(WHERE status='",
+        "kind": "action",
+        "line": 659
+      },
+      {
+        "id": 13,
+        "label": "[\"invoice\", \"attendance\", \"visits\"].includes(type)",
         "kind": "decision",
-        "line": 661
+        "line": 666
+      },
+      {
+        "id": 14,
+        "label": "await requireRole(actor, \"front_desk\");",
+        "kind": "action",
+        "line": 667
+      },
+      {
+        "id": 15,
+        "label": "idSchema.parse(id);",
+        "kind": "action",
+        "line": 668
+      },
+      {
+        "id": 16,
+        "label": "await event(db, actor, \"export\", type, id);",
+        "kind": "action",
+        "line": 669
+      },
+      {
+        "id": 17,
+        "label": "type === \"invoice\"",
+        "kind": "decision",
+        "line": 670
+      },
+      {
+        "id": 18,
+        "label": "RETURN { type, invoice: await found( await rows( sql`SELECT i.*,p.first_name,p.last_name,p.mrn,p.address FROM invoices i JOIN patients p ON p.id=i.pat",
+        "kind": "action",
+        "line": 671
+      },
+      {
+        "id": 19,
+        "label": "type === \"history\"",
+        "kind": "decision",
+        "line": 679
       },
       {
         "id": 20,
-        "label": "RETURN { type, visit: { id: v.id, mrn: v.mrn, first_name: v.first_name, last_name: v.last_name, visit_at: v.visit_at, doctor_name: v.doctor_name, stat",
+        "label": "RETURN { type, ...(await patientDetail(actor, id)) }",
         "kind": "action",
-        "line": 662
+        "line": 679
       },
       {
         "id": 21,
-        "label": "const c = await found( await rows( sql`SELECT content,state,revision,created_at FROM clinical_revisions WHERE visit_id=${id}::uuid ORDER BY revision D",
+        "label": "const v = await found( await rows( sql`SELECT v.*,p.first_name,p.last_name,p.mrn,u.name AS doctor_name FROM visits v JOIN patients p ON p.id=v.patient",
         "kind": "action",
-        "line": 674
-      },
-      {
-        "id": 22,
-        "label": "c.state !== \"final\"",
-        "kind": "decision",
         "line": 680
       },
       {
+        "id": 22,
+        "label": "type === \"attendance\"",
+        "kind": "decision",
+        "line": 685
+      },
+      {
         "id": 23,
-        "label": "RAISE new AppError( 400, \"Complete the clinical entry before you print this document.\", )",
+        "label": "RETURN { type, visit: { id: v.id, mrn: v.mrn, first_name: v.first_name, last_name: v.last_name, visit_at: v.visit_at, doctor_name: v.doctor_name, stat",
         "kind": "action",
-        "line": 681
+        "line": 686
       },
       {
         "id": 24,
+        "label": "const c = await found( await rows( sql`SELECT content,state,revision,created_at FROM clinical_revisions WHERE visit_id=${id}::uuid ORDER BY revision D",
+        "kind": "action",
+        "line": 698
+      },
+      {
+        "id": 25,
+        "label": "c.state !== \"final\"",
+        "kind": "decision",
+        "line": 704
+      },
+      {
+        "id": 26,
+        "label": "RAISE new AppError( 400, \"Complete the clinical entry before you print this document.\", )",
+        "kind": "action",
+        "line": 705
+      },
+      {
+        "id": 27,
         "label": "RETURN { type, visit: v, clinical: c }",
         "kind": "action",
-        "line": 685
+        "line": 709
       }
     ],
     "edges": [
@@ -5621,58 +5822,58 @@
       },
       {
         "from": 11,
+        "to": 12,
+        "label": ""
+      },
+      {
+        "from": 12,
         "to": 2,
         "label": ""
       },
       {
         "from": 9,
-        "to": 12,
-        "label": "False"
-      },
-      {
-        "from": 12,
         "to": 13,
-        "label": ""
+        "label": "False"
       },
       {
         "from": 13,
         "to": 14,
-        "label": ""
+        "label": "True"
       },
       {
         "from": 14,
         "to": 15,
-        "label": "True"
-      },
-      {
-        "from": 15,
-        "to": 2,
         "label": ""
       },
       {
-        "from": 14,
-        "to": 16,
+        "from": 13,
+        "to": 15,
         "label": "False"
+      },
+      {
+        "from": 15,
+        "to": 16,
+        "label": ""
       },
       {
         "from": 16,
         "to": 17,
-        "label": "True"
+        "label": ""
       },
       {
         "from": 17,
+        "to": 18,
+        "label": "True"
+      },
+      {
+        "from": 18,
         "to": 2,
         "label": ""
       },
       {
-        "from": 16,
-        "to": 18,
-        "label": "False"
-      },
-      {
-        "from": 18,
+        "from": 17,
         "to": 19,
-        "label": ""
+        "label": "False"
       },
       {
         "from": 19,
@@ -5711,13 +5912,33 @@
       },
       {
         "from": 24,
+        "to": 25,
+        "label": ""
+      },
+      {
+        "from": 25,
+        "to": 26,
+        "label": "True"
+      },
+      {
+        "from": 26,
+        "to": 2,
+        "label": ""
+      },
+      {
+        "from": 25,
+        "to": 27,
+        "label": "False"
+      },
+      {
+        "from": 27,
         "to": 2,
         "label": ""
       }
     ],
-    "predicates": 8,
-    "edgeNodeComplexity": 9,
-    "predicateComplexity": 9,
+    "predicates": 9,
+    "edgeNodeComplexity": 10,
+    "predicateComplexity": 10,
     "syntacticBasisCandidates": [
       [
         1,
@@ -5743,6 +5964,7 @@
         9,
         10,
         11,
+        12,
         2
       ],
       [
@@ -5752,24 +5974,12 @@
         6,
         7,
         9,
-        12,
         13,
         14,
         15,
-        2
-      ],
-      [
-        1,
-        3,
-        5,
-        6,
-        7,
-        9,
-        12,
-        13,
-        14,
         16,
         17,
+        18,
         2
       ],
       [
@@ -5779,11 +5989,11 @@
         6,
         7,
         9,
-        12,
         13,
         14,
+        15,
         16,
-        18,
+        17,
         19,
         20,
         2
@@ -5795,11 +6005,11 @@
         6,
         7,
         9,
-        12,
         13,
         14,
+        15,
         16,
-        18,
+        17,
         19,
         21,
         22,
@@ -5813,15 +6023,51 @@
         6,
         7,
         9,
-        12,
         13,
         14,
+        15,
         16,
-        18,
+        17,
         19,
         21,
         22,
         24,
+        25,
+        26,
+        2
+      ],
+      [
+        1,
+        3,
+        5,
+        6,
+        7,
+        9,
+        13,
+        14,
+        15,
+        16,
+        17,
+        19,
+        21,
+        22,
+        24,
+        25,
+        27,
+        2
+      ],
+      [
+        1,
+        3,
+        5,
+        6,
+        7,
+        9,
+        13,
+        15,
+        16,
+        17,
+        18,
         2
       ],
       [
@@ -5833,7 +6079,7 @@
         2
       ]
     ],
-    "regionCount": 9,
+    "regionCount": 10,
     "faceBoundaries": [
       [
         1,
@@ -5850,18 +6096,20 @@
         8,
         7,
         9,
-        12,
         13,
-        14,
+        15,
         16,
-        18,
+        17,
         19,
         21,
         22,
-        24
+        24,
+        25,
+        27
       ],
       [
         2,
+        12,
         11,
         10,
         9,
@@ -5873,28 +6121,23 @@
       ],
       [
         2,
+        18,
+        17,
+        16,
         15,
         14,
         13,
-        12,
         9,
         10,
-        11
-      ],
-      [
-        2,
-        17,
-        16,
-        14,
-        15
+        11,
+        12
       ],
       [
         2,
         20,
         19,
-        18,
-        16,
-        17
+        17,
+        18
       ],
       [
         2,
@@ -5906,14 +6149,27 @@
       ],
       [
         2,
+        26,
+        25,
         24,
         22,
         23
       ],
       [
+        2,
+        27,
+        25,
+        26
+      ],
+      [
         5,
         6,
         7
+      ],
+      [
+        13,
+        14,
+        15
       ]
     ],
     "parallelLensFaces": 0

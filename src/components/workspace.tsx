@@ -607,8 +607,8 @@ function PatientForm({
             maxLength={500}
           />
           <span className="field-help">
-            Use this only when the primary record cannot be identified. A doctor
-            must review it.
+            Use this only when the primary record cannot be identified. The
+            receptionist must review it.
           </span>
         </label>
       </div>
@@ -999,6 +999,8 @@ export default function Workspace({
   const page = segments[1] || "overview";
   const patientId = page === "patients" ? segments[2] : undefined;
   const doctor = actor.role === "doctor";
+  const reception = actor.role === "front_desk";
+  const operator = false;
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -1147,12 +1149,16 @@ export default function Workspace({
     { id: "overview", label: "Today", icon: LayoutDashboard },
     { id: "patients", label: "Patients", icon: Users },
     { id: "appointments", label: "Appointments", icon: CalendarDays },
-    ...(doctor ? [{ id: "documents", label: "Documents", icon: Files }] : []),
-    { id: "invoices", label: "Invoices", icon: ReceiptText },
-    { id: "reports", label: "Reports", icon: ChartNoAxesCombined },
+    { id: "documents", label: "Documents", icon: Files },
+    ...(reception
+      ? [{ id: "invoices", label: "Invoices", icon: ReceiptText }]
+      : []),
+    ...(reception
+      ? [{ id: "reports", label: "Reports", icon: ChartNoAxesCombined }]
+      : []),
   ];
   const admin = [
-    ...(doctor
+    ...(operator
       ? [
           { id: "accounts", label: "Staff accounts", icon: Users },
           { id: "audit", label: "Audit history", icon: ShieldCheck },
@@ -1229,23 +1235,25 @@ export default function Workspace({
                     <Status value={a.status} />
                   </td>
                   <td>
-                    <button
-                      className="icon-button"
-                      aria-label={
-                        "Manage appointment for " +
-                        a.firstName +
-                        " " +
-                        a.lastName
-                      }
-                      onClick={() =>
-                        setModal({
-                          kind: "appointment-actions",
-                          appointment: a,
-                        })
-                      }
-                    >
-                      <MoreHorizontal size={18} />
-                    </button>
+                    {reception && (
+                      <button
+                        className="icon-button"
+                        aria-label={
+                          "Manage appointment for " +
+                          a.firstName +
+                          " " +
+                          a.lastName
+                        }
+                        onClick={() =>
+                          setModal({
+                            kind: "appointment-actions",
+                            appointment: a,
+                          })
+                        }
+                      >
+                        <MoreHorizontal size={18} />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -1259,7 +1267,9 @@ export default function Workspace({
       </>
     ) : (
       <Empty title="No appointments on this date.">
-        Choose another date or book a visit.
+        {doctor
+          ? "Choose another date or ask reception to prepare a visit."
+          : "Choose another date or book a visit."}
       </Empty>
     );
   }
@@ -1323,7 +1333,7 @@ export default function Workspace({
             </span>
             <div>
               <strong>{actor.name}</strong>
-              <small>{doctor ? "Doctor" : "Front desk"}</small>
+              <small>{doctor ? "Doctor" : "Receptionist"}</small>
             </div>
             <button
               className="text-button"
@@ -1363,22 +1373,26 @@ export default function Workspace({
                 year: "numeric",
               })}
             </span>
-            <button
-              className="button primary"
-              onClick={() =>
-                setModal({ kind: "appointment", patient: current })
-              }
-            >
-              <Plus size={16} />
-              Book appointment
-            </button>
+            {reception && (
+              <button
+                className="button primary"
+                onClick={() =>
+                  setModal({ kind: "appointment", patient: current })
+                }
+              >
+                <Plus size={16} />
+                Book appointment
+              </button>
+            )}
           </div>
         </div>
         <main id="main-content" className="workspace-content" tabIndex={-1}>
           <div className="demo-banner">
             <ShieldCheck size={14} />
             <span>Fictional practice / Use fictional data only</span>
-            <span>{doctor ? "Doctor workspace" : "Front desk workspace"}</span>
+            <span>
+              {doctor ? "Doctor workspace" : "Receptionist workspace"}
+            </span>
           </div>
           <div className="page-heading">
             <div>
@@ -1394,7 +1408,9 @@ export default function Workspace({
                     ? "One record. A clear history."
                     : (
                         {
-                          patients: "Find a record or register a new patient.",
+                          patients: doctor
+                            ? "Find a patient and review clinical history."
+                            : "Find a record or register a new patient.",
                           appointments:
                             "Plan the day and keep each visit on track.",
                           documents:
@@ -1412,7 +1428,7 @@ export default function Workspace({
               </p>
             </div>
             <div className="heading-actions">
-              {page === "patients" && !patientId && (
+              {page === "patients" && !patientId && reception && (
                 <button
                   className="button primary"
                   onClick={() => setModal({ kind: "patient" })}
@@ -1421,7 +1437,7 @@ export default function Workspace({
                   Register patient
                 </button>
               )}
-              {patientId && current && (
+              {patientId && current && reception && (
                 <button
                   className="button"
                   onClick={() =>
@@ -1431,7 +1447,7 @@ export default function Workspace({
                   Edit details
                 </button>
               )}
-              {page === "documents" && (
+              {page === "documents" && reception && (
                 <button
                   className="button primary"
                   onClick={() => setModal({ kind: "document" })}
@@ -1440,7 +1456,7 @@ export default function Workspace({
                   Add report
                 </button>
               )}
-              {page === "invoices" && (
+              {page === "invoices" && !reception && (
                 <button
                   className="button primary"
                   onClick={() => setModal({ kind: "invoice" })}
@@ -1449,7 +1465,7 @@ export default function Workspace({
                   New invoice
                 </button>
               )}
-              {page === "accounts" && doctor && (
+              {page === "accounts" && operator && (
                 <button
                   className="button primary"
                   onClick={() => setModal({ kind: "user" })}
@@ -1478,46 +1494,48 @@ export default function Workspace({
             <>
               {page === "overview" && dashboard && (
                 <>
-                  <section
-                    className="summary-strip"
-                    aria-label="Practice totals"
-                  >
-                    {[
-                      {
-                        label: "Today's appointments",
-                        value: dashboard.counts.appointments,
-                        note: "Confirmed, arrived, or in consultation",
-                        icon: CalendarDays,
-                      },
-                      {
-                        label: "Active patients",
-                        value: dashboard.counts.patients,
-                        note: "Registered in the practice",
-                        icon: Users,
-                      },
-                      {
-                        label: "Ready to file",
-                        value: dashboard.counts.ready,
-                        note: "Clinical entries completed",
-                        icon: ClipboardList,
-                      },
-                      {
-                        label: "Filed visits",
-                        value: dashboard.counts.filed,
-                        note: "Recorded in the visit logbook",
-                        icon: Check,
-                      },
-                    ].map((s) => (
-                      <div className="summary-stat" key={s.label}>
-                        <span>
-                          {s.label}
-                          <s.icon size={16} strokeWidth={1.5} />
-                        </span>
-                        <strong>{s.value}</strong>
-                        <small>{s.note}</small>
-                      </div>
-                    ))}
-                  </section>
+                  {reception && (
+                    <section
+                      className="summary-strip"
+                      aria-label="Practice totals"
+                    >
+                      {[
+                        {
+                          label: "Today's appointments",
+                          value: dashboard.counts.appointments,
+                          note: "Confirmed, arrived, or in consultation",
+                          icon: CalendarDays,
+                        },
+                        {
+                          label: "Active patients",
+                          value: dashboard.counts.patients,
+                          note: "Registered in the practice",
+                          icon: Users,
+                        },
+                        {
+                          label: "Ready to file",
+                          value: dashboard.counts.ready,
+                          note: "Clinical entries completed",
+                          icon: ClipboardList,
+                        },
+                        {
+                          label: "Filed visits",
+                          value: dashboard.counts.filed,
+                          note: "Recorded in the visit logbook",
+                          icon: Check,
+                        },
+                      ].map((s) => (
+                        <div className="summary-stat" key={s.label}>
+                          <span>
+                            {s.label}
+                            <s.icon size={16} strokeWidth={1.5} />
+                          </span>
+                          <strong>{s.value}</strong>
+                          <small>{s.note}</small>
+                        </div>
+                      ))}
+                    </section>
+                  )}
                   <div className="dashboard-grid">
                     <Panel
                       title="Patient worklist"
@@ -1538,35 +1556,57 @@ export default function Workspace({
                     <div className="stack">
                       <Panel title="Quick actions">
                         <div className="quick-links">
-                          <button onClick={() => setModal({ kind: "patient" })}>
-                            <UserPlus />
-                            <span>
-                              Register a patient
-                              <small>Start a new patient record</small>
-                            </span>
-                            <ArrowUpRight size={15} />
-                          </button>
-                          <button onClick={() => setModal({ kind: "visit" })}>
-                            <Stethoscope />
-                            <span>
-                              Start a walk-in visit
-                              <small>Prepare the patient for the doctor</small>
-                            </span>
-                            <ArrowUpRight size={15} />
-                          </button>
-                          <Link href="/app/reports">
+                          {reception && (
+                            <button
+                              onClick={() => setModal({ kind: "patient" })}
+                            >
+                              <UserPlus />
+                              <span>
+                                Register a patient
+                                <small>Start a new patient record</small>
+                              </span>
+                              <ArrowUpRight size={15} />
+                            </button>
+                          )}
+                          {reception && (
+                            <button onClick={() => setModal({ kind: "visit" })}>
+                              <Stethoscope />
+                              <span>
+                                Start a walk-in visit
+                                <small>
+                                  Prepare the patient for the doctor
+                                </small>
+                              </span>
+                              <ArrowUpRight size={15} />
+                            </button>
+                          )}
+                          <Link
+                            href={doctor ? "/app/patients" : "/app/reports"}
+                          >
                             <FileText />
                             <span>
-                              Open reports
-                              <small>Patient and practice outputs</small>
+                              {doctor ? "Find a patient" : "Open reports"}
+                              <small>
+                                {doctor
+                                  ? "Open clinical history"
+                                  : "Patient and practice outputs"}
+                              </small>
                             </span>
                             <ArrowUpRight size={15} />
                           </Link>
                         </div>
                       </Panel>
                       <Panel
-                        title="Ready to file"
-                        subtitle="Completed by the doctor"
+                        title={
+                          doctor
+                            ? "Completed clinical entries"
+                            : "Ready to file"
+                        }
+                        subtitle={
+                          doctor
+                            ? "Waiting for receptionist filing"
+                            : "Completed by the doctor"
+                        }
                       >
                         {dashboard.ready.length ? (
                           dashboard.ready.map((v) => (
@@ -1576,21 +1616,23 @@ export default function Workspace({
                                   <Person patient={v} sub={v.mrn} />
                                 </Link>
                               </div>
-                              <button
-                                className="text-button"
-                                onClick={() =>
-                                  act(
-                                    () =>
-                                      api(`visits/${v.id}/file`, {
-                                        expectedRevision: v.revision,
-                                      }),
-                                    "Visit filed in the logbook.",
-                                  )
-                                }
-                              >
-                                <Check size={13} />
-                                File visit
-                              </button>
+                              {reception && (
+                                <button
+                                  className="text-button"
+                                  onClick={() =>
+                                    act(
+                                      () =>
+                                        api(`visits/${v.id}/file`, {
+                                          expectedRevision: v.revision,
+                                        }),
+                                      "Visit filed in the logbook.",
+                                    )
+                                  }
+                                >
+                                  <Check size={13} />
+                                  File visit
+                                </button>
+                              )}
                             </div>
                           ))
                         ) : (
@@ -1764,7 +1806,8 @@ export default function Workspace({
                       {[
                         "Overview",
                         "Visits",
-                        ...(doctor ? ["Clinical record", "Documents"] : []),
+                        ...(doctor ? ["Clinical record"] : []),
+                        "Documents",
                       ].map((t) => (
                         <button
                           key={t}
@@ -1843,7 +1886,7 @@ export default function Workspace({
                             {current.provisionalReason && (
                               <div className="note-box">
                                 Provisional record: {current.provisionalReason}
-                                {doctor && !current.mergedInto && (
+                                {reception && !current.mergedInto && (
                                   <button
                                     className="text-button"
                                     onClick={() =>
@@ -1875,39 +1918,48 @@ export default function Workspace({
                         <div className="stack">
                           <Panel title="Record actions">
                             <div className="quick-links">
-                              <button
-                                onClick={() =>
-                                  setModal({ kind: "visit", patient: current })
-                                }
-                              >
-                                <Stethoscope />
-                                <span>Start walk-in visit</span>
-                                <Plus size={14} />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  setModal({
-                                    kind: "appointment",
-                                    patient: current,
-                                  })
-                                }
-                              >
-                                <CalendarPlus />
-                                <span>Book appointment</span>
-                                <Plus size={14} />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  setModal({
-                                    kind: "invoice",
-                                    patient: current,
-                                  })
-                                }
-                              >
-                                <ReceiptText />
-                                <span>Create invoice</span>
-                                <Plus size={14} />
-                              </button>
+                              {reception && (
+                                <button
+                                  onClick={() =>
+                                    setModal({
+                                      kind: "visit",
+                                      patient: current,
+                                    })
+                                  }
+                                >
+                                  <Stethoscope />
+                                  <span>Start walk-in visit</span>
+                                  <Plus size={14} />
+                                </button>
+                              )}
+                              {reception && (
+                                <button
+                                  onClick={() =>
+                                    setModal({
+                                      kind: "appointment",
+                                      patient: current,
+                                    })
+                                  }
+                                >
+                                  <CalendarPlus />
+                                  <span>Book appointment</span>
+                                  <Plus size={14} />
+                                </button>
+                              )}
+                              {reception && (
+                                <button
+                                  onClick={() =>
+                                    setModal({
+                                      kind: "invoice",
+                                      patient: current,
+                                    })
+                                  }
+                                >
+                                  <ReceiptText />
+                                  <span>Create invoice</span>
+                                  <Plus size={14} />
+                                </button>
+                              )}
                               {doctor && (
                                 <a
                                   href={`/print/history?id=${current.id}`}
@@ -1919,7 +1971,7 @@ export default function Workspace({
                                   <ArrowUpRight size={14} />
                                 </a>
                               )}
-                              {doctor && (
+                              {reception && (
                                 <button
                                   onClick={() =>
                                     setModal({
@@ -1992,7 +2044,7 @@ export default function Workspace({
                                       Open clinical record
                                     </button>
                                   )}
-                                  {v.status === "ready" && (
+                                  {v.status === "ready" && reception && (
                                     <button
                                       className="button primary"
                                       onClick={() =>
@@ -2009,11 +2061,13 @@ export default function Workspace({
                                       File visit
                                     </button>
                                   )}
-                                  <PrintLink
-                                    type="attendance"
-                                    id={v.id}
-                                    label="Attendance slip"
-                                  />
+                                  {reception && (
+                                    <PrintLink
+                                      type="attendance"
+                                      id={v.id}
+                                      label="Attendance slip"
+                                    />
+                                  )}
                                   {doctor && v.revision > 0 && (
                                     <>
                                       <PrintLink
@@ -2142,33 +2196,39 @@ export default function Workspace({
                         )}
                       </div>
                     )}
-                    {tab === "Documents" && doctor && (
+                    {tab === "Documents" && (
                       <div style={{ marginTop: 24 }}>
                         <div
                           className="action-row"
                           style={{ marginBottom: 20 }}
                         >
-                          <button
-                            className="button primary"
-                            onClick={() =>
-                              setModal({ kind: "document", patient: current })
-                            }
-                          >
-                            <Plus size={16} />
-                            Add report
-                          </button>
+                          {reception && (
+                            <button
+                              className="button primary"
+                              onClick={() =>
+                                setModal({ kind: "document", patient: current })
+                              }
+                            >
+                              <Plus size={16} />
+                              Add report
+                            </button>
+                          )}
                           <a className="button" href="/api/sample-report">
                             Download sample report
                           </a>
                         </div>
                         <DocumentCards
                           docs={detail.documents || []}
-                          onReplace={(d) =>
-                            setModal({
-                              kind: "document",
-                              patient: current,
-                              replacesId: d.id,
-                            })
+                          canRetrieve={doctor}
+                          onReplace={
+                            doctor
+                              ? undefined
+                              : (d) =>
+                                  setModal({
+                                    kind: "document",
+                                    patient: current,
+                                    replacesId: d.id,
+                                  })
                           }
                         />
                       </div>
@@ -2176,20 +2236,22 @@ export default function Workspace({
                   </div>
                 </>
               )}
-              {page === "documents" && doctor && (
+              {page === "documents" && (
                 <>
                   <p className="note-box" style={{ marginBottom: 24 }}>
-                    Reports are private. In the public demo, upload only the{" "}
+                    {doctor
+                      ? "Reports are private. The receptionist uploads documents. The doctor retrieves their contents. For a demonstration, use the "
+                      : "Reports are private. In the public demo, upload only the "}{" "}
                     <a className="text-button" href="/api/sample-report">
                       supplied sample report
                       <Download size={13} />
                     </a>
                     .
                   </p>
-                  <DocumentCards docs={docs} />
+                  <DocumentCards docs={docs} canRetrieve={doctor} />
                 </>
               )}
-              {page === "invoices" && (
+              {page === "invoices" && reception && (
                 <Panel>
                   {invoices.length ? (
                     <div className="table-wrap">
@@ -2263,7 +2325,7 @@ export default function Workspace({
                   )}
                 </Panel>
               )}
-              {page === "reports" && (
+              {page === "reports" && reception && (
                 <>
                   <div className="report-grid">
                     <Panel>
@@ -2362,7 +2424,7 @@ export default function Workspace({
                   </p>
                 </>
               )}
-              {page === "accounts" && doctor && (
+              {page === "accounts" && operator && (
                 <Panel>
                   <div className="table-wrap">
                     <table>
@@ -2381,7 +2443,7 @@ export default function Workspace({
                             <td>{u.name}</td>
                             <td>{u.username}</td>
                             <td>
-                              {u.role === "doctor" ? "Doctor" : "Front desk"}
+                              {u.role === "doctor" ? "Doctor" : "Receptionist"}
                             </td>
                             <td>
                               <Status
@@ -2405,7 +2467,7 @@ export default function Workspace({
                   </div>
                 </Panel>
               )}
-              {page === "audit" && doctor && (
+              {page === "audit" && operator && (
                 <Panel
                   title="Access and change history"
                   subtitle="Latest 200 events. Clinical revisions are stored with each visit."
@@ -2498,7 +2560,7 @@ export default function Workspace({
                         </tbody>
                       </table>
                     </div>
-                    {doctor && (
+                    {reception && (
                       <div className="panel-body action-row">
                         <button
                           className="button"
@@ -2521,7 +2583,7 @@ export default function Workspace({
                           {dateText(b.startAt)} / {timeText(b.startAt)} to{" "}
                           {timeText(b.endAt)}
                         </p>
-                        {doctor && (
+                        {reception && (
                           <button
                             className="text-button"
                             onClick={() =>
@@ -2544,7 +2606,8 @@ export default function Workspace({
                           <strong>{actor.name}</strong>
                         </p>
                         <p className="muted">
-                          {actor.username} / {doctor ? "Doctor" : "Front desk"}
+                          {actor.username} /{" "}
+                          {doctor ? "Doctor" : "Receptionist"}
                         </p>
                         <button
                           className="button"
@@ -2694,17 +2757,19 @@ export default function Workspace({
                   >
                     Mark arrived
                   </button>
-                  <button
-                    className="button"
-                    onClick={() =>
-                      setModal({
-                        kind: "appointment",
-                        appointment: modal.appointment,
-                      })
-                    }
-                  >
-                    Reschedule
-                  </button>
+                  {reception && (
+                    <button
+                      className="button"
+                      onClick={() =>
+                        setModal({
+                          kind: "appointment",
+                          appointment: modal.appointment,
+                        })
+                      }
+                    >
+                      Reschedule
+                    </button>
+                  )}
                   <Form
                     label="Cancel appointment"
                     submit={async () => {
@@ -2725,25 +2790,26 @@ export default function Workspace({
                   </Form>
                 </>
               )}
-              {["confirmed", "arrived"].includes(modal.appointment.status) && (
-                <button
-                  className="button"
-                  onClick={() =>
-                    act(async () => {
-                      await api("visits", {
-                        patientId: modal.appointment!.patientId,
-                        doctorId: modal.appointment!.doctorId,
-                        appointmentId: modal.appointment!.id,
-                      });
-                      const p = modal.appointment!.patientId;
-                      setModal(null);
-                      router.push("/app/patients/" + p);
-                    }, "Visit started.")
-                  }
-                >
-                  Start visit
-                </button>
-              )}
+              {["confirmed", "arrived"].includes(modal.appointment.status) &&
+                reception && (
+                  <button
+                    className="button"
+                    onClick={() =>
+                      act(async () => {
+                        await api("visits", {
+                          patientId: modal.appointment!.patientId,
+                          doctorId: modal.appointment!.doctorId,
+                          appointmentId: modal.appointment!.id,
+                        });
+                        const p = modal.appointment!.patientId;
+                        setModal(null);
+                        router.push("/app/patients/" + p);
+                      }, "Visit started.")
+                    }
+                  >
+                    Start visit
+                  </button>
+                )}
             </div>
           )}
           {modal.kind === "visit" && (
@@ -2880,7 +2946,7 @@ export default function Workspace({
               <label>
                 Role
                 <select name="role">
-                  <option value="front_desk">Front desk</option>
+                  <option value="front_desk">Receptionist</option>
                   <option value="doctor">Doctor</option>
                 </select>
               </label>
@@ -2932,7 +2998,7 @@ export default function Workspace({
                 <label>
                   Role
                   <select name="role" defaultValue={modal.account.role}>
-                    <option value="front_desk">Front desk</option>
+                    <option value="front_desk">Receptionist</option>
                     <option value="doctor">Doctor</option>
                   </select>
                 </label>
@@ -3201,7 +3267,9 @@ export default function Workspace({
 function DocumentCards({
   docs,
   onReplace,
+  canRetrieve = true,
 }: {
+  canRetrieve?: boolean;
   docs: Doc[];
   onReplace?: (doc: Doc) => void;
 }) {
@@ -3219,10 +3287,12 @@ function DocumentCards({
             {dateText(d.createdAt)} / {(d.size / 1024).toFixed(1)} KiB
             {d.replacesId ? " / Replacement, earlier file kept" : ""}
           </small>
-          <a className="button" href={"/api/documents/" + d.id}>
-            <Download size={14} />
-            Retrieve report
-          </a>
+          {canRetrieve && (
+            <a className="button" href={"/api/documents/" + d.id}>
+              <Download size={14} />
+              Retrieve report
+            </a>
+          )}
           {onReplace && (
             <button
               className="text-button"
@@ -3239,7 +3309,9 @@ function DocumentCards({
   ) : (
     <Panel>
       <Empty title="No diagnostic reports yet.">
-        Add a private report to this patient record.
+        {canRetrieve
+          ? "Ask the receptionist to upload a document to this record."
+          : "Upload a medical document to this patient record."}
       </Empty>
     </Panel>
   );

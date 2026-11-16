@@ -175,16 +175,18 @@ async function handle(req: NextRequest) {
       if (parts[2] === "file")
         return json(await service.fileVisit(actor, id, await req.json()));
     }
-    if (route === "invoices")
+    if (route === "invoices") {
+      await requireRole(actor, "front_desk");
       return json(
         post
           ? await service.saveInvoice(actor, await req.json())
           : await service.invoiceList(actor),
       );
+    }
     if (parts[0] === "invoices" && post)
       return json(await service.setInvoiceStatus(actor, id, await req.json()));
     if (route === "users") {
-      await requireRole(actor);
+      await requireRole(actor, "operator");
       return json(
         post
           ? await service.manageUser(actor, await req.json())
@@ -202,10 +204,12 @@ async function handle(req: NextRequest) {
               .orderBy(users.name),
       );
     }
-    if (parts[0] === "users" && post)
+    if (parts[0] === "users" && post) {
+      await requireRole(actor, "operator");
       return json(await service.manageUser(actor, await req.json(), id));
+    }
     if (route === "audit" && !post) {
-      await requireRole(actor);
+      await requireRole(actor, "operator");
       await service.event(db, actor, "view", "audit");
       return json(
         await service.rows(
@@ -223,7 +227,7 @@ async function handle(req: NextRequest) {
             sql`SELECT b.*,u.name AS doctor_name FROM schedule_blocks b JOIN users u ON u.id=b.doctor_id WHERE end_at>now() ORDER BY start_at`,
           ),
         });
-      await requireRole(actor);
+      await requireRole(actor, "front_desk");
       const d = z
         .object({
           doctorId: idSchema,
@@ -256,7 +260,7 @@ async function handle(req: NextRequest) {
       );
     }
     if (route === "blocks" && post) {
-      await requireRole(actor);
+      await requireRole(actor, "front_desk");
       const d = z
         .object({
           doctorId: idSchema,
@@ -283,7 +287,7 @@ async function handle(req: NextRequest) {
       );
     }
     if (parts[0] === "blocks" && post) {
-      await requireRole(actor);
+      await requireRole(actor, "front_desk");
       return json(
         await db.transaction(async (tx) => {
           await tx.execute(
@@ -303,7 +307,6 @@ async function handle(req: NextRequest) {
         ),
       );
     if (route === "sample-report" && !post) {
-      await requireRole(actor);
       return new NextResponse(new Uint8Array(samplePdf), {
         headers: {
           "Content-Type": "application/pdf",
@@ -314,8 +317,8 @@ async function handle(req: NextRequest) {
       });
     }
     if (parts[0] === "documents") {
-      await requireRole(actor);
       if (id && !post) {
+        await requireRole(actor);
         const [d] = await db
           .select()
           .from(documents)
@@ -332,6 +335,7 @@ async function handle(req: NextRequest) {
         });
       }
       if (post) {
+        await requireRole(actor, "front_desk");
         const form = await req.formData();
         const p = idSchema.parse(form.get("patientId"));
         const title = z

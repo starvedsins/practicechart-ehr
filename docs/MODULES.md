@@ -28,7 +28,7 @@ L7: RETURN rows( sql`SELECT id,mrn,first_name,last_name,dob,phone,address,gender
 
 ## patientDetail
 
-Read a patient and visits. Add clinical history and documents only for a doctor.
+Read a patient and visits. Return document metadata to staff and clinical history only to a doctor.
 
 Source: src/lib/service.ts. Graph: [patientDetail](diagrams/cfg/patientDetail.svg).
 
@@ -52,14 +52,14 @@ L8: const visitList = await rows( sql`SELECT v.id,v.patient_id,v.doctor_id,v.sta
   GO TO L9
 L9: const appointmentList = await rows( sql`SELECT a.*,u.name AS doctor_name FROM appointments a JOIN users u ON u.id=a.doctor_id WHERE patient_id=${id} O
   GO TO L10
-L10: IF actor.role !== "doctor"
-  THEN GO TO L11
-  ELSE GO TO L12
-L11: RETURN { patient: p, visits: visitList, appointments: appointmentList }
+L10: const files = await tx .select({ id: documents.id, title: documents.title, kind: documents.kind, mime: documents.mime, size: documents.size, createdAt
+  GO TO L11
+L11: IF actor.role !== "doctor"
+  THEN GO TO L12
+  ELSE GO TO L13
+L12: RETURN { patient: p, visits: visitList, appointments: appointmentList, documents: files, }
   GO TO L5
-L12: const clinical = await rows( sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.v
-  GO TO L13
-L13: const files = await tx .select({ id: documents.id, title: documents.title, kind: documents.kind, mime: documents.mime, size: documents.size, createdAt
+L13: const clinical = await rows( sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.v
   GO TO L14
 L14: RETURN { patient: p, visits: visitList, appointments: appointmentList, clinical, documents: files, }
   GO TO L5
@@ -77,43 +77,45 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START savePatient
   GO TO L3
 L2: END PROCEDURE
-L3: const data = patientInput.parse(input);
+L3: await requireRole(actor, "front_desk");
   GO TO L4
-L4: BEGIN transaction
-  GO TO L6
-L5: COMMIT transaction
+L4: const data = patientInput.parse(input);
+  GO TO L5
+L5: BEGIN transaction
+  GO TO L7
+L6: COMMIT transaction
   GO TO L2
-L6: IF id
-  THEN GO TO L7
-  ELSE GO TO L14
-L7: idSchema.parse(id);
-  GO TO L8
-L8: const version = z .object({ version: z.number().int().positive() }) .parse(input).version;
+L7: IF id
+  THEN GO TO L8
+  ELSE GO TO L15
+L8: idSchema.parse(id);
   GO TO L9
-L9: const [p] = await tx .update(patients) .set({ ...data, version: version + 1 }) .where(and(eq(patients.id, id), eq(patients.version, version))) .return
+L9: const version = z .object({ version: z.number().int().positive() }) .parse(input).version;
   GO TO L10
-L10: IF p
-  THEN GO TO L12
-  ELSE GO TO L11
-L11: RAISE new AppError( 409, "This patient changed. Reload the record before you save.", )
+L10: const [p] = await tx .update(patients) .set({ ...data, version: version + 1 }) .where(and(eq(patients.id, id), eq(patients.version, version))) .return
+  GO TO L11
+L11: IF p
+  THEN GO TO L13
+  ELSE GO TO L12
+L12: RAISE new AppError( 409, "This patient changed. Reload the record before you save.", )
   GO TO L2
-L12: await event(tx, actor, "update", "patient", id, { version });
-  GO TO L13
-L13: RETURN { patient: p }
-  GO TO L5
-L14: const duplicates = await rows( sql`SELECT id,mrn FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.last
-  GO TO L15
-L15: const [p] = await tx .insert(patients) .values({ ...data, mrn: sql`DEFAULT` }) .returning();
+L13: await event(tx, actor, "update", "patient", id, { version });
+  GO TO L14
+L14: RETURN { patient: p }
+  GO TO L6
+L15: const duplicates = await rows( sql`SELECT id,mrn FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.last
   GO TO L16
-L16: await event(tx, actor, "create", "patient", p.id);
+L16: const [p] = await tx .insert(patients) .values({ ...data, mrn: sql`DEFAULT` }) .returning();
   GO TO L17
-L17: RETURN { patient: p, duplicates }
-  GO TO L5
+L17: await event(tx, actor, "create", "patient", p.id);
+  GO TO L18
+L18: RETURN { patient: p, duplicates }
+  GO TO L6
 ```
 
 ## archivePatient
 
-Require a doctor and the current version before changing patient archive status.
+Require a receptionist and the current version before changing patient archive status.
 
 Source: src/lib/service.ts. Graph: [archivePatient](diagrams/cfg/archivePatient.svg).
 
@@ -123,7 +125,7 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START archivePatient
   GO TO L3
 L2: END PROCEDURE
-L3: await requireRole(actor);
+L3: await requireRole(actor, "front_desk");
   GO TO L4
 L4: const { version, archived } = z .object({ version: z.number().int(), archived: z.boolean() }) .parse(input);
   GO TO L5
@@ -151,7 +153,7 @@ L13: Follow False branch
 
 ## reconcilePatient
 
-Require a doctor. Lock both records and link an unresolved provisional record to its primary record.
+Require a receptionist. Lock both records and link an unresolved provisional record to its primary record.
 
 Source: src/lib/service.ts. Graph: [reconcilePatient](diagrams/cfg/reconcilePatient.svg).
 
@@ -161,7 +163,7 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START reconcilePatient
   GO TO L3
 L2: END PROCEDURE
-L3: await requireRole(actor);
+L3: await requireRole(actor, "front_desk");
   GO TO L4
 L4: const { targetId, reason } = z .object({ targetId: idSchema, reason: z.string().trim().min(3).max(500) }) .parse(input);
   GO TO L5
@@ -292,46 +294,48 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START bookAppointment
   GO TO L3
 L2: END PROCEDURE
-L3: const data = appointmentInput.parse(input);
+L3: await requireRole(actor, "front_desk");
   GO TO L4
-L4: BEGIN transaction
-  GO TO L6
-L5: COMMIT transaction
-  GO TO L2
-L6: const p = await found( await tx.select().from(patients).where(eq(patients.id, data.patientId)), );
+L4: const data = appointmentInput.parse(input);
+  GO TO L5
+L5: BEGIN transaction
   GO TO L7
-L7: IF p.archived
-  THEN GO TO L9
-  ELSE GO TO L8
-L8: IF p.mergedInto
-  THEN GO TO L9
-  ELSE GO TO L10
-L9: RAISE new AppError(400, "Choose an active patient record.")
+L6: COMMIT transaction
   GO TO L2
-L10: IF id
-  THEN GO TO L11
-  ELSE GO TO L18
-L11: idSchema.parse(id);
-  GO TO L12
-L12: const { version } = z .object({ version: z.number().int().positive() }) .parse(input);
+L7: const p = await found( await tx.select().from(patients).where(eq(patients.id, data.patientId)), );
+  GO TO L8
+L8: IF p.archived
+  THEN GO TO L10
+  ELSE GO TO L9
+L9: IF p.mergedInto
+  THEN GO TO L10
+  ELSE GO TO L11
+L10: RAISE new AppError(400, "Choose an active patient record.")
+  GO TO L2
+L11: IF id
+  THEN GO TO L12
+  ELSE GO TO L19
+L12: idSchema.parse(id);
   GO TO L13
-L13: const [a] = await tx .update(appointments) .set({ ...data, startAt: new Date(data.startAt), endAt: new Date(data.endAt), version: version + 1, }) .whe
+L13: const { version } = z .object({ version: z.number().int().positive() }) .parse(input);
   GO TO L14
-L14: IF a
-  THEN GO TO L16
-  ELSE GO TO L15
-L15: RAISE new AppError( 409, "This appointment changed or has started. Reload the schedule.", )
+L14: const [a] = await tx .update(appointments) .set({ ...data, startAt: new Date(data.startAt), endAt: new Date(data.endAt), version: version + 1, }) .whe
+  GO TO L15
+L15: IF a
+  THEN GO TO L17
+  ELSE GO TO L16
+L16: RAISE new AppError( 409, "This appointment changed or has started. Reload the schedule.", )
   GO TO L2
-L16: await event(tx, actor, "reschedule", "appointment", id, { version });
-  GO TO L17
-L17: RETURN a
-  GO TO L5
-L18: const [a] = await tx .insert(appointments) .values({ ...data, startAt: new Date(data.startAt), endAt: new Date(data.endAt), }) .returning();
-  GO TO L19
-L19: await event(tx, actor, "confirm", "appointment", a.id);
+L17: await event(tx, actor, "reschedule", "appointment", id, { version });
+  GO TO L18
+L18: RETURN a
+  GO TO L6
+L19: const [a] = await tx .insert(appointments) .values({ ...data, startAt: new Date(data.startAt), endAt: new Date(data.endAt), }) .returning();
   GO TO L20
-L20: RETURN a
-  GO TO L5
+L20: await event(tx, actor, "confirm", "appointment", a.id);
+  GO TO L21
+L21: RETURN a
+  GO TO L6
 ```
 
 ## appointmentStatus
@@ -346,23 +350,25 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START appointmentStatus
   GO TO L3
 L2: END PROCEDURE
-L3: const { version, status } = z .object({ version: z.number().int(), status: z.enum(["cancelled", "arrived"]), }) .parse(input);
+L3: await requireRole(actor, "front_desk");
   GO TO L4
-L4: BEGIN transaction
-  GO TO L6
-L5: COMMIT transaction
-  GO TO L2
-L6: const [a] = await tx .update(appointments) .set({ status, version: version + 1 }) .where( and( eq(appointments.id, idSchema.parse(id)), eq(appointment
-  GO TO L7
-L7: IF a
-  THEN GO TO L9
-  ELSE GO TO L8
-L8: RAISE new AppError( 409, "This appointment changed or cannot enter that state.", )
-  GO TO L2
-L9: await event(tx, actor, status, "appointment", id);
-  GO TO L10
-L10: RETURN a
+L4: const { version, status } = z .object({ version: z.number().int(), status: z.enum(["cancelled", "arrived"]), }) .parse(input);
   GO TO L5
+L5: BEGIN transaction
+  GO TO L7
+L6: COMMIT transaction
+  GO TO L2
+L7: const [a] = await tx .update(appointments) .set({ status, version: version + 1 }) .where( and( eq(appointments.id, idSchema.parse(id)), eq(appointment
+  GO TO L8
+L8: IF a
+  THEN GO TO L10
+  ELSE GO TO L9
+L9: RAISE new AppError( 409, "This appointment changed or cannot enter that state.", )
+  GO TO L2
+L10: await event(tx, actor, status, "appointment", id);
+  GO TO L11
+L11: RETURN a
+  GO TO L6
 ```
 
 ## startVisit
@@ -377,45 +383,47 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START startVisit
   GO TO L3
 L2: END PROCEDURE
-L3: const data = z .object({ patientId: idSchema, doctorId: idSchema, appointmentId: idSchema.optional(), }) .parse(input);
+L3: await requireRole(actor, "front_desk");
   GO TO L4
-L4: BEGIN transaction
-  GO TO L6
-L5: COMMIT transaction
-  GO TO L2
-L6: const p = await found( await tx.select().from(patients).where(eq(patients.id, data.patientId)), );
+L4: const data = z .object({ patientId: idSchema, doctorId: idSchema, appointmentId: idSchema.optional(), }) .parse(input);
+  GO TO L5
+L5: BEGIN transaction
   GO TO L7
-L7: IF p.archived
-  THEN GO TO L8
-  ELSE GO TO L9
-L8: RAISE new AppError(400, "This patient record is archived.")
+L6: COMMIT transaction
   GO TO L2
-L9: await found( await rows( sql`SELECT id FROM users WHERE id=${data.doctorId}::uuid AND active AND role='doctor'`, tx, ), "Choose an active doctor.", );
-  GO TO L10
-L10: IF data.appointmentId
-  THEN GO TO L11
-  ELSE GO TO L17
-L11: const a = await found( await rows( sql`SELECT * FROM appointments WHERE id=${data.appointmentId}::uuid FOR UPDATE`, tx, ), );
-  GO TO L12
-L12: IF a.patient_id !== data.patientId
-  THEN GO TO L15
-  ELSE GO TO L13
-L13: IF a.doctor_id !== data.doctorId
-  THEN GO TO L15
+L7: const p = await found( await tx.select().from(patients).where(eq(patients.id, data.patientId)), );
+  GO TO L8
+L8: IF p.archived
+  THEN GO TO L9
+  ELSE GO TO L10
+L9: RAISE new AppError(400, "This patient record is archived.")
+  GO TO L2
+L10: await found( await rows( sql`SELECT id FROM users WHERE id=${data.doctorId}::uuid AND active AND role='doctor'`, tx, ), "Choose an active doctor.", );
+  GO TO L11
+L11: IF data.appointmentId
+  THEN GO TO L12
+  ELSE GO TO L18
+L12: const a = await found( await rows( sql`SELECT * FROM appointments WHERE id=${data.appointmentId}::uuid FOR UPDATE`, tx, ), );
+  GO TO L13
+L13: IF a.patient_id !== data.patientId
+  THEN GO TO L16
   ELSE GO TO L14
-L14: IF ["confirmed", "arrived"].includes(String(a.status))
+L14: IF a.doctor_id !== data.doctorId
   THEN GO TO L16
   ELSE GO TO L15
-L15: RAISE new AppError( 400, "Use a matching confirmed or arrived appointment.", )
+L15: IF ["confirmed", "arrived"].includes(String(a.status))
+  THEN GO TO L17
+  ELSE GO TO L16
+L16: RAISE new AppError( 400, "Use a matching confirmed or arrived appointment.", )
   GO TO L2
-L16: await tx .update(appointments) .set({ status: "in_consultation", version: Number(a.version) + 1 }) .where(eq(appointments.id, data.appointmentId));
-  GO TO L17
-L17: const [v] = await tx.insert(visits).values(data).returning();
+L17: await tx .update(appointments) .set({ status: "in_consultation", version: Number(a.version) + 1 }) .where(eq(appointments.id, data.appointmentId));
   GO TO L18
-L18: await event(tx, actor, "start", "visit", v.id);
+L18: const [v] = await tx.insert(visits).values(data).returning();
   GO TO L19
-L19: RETURN v
-  GO TO L5
+L19: await event(tx, actor, "start", "visit", v.id);
+  GO TO L20
+L20: RETURN v
+  GO TO L6
 ```
 
 ## saveClinical
@@ -507,41 +515,43 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START fileVisit
   GO TO L3
 L2: END PROCEDURE
-L3: const { expectedRevision } = z .object({ expectedRevision: z.number().int().positive() }) .parse(input);
+L3: await requireRole(actor, "front_desk");
   GO TO L4
-L4: BEGIN transaction
-  GO TO L6
-L5: COMMIT transaction
-  GO TO L2
-L6: const v = await found( await rows( sql`SELECT * FROM visits WHERE id=${idSchema.parse(id)}::uuid FOR UPDATE`, tx, ), );
+L4: const { expectedRevision } = z .object({ expectedRevision: z.number().int().positive() }) .parse(input);
+  GO TO L5
+L5: BEGIN transaction
   GO TO L7
-L7: const c = await rows( sql`SELECT content,state FROM clinical_revisions WHERE visit_id=${id}::uuid AND revision=${expectedRevision}`, tx, );
+L6: COMMIT transaction
+  GO TO L2
+L7: const v = await found( await rows( sql`SELECT * FROM visits WHERE id=${idSchema.parse(id)}::uuid FOR UPDATE`, tx, ), );
   GO TO L8
-L8: IF v.status !== "ready"
-  THEN GO TO L12
-  ELSE GO TO L9
-L9: IF Number(v.revision) !== expectedRevision
-  THEN GO TO L12
+L8: const c = await rows( sql`SELECT content,state FROM clinical_revisions WHERE visit_id=${id}::uuid AND revision=${expectedRevision}`, tx, );
+  GO TO L9
+L9: IF v.status !== "ready"
+  THEN GO TO L13
   ELSE GO TO L10
-L10: IF c[0]?.state !== "final"
-  THEN GO TO L12
+L10: IF Number(v.revision) !== expectedRevision
+  THEN GO TO L13
   ELSE GO TO L11
-L11: IF (c[0].content as Row)?.diagnosis
+L11: IF c[0]?.state !== "final"
   THEN GO TO L13
   ELSE GO TO L12
-L12: RAISE new AppError( 409, "The doctor must complete the diagnosis before this visit can be filed.", )
+L12: IF (c[0].content as Row)?.diagnosis
+  THEN GO TO L14
+  ELSE GO TO L13
+L13: RAISE new AppError( 409, "The doctor must complete the diagnosis before this visit can be filed.", )
   GO TO L2
-L13: await tx .update(visits) .set({ status: "filed", filedAt: new Date() }) .where(eq(visits.id, id));
-  GO TO L14
-L14: IF v.appointment_id
-  THEN GO TO L15
-  ELSE GO TO L16
-L15: await tx.execute( sql`UPDATE appointments SET status='completed',version=version+1 WHERE id=${v.appointment_id}::uuid`, );
-  GO TO L16
-L16: await event(tx, actor, "file", "visit", id);
+L14: await tx .update(visits) .set({ status: "filed", filedAt: new Date() }) .where(eq(visits.id, id));
+  GO TO L15
+L15: IF v.appointment_id
+  THEN GO TO L16
+  ELSE GO TO L17
+L16: await tx.execute( sql`UPDATE appointments SET status='completed',version=version+1 WHERE id=${v.appointment_id}::uuid`, );
   GO TO L17
-L17: RETURN { filed: true }
-  GO TO L5
+L17: await event(tx, actor, "file", "visit", id);
+  GO TO L18
+L18: RETURN { filed: true }
+  GO TO L6
 ```
 
 ## saveInvoice
@@ -556,22 +566,24 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START saveInvoice
   GO TO L3
 L2: END PROCEDURE
-L3: const data = invoiceInput.parse(input);
+L3: await requireRole(actor, "front_desk");
   GO TO L4
-L4: const totalCents = invoiceTotal(data.lines);
+L4: const data = invoiceInput.parse(input);
   GO TO L5
-L5: BEGIN transaction
-  GO TO L7
-L6: COMMIT transaction
-  GO TO L2
-L7: await found( await tx .select({ id: patients.id }) .from(patients) .where(eq(patients.id, data.patientId)), );
-  GO TO L8
-L8: const [i] = await tx .insert(invoices) .values({ ...data, totalCents, number: sql`DEFAULT` }) .returning();
-  GO TO L9
-L9: await event(tx, actor, "create", "invoice", i.id);
-  GO TO L10
-L10: RETURN i
+L5: const totalCents = invoiceTotal(data.lines);
   GO TO L6
+L6: BEGIN transaction
+  GO TO L8
+L7: COMMIT transaction
+  GO TO L2
+L8: await found( await tx .select({ id: patients.id }) .from(patients) .where(eq(patients.id, data.patientId)), );
+  GO TO L9
+L9: const [i] = await tx .insert(invoices) .values({ ...data, totalCents, number: sql`DEFAULT` }) .returning();
+  GO TO L10
+L10: await event(tx, actor, "create", "invoice", i.id);
+  GO TO L11
+L11: RETURN i
+  GO TO L7
 ```
 
 ## setInvoiceStatus
@@ -586,36 +598,38 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START setInvoiceStatus
   GO TO L3
 L2: END PROCEDURE
-L3: const { version, status, reason } = z .object({ version: z.number().int(), status: z.enum(["issued", "void"]), reason: z.string().trim().max(500).defa
+L3: await requireRole(actor, "front_desk");
   GO TO L4
-L4: IF status === "void"
-  THEN GO TO L5
+L4: const { version, status, reason } = z .object({ version: z.number().int(), status: z.enum(["issued", "void"]), reason: z.string().trim().max(500).defa
+  GO TO L5
+L5: IF status === "void"
+  THEN GO TO L6
+  ELSE GO TO L8
+L6: IF reason
+  THEN GO TO L8
   ELSE GO TO L7
-L5: IF reason
-  THEN GO TO L7
-  ELSE GO TO L6
-L6: RAISE new AppError(400, "Enter a reason to void the invoice.")
+L7: RAISE new AppError(400, "Enter a reason to void the invoice.")
   GO TO L2
-L7: BEGIN transaction
-  GO TO L9
-L8: COMMIT transaction
-  GO TO L2
-L9: IF status === "issued"
-  THEN GO TO L10
-  ELSE GO TO L15
-L10: const [i] = await tx .update(invoices) .set({ status, reason, version: version + 1 }) .where( and( eq(invoices.id, idSchema.parse(id)), eq(invoices.ve
-  GO TO L11
-L11: IF i
-  THEN GO TO L13
-  ELSE GO TO L12
-L12: RAISE new AppError( 409, "This invoice changed or cannot enter that state.", )
-  GO TO L2
-L13: await event(tx, actor, status, "invoice", id, { reason });
-  GO TO L14
-L14: RETURN i
-  GO TO L8
-L15: Follow False branch
+L8: BEGIN transaction
   GO TO L10
+L9: COMMIT transaction
+  GO TO L2
+L10: IF status === "issued"
+  THEN GO TO L11
+  ELSE GO TO L16
+L11: const [i] = await tx .update(invoices) .set({ status, reason, version: version + 1 }) .where( and( eq(invoices.id, idSchema.parse(id)), eq(invoices.ve
+  GO TO L12
+L12: IF i
+  THEN GO TO L14
+  ELSE GO TO L13
+L13: RAISE new AppError( 409, "This invoice changed or cannot enter that state.", )
+  GO TO L2
+L14: await event(tx, actor, status, "invoice", id, { reason });
+  GO TO L15
+L15: RETURN i
+  GO TO L9
+L16: Follow False branch
+  GO TO L11
 ```
 
 ## invoiceList
@@ -630,15 +644,17 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START invoiceList
   GO TO L3
 L2: END PROCEDURE
-L3: await event(db, actor, "view", "invoice_list");
+L3: await requireRole(actor, "front_desk");
   GO TO L4
-L4: RETURN rows( sql`SELECT i.*,p.first_name,p.last_name,p.mrn FROM invoices i JOIN patients p ON p.id=i.patient_id ORDER BY i.created_at DESC LIMIT 100`,
+L4: await event(db, actor, "view", "invoice_list");
+  GO TO L5
+L5: RETURN rows( sql`SELECT i.*,p.first_name,p.last_name,p.mrn FROM invoices i JOIN patients p ON p.id=i.patient_id ORDER BY i.created_at DESC LIMIT 100`,
   GO TO L2
 ```
 
 ## manageUser
 
-Require doctor access. Create or change an account. Protect demo accounts, keep a doctor active, and revoke changed sessions.
+Require a trusted operator context, not an employee login. Create or change an account. Protect demo accounts, keep a doctor active, and revoke changed sessions.
 
 Source: src/lib/service.ts. Graph: [manageUser](diagrams/cfg/manageUser.svg).
 
@@ -648,7 +664,7 @@ The following labelled pseudocode follows graph edges. Labels are not execution 
 L1: START manageUser
   GO TO L3
 L2: END PROCEDURE
-L3: await requireRole(actor);
+L3: await requireRole(actor, "operator");
   GO TO L4
 L4: IF id
   THEN GO TO L14
@@ -791,8 +807,13 @@ L7: const ready = await rows( sql`SELECT v.id,v.revision,v.status,v.patient_id,p
   GO TO L8
 L8: const reminders = await rows( sql`SELECT r.id,a.start_at,p.first_name,p.last_name,p.mrn FROM reminders r JOIN appointments a ON a.id=r.appointment_id
   GO TO L9
-L9: RETURN { counts: counts[0], ready, reminders }
+L9: IF actor.role === "doctor"
+  THEN GO TO L10
+  ELSE GO TO L11
+L10: RETURN { counts: actor.role === "doctor" ? { appointments: counts[0].appointments } : counts[0], ready, reminders, }
   GO TO L4
+L11: Follow False branch
+  GO TO L10
 ```
 
 ## reportData
@@ -824,40 +845,47 @@ L8: RETURN { type, appointments: await schedule(actor, id) }
   GO TO L2
 L9: IF type === "visits"
   THEN GO TO L10
-  ELSE GO TO L12
-L10: await event(db, actor, "export", "visit_counts");
+  ELSE GO TO L13
+L10: await requireRole(actor, "front_desk");
   GO TO L11
-L11: RETURN { type, counts: await rows( sql`SELECT (visit_at AT TIME ZONE 'America/Jamaica')::date AS day,count(*) AS visits,count(*) FILTER(WHERE status='
+L11: await event(db, actor, "export", "visit_counts");
+  GO TO L12
+L12: RETURN { type, counts: await rows( sql`SELECT (visit_at AT TIME ZONE 'America/Jamaica')::date AS day,count(*) AS visits,count(*) FILTER(WHERE status='
   GO TO L2
-L12: idSchema.parse(id);
-  GO TO L13
-L13: await event(db, actor, "export", type, id);
-  GO TO L14
-L14: IF type === "invoice"
-  THEN GO TO L15
-  ELSE GO TO L16
-L15: RETURN { type, invoice: await found( await rows( sql`SELECT i.*,p.first_name,p.last_name,p.mrn,p.address FROM invoices i JOIN patients p ON p.id=i.pat
+L13: IF ["invoice", "attendance", "visits"].includes(type)
+  THEN GO TO L14
+  ELSE GO TO L15
+L14: await requireRole(actor, "front_desk");
+  GO TO L15
+L15: idSchema.parse(id);
+  GO TO L16
+L16: await event(db, actor, "export", type, id);
+  GO TO L17
+L17: IF type === "invoice"
+  THEN GO TO L18
+  ELSE GO TO L19
+L18: RETURN { type, invoice: await found( await rows( sql`SELECT i.*,p.first_name,p.last_name,p.mrn,p.address FROM invoices i JOIN patients p ON p.id=i.pat
   GO TO L2
-L16: IF type === "history"
-  THEN GO TO L17
-  ELSE GO TO L18
-L17: RETURN { type, ...(await patientDetail(actor, id)) }
-  GO TO L2
-L18: const v = await found( await rows( sql`SELECT v.*,p.first_name,p.last_name,p.mrn,u.name AS doctor_name FROM visits v JOIN patients p ON p.id=v.patient
-  GO TO L19
-L19: IF type === "attendance"
+L19: IF type === "history"
   THEN GO TO L20
   ELSE GO TO L21
-L20: RETURN { type, visit: { id: v.id, mrn: v.mrn, first_name: v.first_name, last_name: v.last_name, visit_at: v.visit_at, doctor_name: v.doctor_name, stat
+L20: RETURN { type, ...(await patientDetail(actor, id)) }
   GO TO L2
-L21: const c = await found( await rows( sql`SELECT content,state,revision,created_at FROM clinical_revisions WHERE visit_id=${id}::uuid ORDER BY revision D
+L21: const v = await found( await rows( sql`SELECT v.*,p.first_name,p.last_name,p.mrn,u.name AS doctor_name FROM visits v JOIN patients p ON p.id=v.patient
   GO TO L22
-L22: IF c.state !== "final"
+L22: IF type === "attendance"
   THEN GO TO L23
   ELSE GO TO L24
-L23: RAISE new AppError( 400, "Complete the clinical entry before you print this document.", )
+L23: RETURN { type, visit: { id: v.id, mrn: v.mrn, first_name: v.first_name, last_name: v.last_name, visit_at: v.visit_at, doctor_name: v.doctor_name, stat
   GO TO L2
-L24: RETURN { type, visit: v, clinical: c }
+L24: const c = await found( await rows( sql`SELECT content,state,revision,created_at FROM clinical_revisions WHERE visit_id=${id}::uuid ORDER BY revision D
+  GO TO L25
+L25: IF c.state !== "final"
+  THEN GO TO L26
+  ELSE GO TO L27
+L26: RAISE new AppError( 400, "Complete the clinical entry before you print this document.", )
+  GO TO L2
+L27: RETURN { type, visit: v, clinical: c }
   GO TO L2
 ```
 

@@ -55,11 +55,11 @@ Evidence is in `docs/evidence`. A test count is not proof of all possible paths 
 8. Log in as doctor. Open the patient and enter sample notes, a diagnosis, and treatment.
 9. Add fictional prescription details and certificate text. Save the final entry.
 10. Make a correction with a reason. Show both revisions.
-11. Download the sample lab report. Upload it to the same patient. Retrieve it again.
+11. Log in as receptionist to upload the supplied sample report. Log in as doctor to retrieve it.
 12. Print the prescription, visit summary, and patient report.
 13. Log in as frontdesk. File the completed visit without opening its clinical notes.
 14. Create and issue a manual invoice. State that it is not proof of payment.
-15. Show audit history as doctor. Show the recorded restore test and explain how a full backup differs from a patient report.
+15. Show clinical correction history as doctor. Global audit review is an operator task. Show the recorded restore test and explain how a full backup differs from a patient report.
 
 Use the local copy if the network is slow. Test the laptop, power, projector, Docker, browser, and print view before the presentation. Keep an encrypted recovery bundle and its recovery key in separate private locations.
 
@@ -78,3 +78,7 @@ Use the local copy if the network is slow. Test the laptop, power, projector, Do
 | Store a separate recovery key copy | Controlled storage and operator record | Pending operator action |
 
 The schedule lists presentations in the weeks of November 9 to 13 and November 16 to 20, 2026. A group message mentions November 9 and a user manual before the presentation. Confirm the actual group slot and submission rules with the tutor. Do not treat the older brief milestone dates as the current CIT4001 deadline.
+
+## November presentation preparation
+
+Use the revised role matrix in PERMISSIONS.md. The doctor's role is clinical. Receptionists prepare and file visits and handle office work. Use the November 15 user manual and its task screenshots. The group reports a November 17 presentation at noon and a printed user manual submission. Confirm these arrangements with the tutor. Practise the role handoff before presenting. Do not treat generated documentation as evidence that members completed their coding or training tasks.

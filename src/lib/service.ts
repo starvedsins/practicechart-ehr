@@ -68,12 +68,6 @@ export async function patientDetail(actor: Staff, id: string) {
       sql`SELECT a.*,u.name AS doctor_name FROM appointments a JOIN users u ON u.id=a.doctor_id WHERE patient_id=${id} ORDER BY start_at DESC`,
       tx,
     );
-    if (actor.role !== "doctor")
-      return { patient: p, visits: visitList, appointments: appointmentList };
-    const clinical = await rows(
-      sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.visit_id WHERE v.patient_id=${id} ORDER BY c.created_at DESC,c.revision DESC`,
-      tx,
-    );
     const files = await tx
       .select({
         id: documents.id,
@@ -86,6 +80,17 @@ export async function patientDetail(actor: Staff, id: string) {
       })
       .from(documents)
       .where(eq(documents.patientId, id));
+    if (actor.role !== "doctor")
+      return {
+        patient: p,
+        visits: visitList,
+        appointments: appointmentList,
+        documents: files,
+      };
+    const clinical = await rows(
+      sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.visit_id WHERE v.patient_id=${id} ORDER BY c.created_at DESC,c.revision DESC`,
+      tx,
+    );
     return {
       patient: p,
       visits: visitList,
@@ -96,6 +101,7 @@ export async function patientDetail(actor: Staff, id: string) {
   });
 }
 export async function savePatient(actor: Staff, input: unknown, id?: string) {
+  await requireRole(actor, "front_desk");
   const data = patientInput.parse(input);
   return db.transaction(async (tx) => {
     if (id) {
@@ -129,7 +135,7 @@ export async function savePatient(actor: Staff, input: unknown, id?: string) {
   });
 }
 export async function archivePatient(actor: Staff, id: string, input: unknown) {
-  await requireRole(actor);
+  await requireRole(actor, "front_desk");
   const { version, archived } = z
     .object({ version: z.number().int(), archived: z.boolean() })
     .parse(input);
@@ -151,7 +157,7 @@ export async function reconcilePatient(
   id: string,
   input: unknown,
 ) {
-  await requireRole(actor);
+  await requireRole(actor, "front_desk");
   const { targetId, reason } = z
     .object({ targetId: idSchema, reason: z.string().trim().min(3).max(500) })
     .parse(input);
@@ -227,6 +233,7 @@ export async function bookAppointment(
   input: unknown,
   id?: string,
 ) {
+  await requireRole(actor, "front_desk");
   const data = appointmentInput.parse(input);
   return db.transaction(async (tx) => {
     const p = await found(
@@ -280,6 +287,7 @@ export async function appointmentStatus(
   id: string,
   input: unknown,
 ) {
+  await requireRole(actor, "front_desk");
   const { version, status } = z
     .object({
       version: z.number().int(),
@@ -308,6 +316,7 @@ export async function appointmentStatus(
   });
 }
 export async function startVisit(actor: Staff, input: unknown) {
+  await requireRole(actor, "front_desk");
   const data = z
     .object({
       patientId: idSchema,
@@ -416,6 +425,7 @@ export async function saveClinical(actor: Staff, id: string, input: unknown) {
   });
 }
 export async function fileVisit(actor: Staff, id: string, input: unknown) {
+  await requireRole(actor, "front_desk");
   const { expectedRevision } = z
     .object({ expectedRevision: z.number().int().positive() })
     .parse(input);
@@ -453,6 +463,7 @@ export async function fileVisit(actor: Staff, id: string, input: unknown) {
   });
 }
 export async function saveInvoice(actor: Staff, input: unknown) {
+  await requireRole(actor, "front_desk");
   const data = invoiceInput.parse(input);
   const totalCents = invoiceTotal(data.lines);
   return db.transaction(async (tx) => {
@@ -475,6 +486,7 @@ export async function setInvoiceStatus(
   id: string,
   input: unknown,
 ) {
+  await requireRole(actor, "front_desk");
   const { version, status, reason } = z
     .object({
       version: z.number().int(),
@@ -506,13 +518,15 @@ export async function setInvoiceStatus(
   });
 }
 export async function invoiceList(actor: Staff) {
+  await requireRole(actor, "front_desk");
   await event(db, actor, "view", "invoice_list");
   return rows(
     sql`SELECT i.*,p.first_name,p.last_name,p.mrn FROM invoices i JOIN patients p ON p.id=i.patient_id ORDER BY i.created_at DESC LIMIT 100`,
   );
 }
 export async function manageUser(actor: Staff, input: unknown, id?: string) {
-  await requireRole(actor);
+  // Provisioning is an operator task. Neither employee login role may manage staff.
+  await requireRole(actor, "operator");
   if (!id) {
     const d = userInput.parse(input);
     const passwordHash = await hashPassword(d.password);
@@ -611,7 +625,14 @@ export async function dashboard(actor: Staff) {
       sql`SELECT r.id,a.start_at,p.first_name,p.last_name,p.mrn FROM reminders r JOIN appointments a ON a.id=r.appointment_id JOIN patients p ON p.id=a.patient_id WHERE r.due_date >= (now() AT TIME ZONE 'America/Jamaica')::date AND a.status='confirmed' ORDER BY a.start_at LIMIT 10`,
       tx,
     );
-    return { counts: counts[0], ready, reminders };
+    return {
+      counts:
+        actor.role === "doctor"
+          ? { appointments: counts[0].appointments }
+          : counts[0],
+      ready,
+      reminders,
+    };
   });
 }
 export async function reportData(actor: Staff, type: string, id: string) {
@@ -633,6 +654,7 @@ export async function reportData(actor: Staff, type: string, id: string) {
   if (type === "schedule")
     return { type, appointments: await schedule(actor, id) };
   if (type === "visits") {
+    await requireRole(actor, "front_desk");
     await event(db, actor, "export", "visit_counts");
     return {
       type,
@@ -641,6 +663,8 @@ export async function reportData(actor: Staff, type: string, id: string) {
       ),
     };
   }
+  if (["invoice", "attendance", "visits"].includes(type))
+    await requireRole(actor, "front_desk");
   idSchema.parse(id);
   await event(db, actor, "export", type, id);
   if (type === "invoice")

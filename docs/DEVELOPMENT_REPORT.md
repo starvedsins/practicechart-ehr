@@ -22,7 +22,7 @@ Inputs include credentials, patient demographics, booking intervals, doctor-ente
 
 ## Design and implementation process
 
-The brief, assignment guide, syllabus, schedule, supporting lesson documents, and all 53 embedded images were reviewed. Requirements were separated from old-system interviews, lesson examples, draft algorithms, and unsupported statements. Source conflicts were recorded before implementation. The user selected manual invoices and in-app reminders.
+The brief, assignment guide, syllabus, schedule, supporting lesson documents, and the original 53 source images were reviewed. The current copy has a 54th image, an earlier generated PracticeChart diagram. That image is not a source requirement. Requirements were separated from old-system interviews, lesson examples, draft algorithms, and unsupported statements. Source conflicts were recorded before implementation. The user selected manual invoices and in-app reminders.
 
 The implementation used small server services, validation schemas, explicit role checks, SQL migrations, database constraints, and a shared interface. The initial green sidebar design was rejected as too close to the earlier application's appearance. It was replaced with ink-blue accents, warm light surfaces, top navigation, a patient worklist, and segmented record controls. No deleted application source or saved design reference was used.
 
@@ -44,6 +44,10 @@ The browser uses Next.js pages and authenticated route handlers. Zod validates i
 
 The class diagram represents domain models and service operations. The implementation uses TypeScript types, functions, and Drizzle table models. It does not pretend that every domain model is implemented as an object-oriented class.
 
+## Role correction on November 15, 2026
+
+The group supplied the proposed-system use case diagram as the role authority. Receptionists handle registration, scheduling, visit filing, invoices, uploads, and visit counts. Doctors handle care, lab results, prescriptions, certificates, and clinical history. Neither employee role manages staff accounts or reads the global audit log. PERMISSIONS.md records the exact server and UI matrix. The earlier broad doctor permissions are superseded.
+
 ## Procedural design
 
 MODULES.md contains source-linked processing narratives and graph instructions for 26 functions. CONTROL_FLOW.md contains the three complexity calculations, planar face boundaries, and independent syntactic candidates. TEST_PLAN.md maps feasible state and input cases to executable tests. Database constraints are tested through PostgreSQL, rather than assigned invented JavaScript branch counts.
@@ -58,9 +62,9 @@ The Today page leads with a patient worklist. The patient record separates demog
 
 ## Testing and actual results
 
-Vitest recorded 76 passing tests and 0 failed tests. Playwright recorded 8 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 92.08% of statements and 82.81% of branches. This is not a claim of full path coverage.
+Vitest recorded 78 passing tests and 0 failed tests. Playwright recorded 9 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 92.35% of statements and 83.16% of branches. This is not a claim of full path coverage.
 
-Unit and database tests cover valid and invalid partitions, boundaries, session and account states, simultaneous bookings, stale changes, clinical corrections, document rules, and invoices. Complete browser tests cover both roles. Direct clinical and file routes are denied to the front desk. Axe recorded zero violations on the nine checked desktop pages and the checked emulated phone page. Automated scans do not replace a full accessibility review or a real phone test.
+Unit and database tests cover valid and invalid partitions, boundaries, session and account states, simultaneous bookings, stale changes, clinical corrections, document rules, and invoices. Complete browser tests cover both roles. Direct clinical and file routes are denied to the front desk. Axe recorded zero violations on the nine checked desktop role/page combinations and the checked emulated phone page. Automated scans do not replace a full accessibility review or a real phone test.
 
 ### Performance
 

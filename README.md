@@ -27,15 +27,19 @@ Open http://localhost:3000. Setup creates `.env` only when it is missing. It sta
 
 These credentials are intentional demo credentials. They are not infrastructure credentials. Cloud demo accounts are protected. Local accounts can be changed when `DEMO_MODE=false`.
 
+## Role correction
+
+The receptionist handles registration, demographics, appointments, visit filing, invoices, uploads, and visit counts. The doctor handles clinical records, lab results, prescriptions, certificates, and clinical reports. Doctors cannot use office administration actions. Neither employee login manages staff accounts. Read docs/PERMISSIONS.md for the complete matrix. The updated printed user manual is docs/submission/user-manual.pdf.
+
 ## What is included
 
-- Account and session management with server role checks.
+- Secure staff sessions and operator-only staff provisioning.
 - Patient registration, unique MRNs, search, updates, provisional links, and archiving.
 - Availability, booking confirmation, rescheduling, cancellation, arrival, and visit filing.
 - PostgreSQL overlap constraints and version checks for concurrent changes.
 - Doctor-entered consultation notes, diagnoses, treatment, medications, and certificates.
 - Append-only clinical revisions and audit history.
-- Private diagnostic documents and actual report retrieval.
+- Receptionist document uploads and doctor-only private report retrieval.
 - Manual service invoices, patient reports, attendance slips, and practice reports.
 - Daily in-app reminder work and encrypted full EHR backups.
 
@@ -73,3 +77,5 @@ Next.js, TypeScript, Tailwind CSS, PostgreSQL 18, Neon, Drizzle ORM, Zod, privat
 ## Public source rules
 
 Commit source, migrations, lockfile, safe documentation, and fictional test evidence. Never commit `.env`, `.private`, backups, recovery keys, database files, private uploads, `node_modules`, course interviews, or private chat exports. The old application was deleted. Its business logic and test results are not evidence for this build.
+
+The source-by-source review is in [SPEC_AUDIT.md](docs/SPEC_AUDIT.md). It lists partial requirements and unverified targets. Patient self-registration is not implemented, although the source diagram shows a separate patient form action.

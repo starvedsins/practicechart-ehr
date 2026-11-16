@@ -1,26 +1,26 @@
 {
   "application": "PracticeChart EHR",
-  "generatedAt": "2026-10-31T05:52:52.764Z",
+  "generatedAt": "2026-11-16T04:05:59.608Z",
   "unitTests": {
-    "passed": 76,
+    "passed": 78,
     "failed": 0
   },
   "browserTests": {
-    "passed": 8,
+    "passed": 9,
     "failed": 0
   },
   "coverage": {
     "lines": {
-      "total": 302,
-      "covered": 284,
+      "total": 313,
+      "covered": 295,
       "skipped": 0,
-      "pct": 94.03
+      "pct": 94.24
     },
     "statements": {
-      "total": 316,
-      "covered": 291,
+      "total": 327,
+      "covered": 302,
       "skipped": 0,
-      "pct": 92.08
+      "pct": 92.35
     },
     "functions": {
       "total": 62,
@@ -29,10 +29,10 @@
       "pct": 98.38
     },
     "branches": {
-      "total": 192,
-      "covered": 159,
+      "total": 196,
+      "covered": 163,
       "skipped": 0,
-      "pct": 82.81
+      "pct": 83.16
     },
     "branchesTrue": {
       "total": 0,

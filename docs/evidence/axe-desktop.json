@@ -16,23 +16,23 @@
     "violations": []
   },
   {
-    "path": "/app/invoices",
-    "violations": []
-  },
-  {
-    "path": "/app/reports",
-    "violations": []
-  },
-  {
-    "path": "/app/accounts",
-    "violations": []
-  },
-  {
-    "path": "/app/audit",
-    "violations": []
-  },
-  {
     "path": "/app/settings",
+    "violations": []
+  },
+  {
+    "path": "receptionist:/app",
+    "violations": []
+  },
+  {
+    "path": "receptionist:/app/patients",
+    "violations": []
+  },
+  {
+    "path": "receptionist:/app/invoices",
+    "violations": []
+  },
+  {
+    "path": "receptionist:/app/reports",
     "violations": []
   }
 ]

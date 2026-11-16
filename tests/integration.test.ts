@@ -6,7 +6,11 @@ import * as s from "../src/lib/service";
 import { login, getSession, digest } from "../src/lib/auth";
 import { storeFile, readPrivateFile, samplePdf } from "../src/lib/storage";
 import { emptyClinical } from "../src/lib/validation";
-let doctor: Staff, desk: Staff, patientId: string, doctorId: string;
+let doctor: Staff,
+  desk: Staff,
+  operatorActor: Staff,
+  patientId: string,
+  doctorId: string;
 let minute = 0;
 function booking(patient = patientId, start = 0, duration = 30) {
   const d = new Date("2032-01-05T08:00:00-05:00");
@@ -26,6 +30,8 @@ beforeAll(async () => {
     await db.select().from(users).where(eq(users.username, "frontdesk"))
   )[0];
   doctorId = doctor.id;
+  // Trusted operator context for test fixture provisioning, never a persisted login role.
+  operatorActor = { ...doctor, role: "operator" } as unknown as Staff;
   patientId = (
     await s.savePatient(desk, {
       firstName: "Service",
@@ -85,7 +91,7 @@ describe("additional independent service paths", () => {
         }),
       ),
     ).toBe(true);
-    const other = await s.manageUser(doctor, {
+    const other = await s.manageUser(operatorActor, {
       username: "availability-doctor",
       name: "Fictional Availability Doctor",
       role: "doctor",
@@ -105,7 +111,7 @@ describe("additional independent service paths", () => {
       ),
     ).toBe(true);
     await s.manageUser(
-      doctor,
+      operatorActor,
       { version: 1, role: "doctor", active: false },
       other.id,
     );
@@ -131,7 +137,7 @@ describe("additional independent service paths", () => {
     ).rejects.toMatchObject({ status: 404 });
   });
   it("changes a private account password and revokes its session", async () => {
-    const u = await s.manageUser(doctor, {
+    const u = await s.manageUser(operatorActor, {
       username: "password-test",
       name: "Fictional Password Tester",
       role: "front_desk",
@@ -163,7 +169,7 @@ describe("additional independent service paths", () => {
     try {
       await expect(
         s.manageUser(
-          doctor,
+          operatorActor,
           { version: desk.version, role: "front_desk", active: false },
           desk.id,
         ),
@@ -192,7 +198,7 @@ describe("additional independent service paths", () => {
     expect(result[0].mrn).toBe("PC-1000000");
   });
   it("returns clinical outputs only after a final entry", async () => {
-    const v = await s.startVisit(doctor, { patientId, doctorId });
+    const v = await s.startVisit(desk, { patientId, doctorId });
     await expect(s.reportData(doctor, "summary", v.id)).rejects.toMatchObject({
       status: 404,
     });
@@ -221,6 +227,29 @@ describe("additional independent service paths", () => {
     await expect(
       s.reportData(doctor, "unknown", patientId),
     ).rejects.toMatchObject({ status: 404 });
+  });
+});
+describe("role separation from the group diagram", () => {
+  it("denies doctor administrative mutations before input validation", async () => {
+    for (const action of [
+      () => s.manageUser(doctor, {}),
+      () => s.savePatient(doctor, {}),
+      () => s.bookAppointment(doctor, {}),
+      () => s.startVisit(doctor, {}),
+      () => s.fileVisit(doctor, patientId, {}),
+      () => s.saveInvoice(doctor, {}),
+      () => s.archivePatient(doctor, patientId, {}),
+      () => s.reconcilePatient(doctor, patientId, {}),
+    ])
+      await expect(action()).rejects.toMatchObject({ status: 403 });
+  });
+  it("denies doctor invoice data and administrative report exports", async () => {
+    expect((await s.dashboard(doctor)).counts).not.toHaveProperty("filed");
+    await expect(s.invoiceList(doctor)).rejects.toMatchObject({ status: 403 });
+    for (const kind of ["invoice", "attendance", "visits"])
+      await expect(s.reportData(doctor, kind, patientId)).rejects.toMatchObject(
+        { status: 403 },
+      );
   });
 });
 describe("authentication and role enforcement", () => {
@@ -273,7 +302,7 @@ describe("authentication and role enforcement", () => {
   it("does not include clinical fields in front desk patient responses", async () => {
     const p = await s.patientDetail(desk, patientId);
     expect(p).not.toHaveProperty("clinical");
-    expect(p).not.toHaveProperty("documents");
+    expect(p.documents).toBeInstanceOf(Array);
   });
   it("prevents all doctors from being disabled", async () => {
     await expect(
@@ -286,7 +315,7 @@ describe("authentication and role enforcement", () => {
     ).toBe(true);
   });
   it("creates an account, changes access, and revokes its session", async () => {
-    const u = await s.manageUser(doctor, {
+    const u = await s.manageUser(operatorActor, {
       username: "test-desk",
       name: "Fictional Tester",
       role: "front_desk",
@@ -294,7 +323,7 @@ describe("authentication and role enforcement", () => {
     });
     const l = await login("test-desk", "TestPassword!2026", "new-user");
     await s.manageUser(
-      doctor,
+      operatorActor,
       { version: 1, role: "front_desk", active: false },
       u.id,
     );
@@ -400,7 +429,7 @@ describe("patient changes and appointment concurrency", () => {
   });
   it("does not return an archived patient as bookable", async () => {
     const p = (
-      await s.savePatient(doctor, {
+      await s.savePatient(desk, {
         firstName: "Archived",
         lastName: "Fictional",
         dob: "2000-01-01",
@@ -408,7 +437,7 @@ describe("patient changes and appointment concurrency", () => {
         address: "Sample Road",
       })
     ).patient;
-    await s.archivePatient(doctor, p.id, {
+    await s.archivePatient(desk, p.id, {
       version: p.version,
       archived: true,
     });
@@ -473,7 +502,7 @@ describe("clinical corrections, filing, documents, and invoices", () => {
     ).toBe("filed");
   });
   it("writes only medication details supplied by the doctor", async () => {
-    const v = await s.startVisit(doctor, { patientId, doctorId });
+    const v = await s.startVisit(desk, { patientId, doctorId });
     const medication = {
       medication: "Fictional medicine",
       dosage: "Sample dose",
@@ -506,7 +535,7 @@ describe("clinical corrections, filing, documents, and invoices", () => {
         provisionalReason: "Primary record needs review",
       })
     ).patient;
-    await s.reconcilePatient(doctor, p.id, {
+    await s.reconcilePatient(desk, p.id, {
       targetId: patientId,
       reason: "Identity checked in fictional test",
     });

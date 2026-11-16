@@ -158,7 +158,7 @@ test("both roles complete registration, booking, clinical correction, filing, an
   const response = await page.request.get("/api/patients/" + patientId);
   const safe = await response.json();
   expect(safe).not.toHaveProperty("clinical");
-  expect(safe).not.toHaveProperty("documents");
+  expect(safe.documents).toBeInstanceOf(Array);
   await page.getByRole("tab", { name: "Visits", exact: true }).click();
   await page.getByRole("button", { name: "File visit", exact: true }).click();
   await expect(page.getByText("filed", { exact: true }).first()).toBeVisible();
@@ -201,7 +201,6 @@ test("doctor retrieves a private report and front desk is denied direct clinical
   await page.context().clearCookies();
   await login(page, "frontdesk");
   for (const path of [
-    "documents",
     "documents/" + docs[0].id,
     "users",
     "audit",
@@ -218,10 +217,10 @@ test("doctor retrieves a private report and front desk is denied direct clinical
     (await page.request.get("/api/documents/" + docs[0].id)).status(),
   ).toBe(401);
 });
-test("doctor uploads a sample report and retrieves the exact bytes", async ({
+test("receptionist uploads a sample report for the doctor", async ({
   page,
 }) => {
-  await login(page);
+  await login(page, "frontdesk");
   const docs = await (await page.request.get("/api/documents")).json();
   const p = docs[0].patientId;
   await page.goto("/app/patients/" + p);
@@ -332,10 +331,6 @@ test("keyboard forms and desktop pages pass axe checks", async ({ page }) => {
     "/app/patients",
     "/app/appointments",
     "/app/documents",
-    "/app/invoices",
-    "/app/reports",
-    "/app/accounts",
-    "/app/audit",
     "/app/settings",
   ]) {
     await page.goto(path);
@@ -353,6 +348,14 @@ test("keyboard forms and desktop pages pass axe checks", async ({ page }) => {
         nodes: v.nodes.map((n) => n.target),
       })),
     });
+  }
+  await page.context().clearCookies();
+  await login(page, "frontdesk");
+  for (const path of ["/app", "/app/patients", "/app/invoices", "/app/reports"]) {
+    await page.goto(path);
+    await expect(page.getByText("Loading practice records...")).toHaveCount(0);
+    const a = await new AxeBuilder({page}).withTags(["wcag2a","wcag2aa","wcag21aa"]).analyze();
+    results.push({path: "receptionist:" + path, violations: a.violations.map((v) => ({id:v.id, impact:v.impact, description:v.description, nodes:v.nodes.map((n)=>n.target)}))});
   }
   await mkdir("docs/evidence", { recursive: true });
   await writeFile(
@@ -480,4 +483,67 @@ test("a delayed earlier patient response cannot replace the selected patient", a
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+});
+
+test("doctor cannot use receptionist or operator actions through UI or direct requests", async ({
+  page,
+}) => {
+  await login(page);
+  await expect(
+    page.getByRole("button", { name: "Book appointment", exact: true }),
+  ).toHaveCount(0);
+  await page.goto("/app/patients");
+  await expect(
+    page.getByRole("button", { name: "Register patient", exact: true }),
+  ).toHaveCount(0);
+  for (const endpoint of [
+    "patients",
+    "appointments",
+    "visits",
+    "invoices",
+    "hours",
+    "blocks",
+    "users",
+  ]) {
+    const response = await page.request.post("/api/" + endpoint, {
+      headers: { origin: base },
+      data: {},
+    });
+    expect(response.status(), endpoint).toBe(403);
+  }
+  for (const endpoint of [
+    "invoices",
+    "users",
+    "audit",
+    "reports/visits?id=all",
+  ])
+    expect(
+      (await page.request.get("/api/" + endpoint)).status(),
+      endpoint,
+    ).toBe(403);
+  const patients = await (await page.request.get("/api/patients")).json();
+  await page.goto("/app/patients/" + patients[0].id);
+  await expect(
+    page.getByRole("button", { name: "Edit details", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Start walk-in visit", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("tab", { name: "Documents", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Add report", exact: true }),
+  ).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole("button", { name: "Book appointment", exact: true }),
+  ).toHaveCount(0);
+  await page.context().clearCookies();
+  await login(page, "frontdesk");
+  await page.goto("/app/documents");
+  await expect(
+    page.getByRole("button", { name: "Add report", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Retrieve report", exact: true }),
+  ).toHaveCount(0);
 });

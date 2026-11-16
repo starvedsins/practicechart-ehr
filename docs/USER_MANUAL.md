@@ -1,89 +1,156 @@
 # PracticeChart user manual
 
-PracticeChart stores fictional patient records for a course demonstration. The front desk manages administration. Doctors manage clinical information. Your account role determines what the server will let you read and change.
+Version: November 15, 2026. This manual follows the group's proposed-system role diagram. Use fictional patient data for the course demonstration.
 
-## Log in and log out
+## 1. Open the system and log in
 
-Open the website. Enter your username and password, then select Log in. The demo account buttons fill the public test credentials. They do not skip authentication. Select the exit icon beside your name to log out. On a phone, use More, Practice settings, then Log out.
+Open https://practicechart-ehr.vercel.app. Enter your username and password. Select Log in. The demo buttons fill the public credentials; they do not bypass authentication.
 
-![Doctor workspace](screenshots/doctor-overview.png)
+| Role | Username | Demo password |
+| --- | --- | --- |
+| Receptionist | frontdesk | DeskDemo!2026 |
+| Doctor | doctor | DoctorDemo!2026 |
 
-The Today page shows the patient worklist, practice counts, ready visits, and reminders. Use the top navigation to open Patients, Appointments, Documents, Invoices, or Reports. Documents are available only to doctors. Management links appear only where your role allows them.
+![Login screen with role demo buttons](screenshots/login.png)
 
-## Register and find a patient
+## 2. Understand the two workspaces
 
-Open Patients. Select Register patient. Enter the first and last names, date of birth, phone, and address. Optional fields include gender, emergency contact, and insurance reference. Use fictional details. Select Register patient to save.
+The receptionist registers patients, updates demographics, manages appointments, starts and files visits, creates manual invoices, uploads medical documents, and reviews visit counts. Receptionist is also called front desk in the stored role name. It cannot enter diagnoses, treatment, or lab results, or open private diagnostic file contents.
 
-The system assigns the MRN. It does not derive the MRN from a name. If a possible duplicate exists, the save message warns you. Check the existing record before continuing. People with the same name are not automatically treated as one person.
+![Receptionist workspace and office actions](screenshots/front-desk-overview.png)
 
-![Patient registration](screenshots/patient-registration.png)
+The doctor finds existing patients, opens prepared visits, records care and lab results, makes corrections, retrieves diagnostic reports, and prints clinical documents. The doctor can read the appointment worklist but cannot register patients, book appointments, file visits, create invoices, or manage staff accounts.
 
-Search by name or MRN. Open the correct record. Select Edit details to change demographics. The server checks the record version. If another person changed it first, reload and review the current values before saving again.
+![Doctor workspace without registration or booking controls](screenshots/doctor-overview.png)
 
-An interim record needs a provisional reason. A doctor can link it to the primary record after review. Both MRNs and earlier histories remain available. Do not create another patient record merely because the service is unavailable.
+The receptionist supplies patient and visit information. The doctor records clinical information. They use one patient record with different permissions. Neither employee login provides staff account management or the global audit log. Technical operators handle those tasks outside the staff website.
 
-## Book and manage an appointment
+## 3. Register a patient (receptionist)
 
-Select Book appointment. Choose the patient, doctor, date, length, and an available start time. Select Review appointment. Check the patient and interval. Select Confirm appointment to save it.
+Open Patients and select Register patient. Enter first name, last name, date of birth, phone, and address. Optional fields include gender, emergency contact, and insurance reference. Select Register patient to save. The server assigns a unique medical record number (MRN).
 
-![Appointment confirmation](screenshots/appointment-confirmation.png)
+![Receptionist patient registration form](screenshots/patient-registration.png)
 
-Times use Jamaica time. Availability can change while you review. The server and database check the interval again at confirmation. A conflict message means that the requested save did not complete. Choose another time.
+A possible duplicate warning does not block people who share names. Check the existing records. Create an interim record only with a clear provisional reason. The receptionist can later link it to the primary record. Both MRNs and earlier entries are kept. Do not create a second record because the database is unavailable.
 
-Open Appointments and select a date. Use the appointment action menu to mark arrival, reschedule, cancel, or start the visit. Rescheduling requires a free interval. A failed reschedule keeps the original booking. Cancellation keeps the history and releases the slot.
+## 4. Find and update a patient
 
-## Start and complete a visit
+Open Patients. Search by name or MRN and select the correct person. Both roles can find records. Only the receptionist can select Edit details and save demographic changes. If another person changed the record first, reload and review it before saving.
 
-For an appointment, use Start visit from its action menu. For a walk-in, open the patient and select Start walk-in visit. Choose the doctor. A walk-in record does not reserve an appointment slot.
+![Patient search by name or MRN](screenshots/patient-search.png)
 
-A doctor opens the Clinical record section. Enter the findings, notes, diagnosis, treatment, and any manual lab results. Vitals must include the values and units entered by the doctor. PracticeChart supplies no diagnosis or treatment advice.
+Archiving blocks new bookings. It does not delete the history. Filing a visit does not archive the patient.
 
-![Doctor clinical record](screenshots/doctor-clinical-record.png)
+## 5. Book an appointment (receptionist)
 
-Save a draft while work is incomplete. To complete the entry, choose Final, ready for filing. A final entry requires a diagnosis. The front desk can then see that the visit is ready. It cannot see the clinical note or diagnosis.
+Select Book appointment. Choose the patient, doctor, weekday, visit length, and available start time. Search the patient selector by name or MRN if needed. Select Review appointment. Check the patient's name and MRN, doctor, date, and time. Select Confirm appointment to save.
 
-To correct a final entry, enter the correction and a reason. Save final correction. The earlier revision remains in the history. Do not try to remove an earlier entry.
+![Review the selected patient and interval before confirmation](screenshots/appointment-confirmation.png)
 
-The front desk opens Visits and selects File visit after the doctor completes the entry. Filing records the visit in the logbook. It does not archive the patient.
+Times use Jamaica time. Availability checks the full visit length and both doctor and patient conflicts. The server checks again at confirmation. Choose another interval if it reports a conflict. The default practice hours are Monday to Friday, 08:00 to 17:00.
 
-## Prescriptions and certificates
+## 6. Manage appointments (receptionist)
 
-The doctor can add medicine fields to the clinical entry. Enter medication, dosage, route, frequency, duration, quantity, and any instructions. The printed prescription uses those exact fields.
+Open Appointments and choose the Schedule date. Open Manage appointment for the correct patient. Mark arrival, reschedule, cancel, or start the visit as needed. Rescheduling keeps the visit length unless you change it. A failed reschedule keeps the original booking. Cancellation keeps the record and releases the interval.
 
-![Prescription output](screenshots/prescription.png)
+![Appointment schedule and receptionist action controls](screenshots/appointment-schedule.png)
 
-Enter certificate text only when a certificate is needed. Complete the clinical entry before printing. The course demo marks outputs as fictional. It does not create a real signed medical document.
+Select Print schedule for the chosen date. Under Practice settings, the receptionist can change working hours and add unavailable intervals. Conflicting bookings must be moved first. The doctor sees schedule information without these editing controls.
 
-## Diagnostic reports
+## 7. Prepare and file a visit (receptionist)
 
-Only a doctor can use the Documents page or the Documents section of a patient record. Download the supplied fictional sample report. Select Add report, choose the correct patient, enter its title and type, and select the file. Files must be PDF, PNG, or JPEG and no larger than 4 MiB.
+Start visit from an arrived appointment, or select Start walk-in visit in the patient record. Choose the doctor. A walk-in visit does not reserve an appointment interval. The doctor can now open that visit from the patient record.
 
-![Private diagnostic reports](screenshots/private-diagnostic-documents.png)
+After the doctor saves a final clinical entry, the receptionist sees the ready status. Select File visit. The server requires a final diagnosis before it files the visit and updates the digital logbook. Receptionists see readiness without seeing the diagnosis. An attendance slip excludes diagnosis and treatment.
 
-Select Retrieve report to download the stored bytes. The server checks your session and role before it returns the file. A direct Blob address is not a public download link. To replace a report, select Add replacement beside that report. The form keeps its earlier document reference. The earlier file remains available.
+![Receptionist visit filing and attendance controls](screenshots/visit-filing.png)
 
-## Invoices and reports
+## 8. Record care and lab results (doctor)
 
-Create an invoice from the patient record or the Invoices page. Enter service descriptions, quantities, and unit charges in JMD. Review the draft and issue it. To void an issued invoice, enter a reason. The record remains in the history. An invoice is not proof of payment. PracticeChart does not process payments.
+Find the patient and open Visits. Select Open clinical record for the prepared visit. Enter symptoms, findings, diagnosis, treatment, vital values with units, and manual lab results. PracticeChart supplies no diagnosis or treatment advice.
 
-![Manual invoice list](screenshots/manual-invoices.png)
+![Doctor clinical entry form](screenshots/doctor-clinical-record.png)
 
-Use Reports for a daily appointment schedule, visit logbook, or doctor-only patient history. Use Visits for an attendance slip, clinical visit summary, prescription, or certificate. The front desk attendance slip omits diagnosis and treatment. Select Print or save PDF in the report window.
+Save a draft while work is incomplete. Select Final, ready for filing when the entry is complete. A final entry requires a diagnosis. The receptionist can then file the visit.
 
-A patient report is a reading copy. It is not a database backup. Full database backup and recovery use operator commands described in RECOVERY.md.
+To correct a final entry, change the necessary text, add a correction reason, and select Save final correction. Earlier entries keep their author, time, and content. Corrections to a filed visit do not remove its filing history.
 
-## Phone and keyboard use
+## 9. Print prescriptions and medical certificates (doctor)
 
-On a phone, use the bottom navigation and More menu. Forms use readable text and visible labels. The browser can zoom. Use Tab to move through controls. Use Enter or Space to activate a control. Use Escape to close a form. The patient section controls also support arrow keys, Home, and End.
+Enter each medication, dosage, route, frequency, duration, quantity, and any instructions in the clinical entry. Enter certificate text only when needed. Save the final entry. Under Visits, select Prescription, Certificate, Visit summary, or the patient history report. Use Print or save PDF in the report window.
 
-![Phone workspace](screenshots/phone-overview.png)
+![Prescription made from the doctor's entered fields](screenshots/prescription.png)
 
-Browser checks used a 390 by 844 pixel emulated phone view. A real phone test remains pending. Reduced-motion settings remove animation. Do not treat an automated accessibility scan as a complete accessibility review.
+Outputs use only the doctor's entries. The course demo marks them as fictional. It does not supply a real signed medical document.
 
-## Errors and support
+## 10. Upload medical documents (receptionist)
 
-If a save fails, read the message before retrying. A conflict needs a reload or a different appointment time. A missing file needs operator review. If the database or network is unavailable, the app does not create an offline clinical save. Keep the form information private and contact the group support lead.
+Open Documents or the patient's Documents section. Download the supplied fictional sample if using the public demo. Select Add report, choose the patient, enter the title and type, and select a PDF, PNG, or JPEG file up to 4 MiB. Select Store private report. The public demo accepts only the supplied sample.
 
-The proposed conversion method is phased use with a parallel reference process. Start with fictional registration and scheduling tasks. Add clinical and report tasks after role training. This reduces change at one time and gives staff a comparison process. It also needs extra checking and clear control of the authoritative record. This is a proposed method, not evidence that a live conversion occurred.
+![Receptionist document upload form](screenshots/document-upload.png)
 
-The training plan and blank acceptance forms are in TRAINING_AND_ACCEPTANCE.md. No staff member is recorded as trained until attendance and task results are recorded.
+The document list shows titles and upload metadata. To add a replacement, use Add replacement in the patient's Documents section. The earlier file is kept. Uploading a document does not create or change the doctor's lab-result text. Receptionists cannot download diagnostic contents.
+
+## 11. Retrieve diagnostic reports (doctor)
+
+Open Documents or the patient's Documents section. Check the patient and title. Select Retrieve report. The server checks the doctor's session before returning the private file. Report contents are not available through an unsigned storage URL.
+
+![Doctor diagnostic report retrieval](screenshots/private-diagnostic-documents.png)
+
+If a file is missing, contact the operator. Do not treat an unavailable file as a normal lab result.
+
+## 12. Create manual invoices (receptionist)
+
+Select Create invoice in a patient record or New invoice on the Invoices page. Enter service descriptions, quantities, and unit charges in JMD. Create the draft, review it, and issue it. To void an issued invoice, enter a reason. The record remains in the history.
+
+![Receptionist manual invoice list](screenshots/manual-invoices.png)
+
+An invoice is not proof of payment. PracticeChart does not process payments. The clinical visit summary is a separate output.
+
+## 13. Review visit counts (receptionist)
+
+Open Reports. View visit counts and the logbook, or open a daily appointment schedule. These administrative outputs do not include clinical notes. The doctor prints clinical reports from the patient record.
+
+![Receptionist visit counts and administrative reports](screenshots/visit-reports.png)
+
+A patient report is a reading copy for one patient. It cannot restore the database. A full backup includes the separate EHR database and its referenced files. Only technical operators run backup and restore commands. See RECOVERY.md.
+
+## 14. Use a phone, keyboard, and log out
+
+On a phone, use the bottom navigation and More. Use Tab to move between controls, Enter or Space to activate a control, and Escape to close a form. Patient section tabs also support arrow keys, Home, and End. The browser can zoom. Reduced-motion settings remove motion.
+
+![Phone workspace with role-specific navigation](screenshots/phone-overview.png)
+
+On a desktop, select the exit icon beside your name. On a phone, select More, Practice settings, then Log out. This ends the session. The supplied public demo accounts cannot change their passwords. Local accounts can change their own password under Practice settings.
+
+![Phone account settings and Log out](screenshots/mobile-logout.png)
+
+## 15. Errors and support
+
+Read a failed-save message before retrying. A conflict needs a reload or a different interval. The system does not confirm a save when the database is unavailable. Keep any unsaved information private. Contact the group's named support lead with the action, time, and error message. Do not send patient details or passwords to a group chat.
+
+## 16. Implementation method
+
+The proposed method is phased introduction with a parallel reference process. Prepare the database, private storage, accounts, backup, and printed manual first. Test with fictional data. Start with receptionist registration and scheduling. Then introduce doctor clinical recording, documents, and receptionist filing. Check the authoritative record at each handoff. Agree on a fallback process and a clear cutover decision before any real use.
+
+This is a proposed implementation method for the case study. The course demo is not evidence of a live practice rollout. Keep the current local database and upload folder before an upgrade. Test a restore in an isolated copy. Do not overwrite live data during a test.
+
+For a local demonstration, install Node.js 24 or later and Docker Desktop. In the application folder run npm ci, npm run setup, then npm run dev. Open http://localhost:3000. The database volume and private upload folder preserve data between restarts. GROUP_START_GUIDE.md contains the full setup and demonstration script.
+
+## 17. Training and acceptance
+
+Training is planned, not completed. Demonstrate each task, let the trainee practise with fictional data, and then ask them to repeat it without help. Record errors and repeat failed tasks.
+
+| Session | Audience | Planned task check |
+| --- | --- | --- |
+| Login, privacy, and logout, 20 minutes | Both roles | Explain role limits and end a session |
+| Registration and records, 30 minutes | Receptionist | Register, search, edit, and check an interim record |
+| Scheduling and filing, 30 minutes | Receptionist | Confirm, reschedule, cancel, start, and file a ready visit |
+| Clinical recording, 40 minutes | Doctor | Save a draft, final entry, lab result, and correction |
+| Documents and outputs, 25 minutes | Both, using their assigned tasks | Receptionist uploads; doctor retrieves and prints clinical outputs |
+| Invoices and visit counts, 20 minutes | Receptionist | Issue and void a sample invoice; read visit counts |
+| Recovery, 30 minutes | Technical operator | Restore into an isolated database and private file folder |
+
+Use the attendance records, task checklists, and blank acceptance forms in TRAINING_AND_ACCEPTANCE.md. Record actual participant, date, role, result, and issues after the session. Do not mark staff trained or accepted before they complete the tasks. Keep follow-up support and an issue register.
+
+Browser checks use emulated phone layouts. A real phone check, human usability testing, and signed acceptance remain group tasks.

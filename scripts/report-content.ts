@@ -66,7 +66,7 @@ Inputs include credentials, patient demographics, booking intervals, doctor-ente
 
 ## Design and implementation process
 
-The brief, assignment guide, syllabus, schedule, supporting lesson documents, and all 53 embedded images were reviewed. Requirements were separated from old-system interviews, lesson examples, draft algorithms, and unsupported statements. Source conflicts were recorded before implementation. The user selected manual invoices and in-app reminders.
+The brief, assignment guide, syllabus, schedule, supporting lesson documents, and the original 53 source images were reviewed. The current copy has a 54th image, an earlier generated PracticeChart diagram. That image is not a source requirement. Requirements were separated from old-system interviews, lesson examples, draft algorithms, and unsupported statements. Source conflicts were recorded before implementation. The user selected manual invoices and in-app reminders.
 
 The implementation used small server services, validation schemas, explicit role checks, SQL migrations, database constraints, and a shared interface. The initial green sidebar design was rejected as too close to the earlier application's appearance. It was replaced with ink-blue accents, warm light surfaces, top navigation, a patient worklist, and segmented record controls. No deleted application source or saved design reference was used.
 
@@ -88,6 +88,10 @@ The browser uses Next.js pages and authenticated route handlers. Zod validates i
 
 The class diagram represents domain models and service operations. The implementation uses TypeScript types, functions, and Drizzle table models. It does not pretend that every domain model is implemented as an object-oriented class.
 
+## Role correction on November 15, 2026
+
+The group supplied the proposed-system use case diagram as the role authority. Receptionists handle registration, scheduling, visit filing, invoices, uploads, and visit counts. Doctors handle care, lab results, prescriptions, certificates, and clinical history. Neither employee role manages staff accounts or reads the global audit log. PERMISSIONS.md records the exact server and UI matrix. The earlier broad doctor permissions are superseded.
+
 ## Procedural design
 
 MODULES.md contains source-linked processing narratives and graph instructions for 26 functions. CONTROL_FLOW.md contains the three complexity calculations, planar face boundaries, and independent syntactic candidates. TEST_PLAN.md maps feasible state and input cases to executable tests. Database constraints are tested through PostgreSQL, rather than assigned invented JavaScript branch counts.
@@ -104,7 +108,7 @@ The Today page leads with a patient worklist. The patient record separates demog
 
 ${summary}
 
-Unit and database tests cover valid and invalid partitions, boundaries, session and account states, simultaneous bookings, stale changes, clinical corrections, document rules, and invoices. Complete browser tests cover both roles. Direct clinical and file routes are denied to the front desk. Axe recorded zero violations on the nine checked desktop pages and the checked emulated phone page. Automated scans do not replace a full accessibility review or a real phone test.
+Unit and database tests cover valid and invalid partitions, boundaries, session and account states, simultaneous bookings, stale changes, clinical corrections, document rules, and invoices. Complete browser tests cover both roles. Direct clinical and file routes are denied to the front desk. Axe recorded zero violations on the nine checked desktop role/page combinations and the checked emulated phone page. Automated scans do not replace a full accessibility review or a real phone test.
 
 ### Performance
 
@@ -203,7 +207,7 @@ The cloud uses a separate practicechart_ehr database. Preview uses practicechart
 
 MRNs and invoice numbers use independent sequences. The number formatting function does not truncate longer sequence values. Patient birth dates cannot exceed the Jamaica calendar day. Appointment intervals are positive and at most four hours. PostgreSQL GiST exclusion constraints reject active overlaps for both doctor and patient. Trigger checks serialize doctor availability changes and reject blocked or outside-hours bookings. A doctor account guard keeps at least one active doctor. Clinical, prescription, and audit histories reject update and delete operations.
 
-The runtime role has no schema creation permission. It cannot update or delete protected history. The migration owner connection is separate from the runtime connection. Password hashes are never returned in staff API responses. Front desk patient queries omit clinical content and document metadata.
+The runtime role has no schema creation permission. It cannot update or delete protected history. The migration owner connection is separate from the runtime connection. Password hashes are never returned in staff API responses. Front desk patient queries omit clinical content and private file paths. Receptionists may view document metadata and upload files. Diagnostic bytes remain doctor-only.
 
 ## Column dictionary
 
@@ -229,8 +233,8 @@ All application data routes require a current session except login and health. T
 | POST /api/password | currentPassword and replacement password; closes existing sessions |
 | GET or POST /api/patients | optional q search, or validated demographic fields |
 | POST /api/patients/id | demographic fields and current version |
-| POST /api/patients/id/archive | version and archived boolean; doctor only |
-| POST /api/patients/id/reconcile | targetId and reason; doctor only |
+| POST /api/patients/id/archive | version and archived boolean; receptionist only |
+| POST /api/patients/id/reconcile | targetId and reason; receptionist only |
 | GET /api/availability | doctorId and Jamaica date |
 | POST /api/appointments | patientId, doctorId, ISO startAt and endAt; confirms transactionally |
 | POST /api/appointments/id | booking fields and current version; confirmed bookings only |
@@ -238,15 +242,15 @@ All application data routes require a current session except login and health. T
 | POST /api/visits | patientId, doctorId, optional matching appointmentId |
 | POST /api/visits/id/clinical | expectedRevision, state, structured content, and correction reason; doctor only |
 | POST /api/visits/id/file | expectedRevision; server requires the final diagnosis |
-| GET or POST /api/documents | doctor-only listing or multipart patientId, title, kind, file, optional replacesId |
+| GET or POST /api/documents | staff metadata listing; receptionist multipart upload with patientId, title, kind, file, optional replacesId |
 | GET /api/documents/id | authorised private file bytes, not a public storage URL |
 | POST /api/invoices | patientId and description, quantity, unitCents line items |
 | POST /api/invoices/id | version, issued or void state, and void reason |
-| GET or POST /api/users | doctor-only account listing, creation, and versioned changes |
-| GET /api/audit | doctor-only recent audit events |
+| GET or POST /api/users | blocked for both employee roles; operator provisioning only |
+| GET /api/audit | blocked for both employee roles; operator review only |
 | GET /api/reports/type | type-specific record ID and server role check |
-| GET or POST /api/hours | read doctor hours; doctor-only guarded hour changes |
-| POST /api/blocks | doctor-only interval creation or removal |
+| GET or POST /api/hours | read doctor hours; receptionist-only guarded hour changes |
+| POST /api/blocks | receptionist-only interval creation or removal |
 | GET /api/cron | secret-authenticated daily workflow start |
 
 ## Clinical and invoice payloads

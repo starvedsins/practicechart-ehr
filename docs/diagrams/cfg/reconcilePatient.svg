@@ -19,8 +19,8 @@
 <!-- n3 -->
 <g id="node3" class="node">
 <title>n3</title>
-<polygon fill="#f5f7fb" stroke="#8c9bb4" points="226.86,-1368.8 90.25,-1368.8 90.25,-1332.8 226.86,-1332.8 226.86,-1368.8"/>
-<text xml:space="preserve" text-anchor="middle" x="158.55" y="-1347.8" font-family="Arial" font-size="10.00">3: await requireRole(actor);</text>
+<polygon fill="#f5f7fb" stroke="#8c9bb4" points="256.53,-1368.8 60.57,-1368.8 60.57,-1332.8 256.53,-1332.8 256.53,-1368.8"/>
+<text xml:space="preserve" text-anchor="middle" x="158.55" y="-1347.8" font-family="Arial" font-size="10.00">3: await requireRole(actor, &quot;front_desk&quot;);</text>
 </g>
 <!-- n1&#45;&gt;n3 -->
 <g id="edge1" class="edge">

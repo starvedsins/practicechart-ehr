@@ -1,6 +1,6 @@
 digraph reconcilePatient { graph [label="reconcilePatient",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
 n2[shape=oval,label="2: END"];
-n3[shape=box,label="3: await requireRole(actor);"];
+n3[shape=box,label="3: await requireRole(actor, \"front_desk\");"];
 n4[shape=box,label="4: const { targetId, reason } = z .object({ t\nargetId: idSchema, reason: z.string().trim\n().min(3).max(500) }) .parse(input);"];
 n5[shape=box,label="5: idSchema.parse(id);"];
 n6[shape=diamond,label="6: id === targetId"];

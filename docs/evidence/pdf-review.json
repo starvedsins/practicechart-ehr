@@ -1,16 +1,17 @@
 {
+  "reviewedAt": "2026-11-15",
   "allPagesRendered": true,
   "files": [
     {
       "file": "docs/submission/development-report.pdf",
-      "pages": 14,
-      "renderedPages": 14,
+      "pages": 18,
+      "renderedPages": 18,
       "textFindings": []
     },
     {
       "file": "docs/submission/indexed-source-listing.pdf",
-      "pages": 183,
-      "renderedPages": 183,
+      "pages": 188,
+      "renderedPages": 188,
       "textFindings": []
     },
     {
@@ -33,20 +34,20 @@
     },
     {
       "file": "docs/submission/user-manual.pdf",
-      "pages": 10,
-      "renderedPages": 10,
+      "pages": 18,
+      "renderedPages": 18,
       "textFindings": []
     },
     {
       "file": ".private/submission/development-report.pdf",
-      "pages": 14,
-      "renderedPages": 14,
+      "pages": 18,
+      "renderedPages": 18,
       "textFindings": []
     },
     {
       "file": ".private/submission/indexed-source-listing.pdf",
-      "pages": 183,
-      "renderedPages": 183,
+      "pages": 188,
+      "renderedPages": 188,
       "textFindings": []
     },
     {
@@ -69,8 +70,8 @@
     },
     {
       "file": ".private/submission/user-manual.pdf",
-      "pages": 10,
-      "renderedPages": 10,
+      "pages": 18,
+      "renderedPages": 18,
       "textFindings": []
     }
   ]

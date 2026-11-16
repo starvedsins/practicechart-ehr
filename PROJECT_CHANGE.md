@@ -18,3 +18,7 @@ The local PostgreSQL presentation copy, migrations, tests, diagrams, manuals, so
 
 
 Final booking review checks added duration-aware availability, patient conflict checks, and the selected patient name and MRN. The final local regression suite passed 76 Vitest tests. Eight complete browser workflows cover both roles. The public release record and safe evidence state the final results.
+
+## 2026-11-15
+
+The group requested the original proposed-system role split. The earlier broad doctor permissions are superseded. Receptionists perform registration, scheduling, filing, invoices, uploads, and visit analytics. Doctors perform clinical work and clinical outputs. Staff provisioning and global audit review are operator tasks. Direct API checks enforce the roles. The user manual, screenshots, diagrams, programme manual, processing narratives, and role tests were updated. Existing records and prior clinical revisions are preserved.

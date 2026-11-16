@@ -2,31 +2,33 @@
 
 ## Role permissions
 
-The server applies these rules on each request. Hidden controls are not a security boundary. The server reads the current account role and active state from the database. Role changes revoke existing sessions.
+Revised on November 15, 2026, to follow the group's proposed-system diagram and functional requirements F1 to F9. Receptionist is the UI name for the stored front_desk role. Doctor is a clinical role. Each request uses the current database session and role.
 
-| Function | Front desk | Doctor |
+| Function | Receptionist | Doctor |
 | --- | --- | --- |
-| View and change patient demographics | Yes | Yes |
-| Register a patient or provisional record | Yes | Yes |
-| Archive or reconcile patient records | No | Yes |
-| Book, reschedule, cancel, and mark arrival | Yes | Yes |
-| View and print appointment schedules | Yes | Yes |
-| Create, issue, print, and void manual invoices | Yes | Yes |
-| Start a visit, view readiness, and file a ready visit | Yes | Yes |
-| View notes, diagnoses, treatment, and clinical history | No | Yes |
-| Enter or correct clinical records | No | Yes |
-| Upload or retrieve diagnostic files | No | Yes |
-| Create or print prescriptions and certificates | No | Yes |
-| Print full clinical reports and visit summaries | No | Yes |
-| Print an attendance slip without clinical details | Yes | Yes |
-| Create, change, or disable staff accounts | No | Yes |
-| Set doctor hours and unavailable intervals | No | Yes |
-| View audit history | No | Yes |
+| Register patients, change demographics, create interim records | Yes | No |
+| Find patient records and view demographics | Yes | Yes, for care |
+| Archive or reconcile patient records | Yes | No |
+| Book, confirm, reschedule, cancel, and mark arrival | Yes | No |
+| Read the worklist and appointment schedule | Yes | Yes, read only |
+| Set practice hours and unavailable intervals | Yes | No |
+| Start a visit, file a ready visit, print attendance | Yes | No |
+| Create, issue, print, or void manual invoices | Yes | No |
+| View visit counts and administrative reports | Yes | No |
+| Upload medical documents and add replacements | Yes | No |
+| View document titles and upload metadata | Yes | Yes |
+| Download diagnostic document contents | No | Yes |
+| View or record clinical notes, diagnoses, treatment, and manual lab results | No | Yes |
+| Correct final clinical entries with a reason | No | Yes |
+| Create and print prescriptions, certificates, clinical summaries, and patient history | No | Yes |
+| Manage staff accounts or view the full audit log through the website | No | No |
 | Change own password and log out | Yes | Yes |
-| Download a full backup or run a restore in the website | No | No |
+| Full backup or restore through the website | No | No |
 
-Front desk patient responses omit clinical entries and diagnostic document metadata. Visit readiness does not disclose the diagnosis. A front desk attendance slip contains attendance information only. Invoice lines are entered by staff. They do not prove payment.
+The receptionist prepares the visit. The doctor records care and marks the entry final. The receptionist files the ready visit. Filing still requires a final doctor-entered diagnosis. Receptionist responses contain document metadata for filing and replacement, but no clinical entries or private file paths. File bytes remain doctor-only. Doctors can enter lab results in the clinical record; this is separate from the receptionist's document upload task.
 
-Full backups and restores require a private operator terminal. The public demo protects its supplied accounts. It accepts only the supplied fictional diagnostic file. Doctors can manage other fictional demo accounts. The final active doctor cannot be removed.
+Staff provisioning, audit investigation, full backups, and restores are operator tasks outside the two employee login roles. There is no third employee login role. The SQL role constraint still permits only doctor and front_desk. Account-management APIs reject both employee roles. Tests may construct a trusted operator context only for fixture provisioning.
 
-These are course implementation rules. They are not evidence of legal compliance or clinical approval.
+The source diagram gives the patient a separate registration-form action. UC01 instead says the receptionist completes it. This release follows the earlier no-portal decision and has no patient-facing intake form. That is a gap against the diagram, not proof that a patient can use the current staff form. See SPEC_AUDIT.md. Email delivery remains deferred by the earlier user decision. In-app confirmations and reminders remain available. There is no payment processing or external medical integration.
+
+The earlier broader doctor permissions are superseded by this matrix. UI controls and server checks must agree. A hidden control alone is not a permission check.

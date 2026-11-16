@@ -62,3 +62,11 @@ Submission PDFs are in docs/submission. Local copies with private group cover de
 Each member still needs an actual module contribution and explanation. The group still needs a rehearsal, training attendance, human acceptance results, a real phone test, and confirmation of its presentation slot. Save a separate recovery key copy in a controlled location. Collaborator invitations need member usernames.
 
 The short local load tests do not establish cloud performance or 99 percent availability. No clinical approval, legal compliance, completed staff training, human acceptance, or live pilot is claimed. Full path coverage is not claimed. TEST_PLAN.md records feasible paths and coverage limits.
+
+## Role correction, November 15, 2026
+
+The original proposed-system diagram now defines the role split. Registration, appointment changes, visit filing, invoices, document uploads, and visit counts belong to the receptionist. Clinical notes, diagnoses, treatment, manual lab results, prescriptions, certificates, clinical reports, and diagnostic retrieval belong to the doctor. Neither employee login manages staff accounts or reads the global audit log. See PERMISSIONS.md.
+
+The correction preserves database records and clinical history. It changes server permissions and UI controls. No schema migration or data reset is required. The new local regression suite has 78 unit/database tests and nine browser workflows. Historical October evidence remains labelled with its original date. The October load and recovery results are baseline evidence, not a new November benchmark or restore claim.
+
+The user manual was rewritten with the corrected tasks, matching colour screenshots under each section, implementation guidance, and a planned training section. No completed human training or acceptance is claimed. The group chat reports a presentation on November 17 at noon; confirm that course arrangement with the tutor. The private chat files and raw source images are not included in public source.

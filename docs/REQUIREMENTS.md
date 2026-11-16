@@ -2,7 +2,7 @@
 
 ## Source authority
 
-The private source brief is Software Implementation Group Project Sem1-26_27.md. Its 53 embedded images were extracted and inspected during analysis. Images 26 and 27 contain the high level requirements. Image 32 contains F1 to F9. Image 33 contains N1 to N10. Images 38 to 41 are draft design diagrams. Images 42 to 53 are draft flow graphs. The raw brief, interviews, chats, and scans are not published here.
+The private source brief is Software Implementation Group Project Sem1-26_27.md. The current copy contains 54 embedded images. The first 53 are source material. Image 54 is the earlier generated PracticeChart diagram and is not independent authority. Images 26 and 27 contain the high level requirements. Image 32 contains F1 to F9. Image 33 contains N1 to N10. Images 38 to 41 are draft design diagrams. Images 42 to 53 are draft flow graphs. The raw brief, interviews, chats, and scans are not published here.
 
 Assignment_Guide.docx controls the course report structure. Software_ImplTest_Syllabus (2).doc describes coding, testing, metrics, maintenance, configuration management, and team work. The semester schedule gives presentation windows. Lesson slides, tutorial exercises, and past papers support test methods. The revision guide is supporting material, not a higher authority than the course documents.
 
@@ -16,7 +16,7 @@ The source contains a private interview and observation notes. Those records des
 | AUTH-02 | N2; account administration | Server role checks, disabled accounts, last doctor guard | Denied direct URL tests, account and session tests |
 | PAT-01 | F1, F2, UC01; registration fields and validation | Patient form, Zod, SQL date rule, unique MRN sequence | Date and string boundaries; duplicate name and MRN tests |
 | PAT-02 | F3; patient ID and name search | Parameterised search, demographic updates, version check | Search browser flow and stale update race |
-| PAT-03 | F4; interim record | Marked provisional record and doctor-controlled linking | Reconciliation test; both MRNs retained |
+| PAT-03 | F4; interim record | Marked provisional record and receptionist linking | Reconciliation test; both MRNs retained |
 | APT-01 | High level requirements; appointment requests | Doctor hours, available slots, review and confirmation | Booking browser flow and hour boundaries |
 | APT-02 | Draft appointment functions | Reschedule, cancel, arrival, completion | Browser reschedule and cancel; rollback tests |
 | APT-03 | User requirement; concurrent overlaps | PostgreSQL GiST exclusions for doctor and patient | Simultaneous booking and adjacent interval tests |
@@ -45,8 +45,8 @@ The source contains a private interview and observation notes. Those records des
 | Lab output repeats DisplayReceipt | Retrieve the actual diagnostic file by patient-linked document ID. |
 | Receipt lists no money, but another page asks for invoices | Keep the visit summary separate. Add manual invoices by user choice. No payment processing. |
 | Receptionist narrative displays full clinical history | Front desk receives demographic and visit-state data only. Clinical access needs a doctor role. |
-| Duplicate interim files conflict with unique patient records | Make interim creation explicit and mark it provisional. Doctor linking preserves both identifiers and histories. Never bypass an outage by making another record. |
-| Filing calls the patient inactive or archived | Close the visit. Keep the patient available for future care. Patient archiving is a separate doctor action. |
+| Duplicate interim files conflict with unique patient records | Make interim creation explicit and mark it provisional. Receptionist linking preserves both identifiers and histories. Never bypass an outage by making another record. |
+| Filing calls the patient inactive or archived | Close the visit. Keep the patient available for future care. Patient archiving is a separate receptionist action. |
 | Draft code stores or compares plain passwords | Store Argon2id hashes. Derive the role from the server account. |
 | Sequence drafts confirm registration before a database save | Show success only after the transaction commits. |
 | Draft graphs claim all input functions have complexity 2 | Generate graphs from the implemented functions. Record the graph convention and calculate all three methods. |
@@ -59,3 +59,9 @@ The source contains a private interview and observation notes. Those records des
 ## Fixed defaults
 
 The practice time zone is America/Jamaica. Initial doctor hours are Monday to Friday, 08:00 to 17:00. Available start times use 30 minute steps. The booking form allows several visit lengths; the database still rejects overlaps. Appointments must be at least one minute and no more than four hours. There is no patient self-service portal. Local upload storage is private. Public demo uploads accept only the supplied fictional report.
+
+## Role correction, November 15, 2026
+
+The user supplied the original proposed-system role diagram as the authority for the correction. PERMISSIONS.md supersedes the earlier broad doctor permissions. Receptionists perform registration, scheduling, filing, invoicing, uploads, and visit analytics. Doctors perform clinical work and outputs. Staff account management is not assigned to either employee login. Receptionists can view upload metadata but cannot retrieve private diagnostic bytes or clinical notes. The original brief supports manual lab-result entry by the doctor, separate from office document upload. The generated earlier PracticeChart diagram was an implementation decision, not a source requirement.
+
+Read SPEC_AUDIT.md for the November review of each numbered requirement, partial coverage, and evidence limits.

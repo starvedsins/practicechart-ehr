@@ -75,4 +75,8 @@ local-persistence.json records an actual Docker database restart. Fingerprints o
 
 private-blob.json records an unsigned request to a real private Blob object. It returned 403. The evidence omits the stored URL. cloud-smoke-production.json records both roles against the public domain without a deployment bypass.
 
-workflows.json records two actual cloud Workflow runs. They produced one reminder for one fictional appointment and recorded file integrity results. github-actions.json records successful remote verification and backup jobs. recovery-browser.json records a separate restored application drill. These probes are separate from the 76 Vitest tests and eight Playwright suite cases.
+workflows.json records two actual cloud Workflow runs. They produced one reminder for one fictional appointment and recorded file integrity results. github-actions.json records successful remote verification and backup jobs. recovery-browser.json records a separate restored application drill. These dated probes are separate from the current regression suite. Read build-summary.json for current test counts.
+
+## November 15 role regression
+
+The proposed-system diagram is now the role authority. Direct service and HTTP tests reject doctor registration, appointment changes, visit creation and filing, invoice access, visit analytics, staff management, and office schedule changes. Receptionists can upload documents and read metadata but cannot retrieve diagnostic bytes or clinical notes. Browser checks cover both roles, phone navigation, and the receptionist-to-doctor-to-receptionist visit handoff. Nine desktop role/page combinations and an emulated phone page are checked with axe. Staff provisioning test fixtures use a trusted operator context; no operator login role is added to the database.
