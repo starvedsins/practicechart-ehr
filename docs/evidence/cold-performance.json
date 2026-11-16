@@ -1,29 +1,29 @@
 {
-  "testedAt": "2026-10-31T05:35:53.023Z",
+  "testedAt": "2026-11-16T04:38:09.211Z",
   "method": "Three fresh local production Node processes and fresh Chromium sessions. A health probe precedes login. Each process shows one first patient display and one repeat display.",
   "limits": "Process-cold measurements. PostgreSQL and operating system caches remain warm. This is not a Vercel cold start or a cold database test. Three samples do not establish a percentile guarantee.",
   "environmentSource": "performance.json",
   "results": [
     {
       "run": 1,
-      "startupMs": 1916.03,
-      "loginMs": 524.66,
-      "firstPatientDisplayMs": 147.85,
-      "warmPatientDisplayMs": 176.09
+      "startupMs": 1543.09,
+      "loginMs": 402.45,
+      "firstPatientDisplayMs": 141.62,
+      "warmPatientDisplayMs": 161.15
     },
     {
       "run": 2,
-      "startupMs": 1524.34,
-      "loginMs": 528.83,
-      "firstPatientDisplayMs": 152.11,
-      "warmPatientDisplayMs": 175.08
+      "startupMs": 1566.14,
+      "loginMs": 375.64,
+      "firstPatientDisplayMs": 161.64,
+      "warmPatientDisplayMs": 167.6
     },
     {
       "run": 3,
-      "startupMs": 1477.63,
-      "loginMs": 384.63,
-      "firstPatientDisplayMs": 146.04,
-      "warmPatientDisplayMs": 185.18
+      "startupMs": 1459.63,
+      "loginMs": 421.95,
+      "firstPatientDisplayMs": 166.78,
+      "warmPatientDisplayMs": 127.28
     }
   ]
 }

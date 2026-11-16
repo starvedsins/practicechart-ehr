@@ -1,0 +1,10 @@
+digraph duplicatePatients { graph [label="duplicatePatients",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: await requireRole(actor, \"front_desk\");"];
+n4[shape=box,label="4: const data = patientInput.parse(input);"];
+n5[shape=box,label="5: await event(db, actor, \"search\", \"patient_\nduplicates\");"];
+n6[shape=box,label="6: RETURN rows( sql`SELECT id,mrn,first_name,\nlast_name,dob FROM patients WHERE lower(fi\nrst_name)=lower(${data.firstName}) AND low\ner(last_name)=lower(${da"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n5[label=""];
+n5->n6[label=""];
+n6->n2[label=""];}

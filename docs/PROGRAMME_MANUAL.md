@@ -4,7 +4,7 @@ This manual describes the implemented source, database, interfaces, file formats
 
 ## Source and architecture
 
-The Next.js App Router hosts the login, workspace, report pages, and route handlers. The workspace is a client interface backed by authenticated server functions. Drizzle models define typed rows. SQL migrations add database-level invariants. The indexed source listing contains all authored application source, migrations, scripts, tests, and project configuration. Third-party packages and generated bundles are excluded.
+The Next.js App Router hosts the public registration form, login, staff workspace, report pages, and route handlers. The workspace is a client interface backed by authenticated server functions. Drizzle models define typed rows. SQL migrations add database-level invariants. The indexed source listing contains all authored application source, migrations, scripts, tests, and project configuration. Third-party packages and generated bundles are excluded.
 
 The important source groups are src/app for routes and pages, src/components for interface modules, src/lib for authentication, validation, storage, and transactional services, and src/workflows for daily work. scripts contains setup, migration, test, performance, course analysis, and recovery tools. The SQL migrations are the authority for constraints and triggers. Schema hashes prevent silent migration changes.
 
@@ -28,11 +28,14 @@ The cloud uses a separate practicechart_ehr database. Preview uses practicechart
 | visits | Patient, doctor, optional unique appointment, clinical revision number, and filing state |
 | clinical_revisions | Immutable doctor content, revision, state, correction reason, and author |
 | prescriptions | Exact doctor-entered medicine fields linked to a final revision |
-| documents | Patient association, private path, MIME, size, digest, replacement reference, and author |
+| documents | Patient and optional visit association, private path, MIME, size, digest, replacement reference, and author |
 | invoices | Unique number, manual line items, integer-cent total, state, reason, and version |
 | audit_events | Append-only actor, action, record reference, metadata, and time |
 | reminders | Unique appointment and due date pair |
 | backup_runs | Backup status, private bundle reference, and time |
+| registration_intakes | Public demographic submissions, review state, version, and accepted patient reference |
+| public_form_limits | Hashed hourly submission bucket, count, and expiry |
+| notification_outbox | Booking event, consent checks, stable send request, provider result, and retry state |
 | migrations | Applied migration names, hashes, and time |
 
 MRNs and invoice numbers use independent sequences. The number formatting function does not truncate longer sequence values. Patient birth dates cannot exceed the Jamaica calendar day. Appointment intervals are positive and at most four hours. PostgreSQL GiST exclusion constraints reject active overlaps for both doctor and patient. Trigger checks serialize doctor availability changes and reject blocked or outside-hours bookings. A doctor account guard keeps at least one active doctor. Clinical, prescription, and audit histories reject update and delete operations.
@@ -85,6 +88,7 @@ The runtime role has no schema creation permission. It cannot update or delete p
 | documents | replaces_id | uuid | YES |  |
 | documents | author_id | uuid | NO |  |
 | documents | created_at | timestamp with time zone | NO | now() |
+| documents | visit_id | uuid | YES |  |
 | invoices | id | uuid | NO | gen_random_uuid() |
 | invoices | number | text | NO | next_record_number('INV-'::text, 'invoice_seq'::regclass) |
 | invoices | patient_id | uuid | NO |  |
@@ -100,6 +104,18 @@ The runtime role has no schema creation permission. It cannot update or delete p
 | migrations | name | text | NO |  |
 | migrations | sha256 | text | NO |  |
 | migrations | applied_at | timestamp with time zone | NO | now() |
+| notification_outbox | id | uuid | NO | gen_random_uuid() |
+| notification_outbox | appointment_id | uuid | NO |  |
+| notification_outbox | appointment_version | integer | NO |  |
+| notification_outbox | kind | text | NO |  |
+| notification_outbox | status | text | NO | 'queued'::text |
+| notification_outbox | attempts | integer | NO | 0 |
+| notification_outbox | next_attempt_at | timestamp with time zone | NO | now() |
+| notification_outbox | provider_id | text | YES |  |
+| notification_outbox | last_error | text | NO | ''::text |
+| notification_outbox | created_at | timestamp with time zone | NO | now() |
+| notification_outbox | sent_at | timestamp with time zone | YES |  |
+| notification_outbox | delivery_payload | jsonb | YES |  |
 | patients | id | uuid | NO | gen_random_uuid() |
 | patients | mrn | text | NO | next_record_number('PC-'::text, 'mrn_seq'::regclass) |
 | patients | first_name | text | NO |  |
@@ -115,12 +131,29 @@ The runtime role has no schema creation permission. It cannot update or delete p
 | patients | archived | boolean | NO | false |
 | patients | version | integer | NO | 1 |
 | patients | created_at | timestamp with time zone | NO | now() |
+| patients | email | text | NO | ''::text |
+| patients | email_opt_in | boolean | NO | false |
+| patients | reviewed_by | uuid | YES |  |
+| patients | reviewed_at | timestamp with time zone | YES |  |
+| patients | review_reason | text | NO | ''::text |
 | prescriptions | id | uuid | NO | gen_random_uuid() |
 | prescriptions | visit_id | uuid | NO |  |
 | prescriptions | revision_id | uuid | NO |  |
 | prescriptions | patient_id | uuid | NO |  |
 | prescriptions | content | jsonb | NO |  |
 | prescriptions | created_at | timestamp with time zone | NO | now() |
+| public_form_limits | bucket | text | NO |  |
+| public_form_limits | attempts | integer | NO |  |
+| public_form_limits | expires_at | timestamp with time zone | NO |  |
+| registration_intakes | id | uuid | NO |  |
+| registration_intakes | payload | jsonb | NO |  |
+| registration_intakes | status | text | NO | 'pending'::text |
+| registration_intakes | patient_id | uuid | YES |  |
+| registration_intakes | reviewed_by | uuid | YES |  |
+| registration_intakes | review_reason | text | NO | ''::text |
+| registration_intakes | version | integer | NO | 1 |
+| registration_intakes | created_at | timestamp with time zone | NO | now() |
+| registration_intakes | reviewed_at | timestamp with time zone | YES |  |
 | reminders | id | uuid | NO | gen_random_uuid() |
 | reminders | appointment_id | uuid | NO |  |
 | reminders | due_date | date | NO |  |
@@ -152,11 +185,17 @@ The runtime role has no schema creation permission. It cannot update or delete p
 
 ## Server interfaces
 
-All application data routes require a current session except login and health. The cron route requires its separate secret. Browser mutations must have the same origin as the request host. JSON uses camelCase. Validation errors return 400. Missing sessions return 401. Denied roles return 403. Missing records return 404. Stale changes, duplicate values, and overlaps return 409 where applicable. Unconfirmed service failures return 503. Private responses are not cached.
+All staff data routes require a current session. Login, health, and public registration do not require a staff session. The cron route requires its separate secret. Browser mutations must have the same origin as the request host. JSON uses camelCase. Validation errors return 400. Missing sessions return 401. Denied roles return 403. Missing records return 404. Stale changes, duplicate values, and overlaps return 409 where applicable. Unconfirmed service failures return 503. Private responses are not cached.
 
 | Route group | Input contract and behaviour |
 | --- | --- |
 | POST /api/login | username and password; creates an eight-hour HTTP-only session cookie |
+| POST /api/public-registration | Public demographic form, submissionId and consent; returns a reference only |
+| GET or POST /api/intakes/id | Receptionist-only pending form review; acceptance and MRN creation are atomic |
+| POST /api/patients/check-duplicates | Receptionist-only matching name and birth-date check before saving |
+| POST /api/patients/id/review | Doctor review reason and current version for an interim record |
+| GET /api/notifications | Receptionist-only provider queue status |
+| POST /api/notifications/retry | Receptionist starts due queue processing |
 | POST /api/logout | closes the current server session and removes the cookie |
 | POST /api/password | currentPassword and replacement password; closes existing sessions |
 | GET or POST /api/patients | optional q search, or validated demographic fields |
@@ -170,7 +209,7 @@ All application data routes require a current session except login and health. T
 | POST /api/visits | patientId, doctorId, optional matching appointmentId |
 | POST /api/visits/id/clinical | expectedRevision, state, structured content, and correction reason; doctor only |
 | POST /api/visits/id/file | expectedRevision; server requires the final diagnosis |
-| GET or POST /api/documents | staff metadata listing; receptionist multipart upload with patientId, title, kind, file, optional replacesId |
+| GET or POST /api/documents | staff metadata listing; receptionist multipart upload with patientId, title, kind, file, optional replacesId and visitId; visit is required for a lab report |
 | GET /api/documents/id | authorised private file bytes, not a public storage URL |
 | POST /api/invoices | patientId and description, quantity, unitCents line items |
 | POST /api/invoices/id | version, issued or void state, and void reason |
@@ -207,6 +246,6 @@ Run npm ci, npm run setup, and npm run dev. For the presentation, stop developme
 
 ## Verification
 
-Vitest recorded 78 passing tests and 0 failed tests. Playwright recorded 9 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 92.35% of statements and 83.16% of branches. This is not a claim of full path coverage.
+Vitest recorded 87 passing tests and 0 failed tests. Playwright recorded 10 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 91.88% of statements and 85.27% of branches. This is not a claim of full path coverage.
 
 The control flow appendix records actual source-linked graphs and calculations. The test plan identifies feasible path cases and limits. Safe evidence includes automated results, axe results, load results, and an actual restore result. No human test or training completion is inferred from these files.

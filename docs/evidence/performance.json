@@ -1,5 +1,5 @@
 {
-  "testedAt": "2026-10-31T01:28:43.268Z",
+  "testedAt": "2026-11-16T04:53:21.091Z",
   "environment": {
     "target": "http://localhost:3000",
     "server": "Local Next.js production build",
@@ -14,8 +14,8 @@
     "driver": "pg through Drizzle; maximum 5 connections per process",
     "network": "Same Windows host; PostgreSQL 18 in Docker Desktop via localhost",
     "dataset": {
-      "patients": 1016,
-      "clinicalRevisions": 5
+      "patients": 1041,
+      "clinicalRevisions": 29
     }
   },
   "results": [
@@ -24,14 +24,14 @@
       "durationSeconds": 30,
       "backgroundPattern": "Each background session requests patient search and patient detail, then waits 1 second.",
       "uiPattern": "One authenticated browser opens the complete patient overview, then waits 1 second.",
-      "uiLoginMs": 258.99,
-      "firstRecordMs": 148.87,
+      "uiLoginMs": 255.6,
+      "firstRecordMs": 125.06,
       "warmRecordDisplay": {
-        "samples": 25,
-        "minMs": 128.86,
-        "p50Ms": 145.52,
-        "p95Ms": 164.21,
-        "maxMs": 176.06
+        "samples": 26,
+        "minMs": 81.02,
+        "p50Ms": 143.23,
+        "p95Ms": 146.87,
+        "maxMs": 147.53
       },
       "api": {
         "samples": 0,
@@ -43,62 +43,62 @@
       "apiRequests": 0,
       "errors": 0,
       "loginWithin3000ms": true,
-      "warmDisplaysWithin2000ms": 25,
-      "totalWarmDisplays": 25
+      "warmDisplaysWithin2000ms": 26,
+      "totalWarmDisplays": 26
     },
     {
       "concurrentSessions": 10,
       "durationSeconds": 30,
       "backgroundPattern": "Each background session requests patient search and patient detail, then waits 1 second.",
       "uiPattern": "One authenticated browser opens the complete patient overview, then waits 1 second.",
-      "uiLoginMs": 255.45,
-      "firstRecordMs": 138.26,
+      "uiLoginMs": 241.4,
+      "firstRecordMs": 142.95,
       "warmRecordDisplay": {
-        "samples": 25,
-        "minMs": 127.72,
-        "p50Ms": 167.12,
-        "p95Ms": 190.66,
-        "maxMs": 274.74
+        "samples": 26,
+        "minMs": 76.65,
+        "p50Ms": 130.16,
+        "p95Ms": 145.09,
+        "maxMs": 146.61
       },
       "api": {
-        "samples": 522,
-        "minMs": 9.05,
-        "p50Ms": 20.24,
-        "p95Ms": 39.91,
-        "maxMs": 66.53
+        "samples": 528,
+        "minMs": 7.16,
+        "p50Ms": 15.08,
+        "p95Ms": 32.38,
+        "maxMs": 49.33
       },
-      "apiRequests": 522,
+      "apiRequests": 528,
       "errors": 0,
       "loginWithin3000ms": true,
-      "warmDisplaysWithin2000ms": 25,
-      "totalWarmDisplays": 25
+      "warmDisplaysWithin2000ms": 26,
+      "totalWarmDisplays": 26
     },
     {
       "concurrentSessions": 50,
       "durationSeconds": 30,
       "backgroundPattern": "Each background session requests patient search and patient detail, then waits 1 second.",
       "uiPattern": "One authenticated browser opens the complete patient overview, then waits 1 second.",
-      "uiLoginMs": 625.71,
-      "firstRecordMs": 144.72,
+      "uiLoginMs": 451.96,
+      "firstRecordMs": 141.85,
       "warmRecordDisplay": {
-        "samples": 24,
-        "minMs": 130.75,
-        "p50Ms": 166.56,
-        "p95Ms": 271.42,
-        "maxMs": 273.06
+        "samples": 25,
+        "minMs": 123.47,
+        "p50Ms": 129.52,
+        "p95Ms": 147.16,
+        "maxMs": 240.07
       },
       "api": {
-        "samples": 2818,
-        "minMs": 8.28,
-        "p50Ms": 19.06,
-        "p95Ms": 111.39,
-        "maxMs": 277.02
+        "samples": 2842,
+        "minMs": 7.04,
+        "p50Ms": 15.11,
+        "p95Ms": 68.58,
+        "maxMs": 161.23
       },
-      "apiRequests": 2818,
+      "apiRequests": 2842,
       "errors": 0,
       "loginWithin3000ms": true,
-      "warmDisplaysWithin2000ms": 24,
-      "totalWarmDisplays": 24
+      "warmDisplaysWithin2000ms": 25,
+      "totalWarmDisplays": 25
     }
   ],
   "limits": [

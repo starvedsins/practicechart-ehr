@@ -82,3 +82,9 @@ The schedule lists presentations in the weeks of November 9 to 13 and November 1
 ## November presentation preparation
 
 Use the revised role matrix in PERMISSIONS.md. The doctor's role is clinical. Receptionists prepare and file visits and handle office work. Use the November 15 user manual and its task screenshots. The group reports a November 17 presentation at noon and a printed user manual submission. Confirm these arrangements with the tutor. Practise the role handoff before presenting. Do not treat generated documentation as evidence that members completed their coding or training tasks.
+
+## Patient form and email demonstration
+
+Open /register without staff login. Send a fictional form. Log in as receptionist, open Registration forms, and accept it. Check that the MRN is created only once. Reception can also register directly. Give a separate-record reason only after checking a matching file.
+
+Show Email status after a consented booking. The public demo sends only to a provider test inbox. Read EMAIL_AND_OPERATOR_SETUP.md for private mail settings and the operator account commands. Read AUDIT_RESOLUTION.md for current scope and remaining human tasks.

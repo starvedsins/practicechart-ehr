@@ -1,7 +1,20 @@
 export async function dailyPracticeTasks() {
   "use workflow";
   await createReminders();
+  await sendEmails();
   await reconcileFiles();
+  return { complete: true };
+}
+export async function sendEmails() {
+  "use step";
+  const { queueEmailReminders } = await import("../lib/notifications");
+  await queueEmailReminders();
+  const { start } = await import("workflow/api");
+  const { sendAppointmentEmails } = await import("./notifications");
+  await start(sendAppointmentEmails, []);
+  const { db } = await import("../lib/db");
+  const { sql } = await import("drizzle-orm");
+  await db.execute(sql`DELETE FROM public_form_limits WHERE expires_at<now()`);
   return { complete: true };
 }
 export async function createReminders() {

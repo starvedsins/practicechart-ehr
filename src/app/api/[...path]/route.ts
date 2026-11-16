@@ -16,6 +16,9 @@ import { readPrivateFile, storeFile, samplePdf } from "@/lib/storage";
 import { idSchema } from "@/lib/validation";
 import { start } from "workflow/api";
 import { dailyPracticeTasks } from "@/workflows/daily";
+import { submitIntake, intakeList, reviewIntake } from "@/lib/intake";
+import { notificationList } from "@/lib/notifications";
+import { sendAppointmentEmails } from "@/workflows/notifications";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 function camel(value: unknown): unknown {
@@ -46,6 +49,7 @@ export async function PATCH(req: NextRequest) {
   return handle(req);
 }
 async function handle(req: NextRequest) {
+  let auditActor: Awaited<ReturnType<typeof getSession>> = null;
   try {
     const route = req.nextUrl.pathname.replace(/^\/api\//, "");
     const parts = route.split("/");
@@ -92,8 +96,40 @@ async function handle(req: NextRequest) {
       });
       return res;
     }
+    if (route === "public-registration" && post) {
+      let raw = "",
+        length = 0;
+      const reader = req.body?.getReader();
+      const decoder = new TextDecoder();
+      if (reader)
+        for (;;) {
+          const chunk = await reader.read();
+          if (chunk.done) break;
+          length += chunk.value.byteLength;
+          if (length > 16000) {
+            await reader.cancel();
+            throw new AppError(413, "The form is too large.");
+          }
+          raw += decoder.decode(chunk.value, { stream: true });
+        }
+      raw += decoder.decode();
+      let input: unknown;
+      try {
+        input = JSON.parse(raw);
+      } catch {
+        throw new AppError(400, "Use a valid form.");
+      }
+      return json(
+        await submitIntake(
+          input,
+          req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "local",
+        ),
+        201,
+      );
+    }
     const token = req.cookies.get(SESSION_COOKIE)?.value;
     const actor = await getSession(token);
+    auditActor = actor;
     if (!actor) throw new AppError(401, "Please log in to continue.");
     if (route === "logout" && post) {
       await db.transaction(async (tx) => {
@@ -104,19 +140,28 @@ async function handle(req: NextRequest) {
       r.cookies.delete(SESSION_COOKIE);
       return r;
     }
-    if (route === "me")
+    if (route === "me") {
+      await service.event(db, actor, "view", "session_identity");
       return json({ user: actor, demo: process.env.DEMO_MODE === "true" });
+    }
     if (route === "password" && post)
       return json(await service.changePassword(actor, await req.json()));
     if (route === "dashboard" && !post)
       return json(await service.dashboard(actor));
-    if (route === "doctors" && !post)
+    if (route === "doctors" && !post) {
+      await service.event(db, actor, "view", "doctor_list");
       return json(
         await db
           .select({ id: users.id, name: users.name })
           .from(users)
           .where(and(eq(users.role, "doctor"), eq(users.active, true))),
       );
+    }
+    if (route === "intakes" && !post) return json(await intakeList(actor));
+    if (parts[0] === "intakes" && id && post)
+      return json(await reviewIntake(actor, id, await req.json()));
+    if (route === "patients/check-duplicates" && post)
+      return json(await service.duplicatePatients(actor, await req.json()));
     if (route === "patients")
       return json(
         post
@@ -127,6 +172,10 @@ async function handle(req: NextRequest) {
             ),
       );
     if (parts[0] === "patients" && id) {
+      if (parts[2] === "review" && post)
+        return json(
+          await service.reviewProvisional(actor, id, await req.json()),
+        );
       if (parts[2] === "archive" && post)
         return json(await service.archivePatient(actor, id, await req.json()));
       if (parts[2] === "reconcile" && post)
@@ -139,21 +188,48 @@ async function handle(req: NextRequest) {
           : await service.patientDetail(actor, id),
       );
     }
-    if (route === "appointments")
+    if (route === "appointments") {
+      if (post) {
+        const result = await service.bookAppointment(actor, await req.json());
+        try {
+          await start(sendAppointmentEmails, []);
+        } catch {
+          console.error(
+            "Email worker start failed. The queued mail is retained.",
+          );
+        }
+        return json(result);
+      }
       return json(
-        post
-          ? await service.bookAppointment(actor, await req.json())
-          : await service.schedule(
-              actor,
-              req.nextUrl.searchParams.get("date") || undefined,
-            ),
+        await service.schedule(
+          actor,
+          req.nextUrl.searchParams.get("date") || undefined,
+        ),
       );
-    if (parts[0] === "appointments" && post)
-      return json(
+    }
+    if (parts[0] === "appointments" && post) {
+      const result =
         parts[2] === "status"
           ? await service.appointmentStatus(actor, id, await req.json())
-          : await service.bookAppointment(actor, await req.json(), id),
-      );
+          : await service.bookAppointment(actor, await req.json(), id);
+      if (parts[2] !== "status")
+        try {
+          await start(sendAppointmentEmails, []);
+        } catch {
+          console.error(
+            "Email worker start failed. The queued mail is retained.",
+          );
+        }
+      return json(result);
+    }
+    if (route === "notifications" && !post)
+      return json(await notificationList(actor));
+    if (route === "notifications/retry" && post) {
+      await requireRole(actor, "front_desk");
+      await service.event(db, actor, "retry", "notification_worker");
+      await start(sendAppointmentEmails, []);
+      return json({ queued: true });
+    }
     if (route === "availability" && !post)
       return json(
         await service.availability(
@@ -218,7 +294,8 @@ async function handle(req: NextRequest) {
       );
     }
     if (route === "hours") {
-      if (!post)
+      if (!post) {
+        await service.event(db, actor, "view", "doctor_hours");
         return json({
           hours: await service.rows(
             sql`SELECT h.*,u.name AS doctor_name FROM doctor_hours h JOIN users u ON u.id=h.doctor_id ORDER BY u.name,h.weekday`,
@@ -227,6 +304,7 @@ async function handle(req: NextRequest) {
             sql`SELECT b.*,u.name AS doctor_name FROM schedule_blocks b JOIN users u ON u.id=b.doctor_id WHERE end_at>now() ORDER BY start_at`,
           ),
         });
+      }
       await requireRole(actor, "front_desk");
       const d = z
         .object({
@@ -307,6 +385,7 @@ async function handle(req: NextRequest) {
         ),
       );
     if (route === "sample-report" && !post) {
+      await service.event(db, actor, "export", "sample_report");
       return new NextResponse(new Uint8Array(samplePdf), {
         headers: {
           "Content-Type": "application/pdf",
@@ -350,6 +429,18 @@ async function handle(req: NextRequest) {
         const replacesId = form.get("replacesId")
           ? idSchema.parse(form.get("replacesId"))
           : undefined;
+        const visitId = form.get("visitId")
+          ? idSchema.parse(form.get("visitId"))
+          : undefined;
+        if (kind === "Lab report" && !visitId)
+          throw new AppError(400, "Choose the visit for this lab report.");
+        if (visitId) {
+          const match = await service.rows(
+            sql`SELECT id FROM visits WHERE id=${visitId}::uuid AND patient_id=${p}::uuid`,
+          );
+          if (!match.length)
+            throw new AppError(400, "Choose a visit for the same patient.");
+        }
         const file = form.get("file");
         if (!(file instanceof File)) throw new AppError(400, "Choose a file.");
         const [patient] = await db
@@ -377,6 +468,7 @@ async function handle(req: NextRequest) {
             .insert(documents)
             .values({
               patientId: p,
+              visitId,
               title,
               kind,
               replacesId,
@@ -392,12 +484,21 @@ async function handle(req: NextRequest) {
       await service.event(db, actor, "view", "document_list");
       return json(
         await service.rows(
-          sql`SELECT d.id,d.patient_id,d.title,d.kind,d.mime,d.size,d.created_at,d.replaces_id,p.first_name,p.last_name,p.mrn FROM documents d JOIN patients p ON p.id=d.patient_id ORDER BY d.created_at DESC LIMIT 100`,
+          sql`SELECT d.id,d.patient_id,d.visit_id,d.title,d.kind,d.mime,d.size,d.created_at,d.replaces_id,p.first_name,p.last_name,p.mrn FROM documents d JOIN patients p ON p.id=d.patient_id ORDER BY d.created_at DESC LIMIT 100`,
         ),
       );
     }
     throw new AppError(404, "This function was not found.");
   } catch (error) {
+    if (auditActor)
+      try {
+        await service.event(db, auditActor, "request_failed", "request", "", {
+          path: req.nextUrl.pathname.replace(/[a-f0-9-]{36}/g, ":id"),
+          status: error instanceof AppError ? error.status : 400,
+        });
+      } catch {
+        console.error("Request failure audit could not be saved.");
+      }
     if (error instanceof AppError)
       return json({ error: error.message }, error.status);
     if (error instanceof z.ZodError)

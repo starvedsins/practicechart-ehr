@@ -75,3 +75,7 @@ Member: __________ Module: __________ Commit: __________ Reviewer: __________
 What the member changed and can explain: __________________________________________
 
 This form does not assign credit merely because a name appears on a report cover.
+
+## Added role tasks
+
+Patient: complete the fictional intake form and keep the reference. Receptionist: review and accept or reject the form, check possible duplicates before saving, link a doctor-reviewed interim record, choose a visit for a lab file, review email status, and read monthly visit counts. Doctor: review an interim record, enter lab text, and check linked history. All attendance and acceptance fields remain blank until people complete these tasks.

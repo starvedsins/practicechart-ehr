@@ -1,0 +1,21 @@
+digraph reviewProvisional { graph [label="reviewProvisional",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: await requireRole(actor);"];
+n4[shape=box,label="4: const { reason, version } = z .object({ re\nason: z.string().trim().min(3).max(500), v\nersion: z.number().int().positive(), }) .p\narse(input);"];
+n5[shape=box,label="5: BEGIN transaction"];
+n6[shape=box,label="6: COMMIT transaction"];
+n7[shape=box,label="7: const result = await rows( sql`UPDATE pati\nents SET reviewed_by=${actor.id}::uuid,rev\niewed_at=now(),review_reason=${reason},ver\nsion=version+1 WHERE id="];
+n8[shape=diamond,label="8: result.length"];
+n9[shape=box,label="9: RAISE new AppError(409, \"This provisional \nrecord changed. Reload it.\")"];
+n10[shape=box,label="10: await event(tx, actor, \"review\", \"provisio\nnal_patient\", id, { reason });"];
+n11[shape=box,label="11: RETURN result[0]"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n5[label=""];
+n5->n7[label=""];
+n7->n8[label=""];
+n8->n9[label="False"];
+n9->n2[label=""];
+n8->n10[label="True"];
+n10->n11[label=""];
+n11->n6[label=""];
+n6->n2[label="Return"];}

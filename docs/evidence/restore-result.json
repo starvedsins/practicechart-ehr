@@ -1,12 +1,12 @@
 {
   "status": "passed",
-  "testedAt": "2026-10-31T05:33:54.741Z",
-  "sourceCreatedAt": "2026-10-31T02:15:26.996Z",
+  "testedAt": "2026-11-16T04:33:59.066Z",
+  "sourceCreatedAt": "2026-11-16T04:33:56.223Z",
   "kind": "Full EHR database and uploaded files",
   "restoreTarget": "isolated local PostgreSQL 18 database",
-  "durationSeconds": 1.269,
-  "tablesCompared": 16,
-  "documentsVerified": 2,
+  "durationSeconds": 1.053,
+  "tablesCompared": 19,
+  "documentsVerified": 15,
   "checks": [
     "table row counts",
     "all restored row values, including MRNs and clinical revisions",
@@ -17,5 +17,5 @@
     "MRN sequence",
     "invoice sequence"
   ],
-  "retainedLocalDatabase": "practicechart_restore_1793424833271"
+  "retainedLocalDatabase": "practicechart_restore_1794803637943"
 }

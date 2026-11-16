@@ -50,7 +50,7 @@ The source contains a private interview and observation notes. Those records des
 | Draft code stores or compares plain passwords | Store Argon2id hashes. Derive the role from the server account. |
 | Sequence drafts confirm registration before a database save | Show success only after the transaction commits. |
 | Draft graphs claim all input functions have complexity 2 | Generate graphs from the implemented functions. Record the graph convention and calculate all three methods. |
-| Email confirmation and reminders need a delivery service | Use on-screen confirmation and in-app reminders. External email is deferred by user choice. |
+| Email confirmation and reminders need a delivery service | The latest user instruction enables provider email confirmations and reminders. Public demo mail uses only a test inbox. In-app reminders remain. |
 | Original text claims delays; interview says no major delay | Measure this build. Do not claim a measured reduction from that source. |
 | Dates include old milestones and August 2027 implementation | Use the current course schedule for planning. Confirm the group presentation slot with the tutor. |
 | Hardware purchases and vendor support appear in the scope | Supply local and cloud setup requirements. Do not claim equipment was bought or vendor training occurred. |
@@ -58,7 +58,7 @@ The source contains a private interview and observation notes. Those records des
 
 ## Fixed defaults
 
-The practice time zone is America/Jamaica. Initial doctor hours are Monday to Friday, 08:00 to 17:00. Available start times use 30 minute steps. The booking form allows several visit lengths; the database still rejects overlaps. Appointments must be at least one minute and no more than four hours. There is no patient self-service portal. Local upload storage is private. Public demo uploads accept only the supplied fictional report.
+The practice time zone is America/Jamaica. Initial doctor hours are Monday to Friday, 08:00 to 17:00. Available start times use 30 minute steps. The booking form allows several visit lengths; the database still rejects overlaps. Appointments must be at least one minute and no more than four hours. Patients can complete a public intake form. There is no patient record portal. Local upload storage is private. Public demo uploads accept only the supplied fictional report.
 
 ## Role correction, November 15, 2026
 

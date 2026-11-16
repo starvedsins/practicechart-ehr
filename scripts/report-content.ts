@@ -54,7 +54,7 @@ The project brief defines the EHR business scope. The assignment guide defines t
 
 Support patient registration and retrieval, administrative updates, safe appointment scheduling, consultation records, diagnostic files, prescriptions, certificates, visit filing, manual invoices, and reports. Preserve earlier clinical entries and audit history. Provide an encrypted full backup and a measured restore test. Keep the local presentation data across restarts.
 
-There is no patient portal, payment processor, AI clinical advice, biometric authentication, external medical practice connection, Ministry of Health connection, pharmacy integration, or laboratory integration. Email delivery is deferred. In-app reminders are included. Hardware purchasing and staff training are not represented as completed work.
+Patients can complete a public registration form. Reception reviews submissions and can also register directly. There is no patient record portal, payment processor, AI clinical advice, biometric authentication, external medical practice connection, Ministry of Health connection, pharmacy integration, or laboratory integration. Email confirmations, email reminders, and in-app reminders are included. Hardware purchasing and staff training are not represented as completed work.
 
 ## Requirements and constraints
 
@@ -94,7 +94,7 @@ The group supplied the proposed-system use case diagram as the role authority. R
 
 ## Procedural design
 
-MODULES.md contains source-linked processing narratives and graph instructions for 26 functions. CONTROL_FLOW.md contains the three complexity calculations, planar face boundaries, and independent syntactic candidates. TEST_PLAN.md maps feasible state and input cases to executable tests. Database constraints are tested through PostgreSQL, rather than assigned invented JavaScript branch counts.
+MODULES.md contains source-linked processing narratives and graph instructions for 36 functions. CONTROL_FLOW.md contains the three complexity calculations, planar face boundaries, and independent syntactic candidates. TEST_PLAN.md maps feasible state and input cases to executable tests. Database constraints are tested through PostgreSQL, rather than assigned invented JavaScript branch counts.
 
 ## Interface design
 
@@ -174,7 +174,7 @@ This manual describes the implemented source, database, interfaces, file formats
 
 ## Source and architecture
 
-The Next.js App Router hosts the login, workspace, report pages, and route handlers. The workspace is a client interface backed by authenticated server functions. Drizzle models define typed rows. SQL migrations add database-level invariants. The indexed source listing contains all authored application source, migrations, scripts, tests, and project configuration. Third-party packages and generated bundles are excluded.
+The Next.js App Router hosts the public registration form, login, staff workspace, report pages, and route handlers. The workspace is a client interface backed by authenticated server functions. Drizzle models define typed rows. SQL migrations add database-level invariants. The indexed source listing contains all authored application source, migrations, scripts, tests, and project configuration. Third-party packages and generated bundles are excluded.
 
 The important source groups are src/app for routes and pages, src/components for interface modules, src/lib for authentication, validation, storage, and transactional services, and src/workflows for daily work. scripts contains setup, migration, test, performance, course analysis, and recovery tools. The SQL migrations are the authority for constraints and triggers. Schema hashes prevent silent migration changes.
 
@@ -198,11 +198,14 @@ The cloud uses a separate practicechart_ehr database. Preview uses practicechart
 | visits | Patient, doctor, optional unique appointment, clinical revision number, and filing state |
 | clinical_revisions | Immutable doctor content, revision, state, correction reason, and author |
 | prescriptions | Exact doctor-entered medicine fields linked to a final revision |
-| documents | Patient association, private path, MIME, size, digest, replacement reference, and author |
+| documents | Patient and optional visit association, private path, MIME, size, digest, replacement reference, and author |
 | invoices | Unique number, manual line items, integer-cent total, state, reason, and version |
 | audit_events | Append-only actor, action, record reference, metadata, and time |
 | reminders | Unique appointment and due date pair |
 | backup_runs | Backup status, private bundle reference, and time |
+| registration_intakes | Public demographic submissions, review state, version, and accepted patient reference |
+| public_form_limits | Hashed hourly submission bucket, count, and expiry |
+| notification_outbox | Booking event, consent checks, stable send request, provider result, and retry state |
 | migrations | Applied migration names, hashes, and time |
 
 MRNs and invoice numbers use independent sequences. The number formatting function does not truncate longer sequence values. Patient birth dates cannot exceed the Jamaica calendar day. Appointment intervals are positive and at most four hours. PostgreSQL GiST exclusion constraints reject active overlaps for both doctor and patient. Trigger checks serialize doctor availability changes and reject blocked or outside-hours bookings. A doctor account guard keeps at least one active doctor. Clinical, prescription, and audit histories reject update and delete operations.
@@ -224,11 +227,17 @@ The runtime role has no schema creation permission. It cannot update or delete p
 
 ## Server interfaces
 
-All application data routes require a current session except login and health. The cron route requires its separate secret. Browser mutations must have the same origin as the request host. JSON uses camelCase. Validation errors return 400. Missing sessions return 401. Denied roles return 403. Missing records return 404. Stale changes, duplicate values, and overlaps return 409 where applicable. Unconfirmed service failures return 503. Private responses are not cached.
+All staff data routes require a current session. Login, health, and public registration do not require a staff session. The cron route requires its separate secret. Browser mutations must have the same origin as the request host. JSON uses camelCase. Validation errors return 400. Missing sessions return 401. Denied roles return 403. Missing records return 404. Stale changes, duplicate values, and overlaps return 409 where applicable. Unconfirmed service failures return 503. Private responses are not cached.
 
 | Route group | Input contract and behaviour |
 | --- | --- |
 | POST /api/login | username and password; creates an eight-hour HTTP-only session cookie |
+| POST /api/public-registration | Public demographic form, submissionId and consent; returns a reference only |
+| GET or POST /api/intakes/id | Receptionist-only pending form review; acceptance and MRN creation are atomic |
+| POST /api/patients/check-duplicates | Receptionist-only matching name and birth-date check before saving |
+| POST /api/patients/id/review | Doctor review reason and current version for an interim record |
+| GET /api/notifications | Receptionist-only provider queue status |
+| POST /api/notifications/retry | Receptionist starts due queue processing |
 | POST /api/logout | closes the current server session and removes the cookie |
 | POST /api/password | currentPassword and replacement password; closes existing sessions |
 | GET or POST /api/patients | optional q search, or validated demographic fields |
@@ -242,7 +251,7 @@ All application data routes require a current session except login and health. T
 | POST /api/visits | patientId, doctorId, optional matching appointmentId |
 | POST /api/visits/id/clinical | expectedRevision, state, structured content, and correction reason; doctor only |
 | POST /api/visits/id/file | expectedRevision; server requires the final diagnosis |
-| GET or POST /api/documents | staff metadata listing; receptionist multipart upload with patientId, title, kind, file, optional replacesId |
+| GET or POST /api/documents | staff metadata listing; receptionist multipart upload with patientId, title, kind, file, optional replacesId and visitId; visit is required for a lab report |
 | GET /api/documents/id | authorised private file bytes, not a public storage URL |
 | POST /api/invoices | patientId and description, quantity, unitCents line items |
 | POST /api/invoices/id | version, issued or void state, and void reason |

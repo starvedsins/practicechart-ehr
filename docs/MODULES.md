@@ -48,20 +48,24 @@ L6: const p = await found( await tx.select().from(patients).where(eq(patients.id
   GO TO L7
 L7: await event(tx, actor, "view", "patient", id);
   GO TO L8
-L8: const visitList = await rows( sql`SELECT v.id,v.patient_id,v.doctor_id,v.status,v.revision,v.visit_at,v.filed_at,u.name AS doctor_name FROM visits v J
+L8: const family = ( await rows( sql`WITH RECURSIVE edges(a,b) AS (SELECT id,merged_into FROM patients WHERE merged_into IS NOT NULL UNION SELECT merged_i
   GO TO L9
-L9: const appointmentList = await rows( sql`SELECT a.*,u.name AS doctor_name FROM appointments a JOIN users u ON u.id=a.doctor_id WHERE patient_id=${id} O
+L9: const ids = sql.join( family.map((p) => sql`${p}::uuid`), sql`, `, );
   GO TO L10
-L10: const files = await tx .select({ id: documents.id, title: documents.title, kind: documents.kind, mime: documents.mime, size: documents.size, createdAt
+L10: const visitList = await rows( sql`SELECT v.id,v.patient_id,v.doctor_id,v.status,v.revision,v.visit_at,v.filed_at,u.name AS doctor_name FROM visits v J
   GO TO L11
-L11: IF actor.role !== "doctor"
-  THEN GO TO L12
-  ELSE GO TO L13
-L12: RETURN { patient: p, visits: visitList, appointments: appointmentList, documents: files, }
+L11: const appointmentList = await rows( sql`SELECT a.*,u.name AS doctor_name FROM appointments a JOIN users u ON u.id=a.doctor_id WHERE patient_id IN (${i
+  GO TO L12
+L12: const files = await tx .select({ id: documents.id, title: documents.title, kind: documents.kind, mime: documents.mime, size: documents.size, createdAt
+  GO TO L13
+L13: IF actor.role !== "doctor"
+  THEN GO TO L14
+  ELSE GO TO L15
+L14: RETURN { patient: p, visits: visitList, appointments: appointmentList, documents: files, }
   GO TO L5
-L13: const clinical = await rows( sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.v
-  GO TO L14
-L14: RETURN { patient: p, visits: visitList, appointments: appointmentList, clinical, documents: files, }
+L15: const clinical = await rows( sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.v
+  GO TO L16
+L16: RETURN { patient: p, visits: visitList, appointments: appointmentList, clinical, documents: files, }
   GO TO L5
 ```
 
@@ -92,7 +96,7 @@ L8: idSchema.parse(id);
   GO TO L9
 L9: const version = z .object({ version: z.number().int().positive() }) .parse(input).version;
   GO TO L10
-L10: const [p] = await tx .update(patients) .set({ ...data, version: version + 1 }) .where(and(eq(patients.id, id), eq(patients.version, version))) .return
+L10: const [p] = await tx .update(patients) .set({ ...data, reviewedBy: null, reviewedAt: null, reviewReason: "", version: version + 1, }) .where(and(eq(pa
   GO TO L11
 L11: IF p
   THEN GO TO L13
@@ -101,16 +105,71 @@ L12: RAISE new AppError( 409, "This patient changed. Reload the record before yo
   GO TO L2
 L13: await event(tx, actor, "update", "patient", id, { version });
   GO TO L14
-L14: RETURN { patient: p }
+L14: RETURN { patient: p, duplicates: [] as Record<string, unknown>[] }
   GO TO L6
-L15: const duplicates = await rows( sql`SELECT id,mrn FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.last
-  GO TO L16
-L16: const [p] = await tx .insert(patients) .values({ ...data, mrn: sql`DEFAULT` }) .returning();
-  GO TO L17
-L17: await event(tx, actor, "create", "patient", p.id);
-  GO TO L18
-L18: RETURN { patient: p, duplicates }
+L15: RETURN insertPatient(tx, actor, data, input)
   GO TO L6
+```
+
+## duplicatePatients
+
+Require reception access. Check matching names and birth dates before a new record is saved.
+
+Source: src/lib/service.ts. Graph: [duplicatePatients](diagrams/cfg/duplicatePatients.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START duplicatePatients
+  GO TO L3
+L2: END PROCEDURE
+L3: await requireRole(actor, "front_desk");
+  GO TO L4
+L4: const data = patientInput.parse(input);
+  GO TO L5
+L5: await event(db, actor, "search", "patient_duplicates");
+  GO TO L6
+L6: RETURN rows( sql`SELECT id,mrn,first_name,last_name,dob FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${da
+  GO TO L2
+```
+
+## insertPatient
+
+Serialize matching registrations. Require a reason for a separate matching person. Create the MRN and audit event in the caller's transaction.
+
+Source: src/lib/service.ts. Graph: [insertPatient](diagrams/cfg/insertPatient.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START insertPatient
+  GO TO L3
+L2: END PROCEDURE
+L3: await tx.execute( sql`SELECT pg_advisory_xact_lock(hashtextextended(lower(${data.firstName})||':'||lower(${data.lastName})||':'||${data.dob},0))`, );
+  GO TO L4
+L4: const duplicates = await rows( sql`SELECT id,mrn FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.last
+  GO TO L5
+L5: const { duplicateReason } = z .object({ duplicateReason: z.string().trim().max(500).default("") }) .parse(input);
+  GO TO L6
+L6: IF duplicates.length
+  THEN GO TO L7
+  ELSE GO TO L9
+L7: IF duplicateReason.length < 3
+  THEN GO TO L8
+  ELSE GO TO L9
+L8: RAISE new AppError( 409, "A matching name and birth date already exist. Review the existing record, or enter a reason to create a separate record.", )
+  GO TO L2
+L9: const [p] = await tx .insert(patients) .values({ ...data, mrn: sql`DEFAULT` }) .returning();
+  GO TO L10
+L10: IF duplicates.length
+  THEN GO TO L11
+  ELSE GO TO L13
+L11: await event(tx, actor, "create", "patient", p.id, { ...(duplicates.length ? { duplicateReason } : {}), });
+  GO TO L12
+L12: RETURN { patient: p, duplicates }
+  GO TO L2
+L13: Follow False branch
+  GO TO L11
 ```
 
 ## archivePatient
@@ -191,21 +250,62 @@ L14: const target = list.find((p) => p.id === targetId);
   GO TO L15
 L15: IF source?.provisional_reason
   THEN GO TO L16
-  ELSE GO TO L18
+  ELSE GO TO L19
 L16: IF source.merged_into
-  THEN GO TO L18
+  THEN GO TO L19
   ELSE GO TO L17
 L17: IF target?.merged_into
-  THEN GO TO L18
-  ELSE GO TO L19
-L18: RAISE new AppError( 400, "Use an unresolved provisional record and an active primary record.", )
+  THEN GO TO L19
+  ELSE GO TO L18
+L18: IF target?.archived
+  THEN GO TO L19
+  ELSE GO TO L20
+L19: RAISE new AppError( 400, "Use an unresolved provisional record and an active primary record.", )
   GO TO L2
-L19: await tx .update(patients) .set({ mergedInto: targetId, archived: true, version: Number(source.version) + 1, }) .where(eq(patients.id, id));
-  GO TO L20
-L20: await event(tx, actor, "reconcile", "patient", id, { targetId, reason });
-  GO TO L21
-L21: RETURN { targetId }
+L20: IF source.reviewed_at
+  THEN GO TO L22
+  ELSE GO TO L21
+L21: RAISE new AppError( 400, "A doctor must review the provisional record before it can be linked.", )
+  GO TO L2
+L22: await tx .update(patients) .set({ mergedInto: targetId, archived: true, version: Number(source.version) + 1, }) .where(eq(patients.id, id));
+  GO TO L23
+L23: await event(tx, actor, "reconcile", "patient", id, { targetId, reason });
+  GO TO L24
+L24: RETURN { targetId }
   GO TO L9
+```
+
+## reviewProvisional
+
+Require a doctor and the current version. Record the review reason before reception links an interim record.
+
+Source: src/lib/service.ts. Graph: [reviewProvisional](diagrams/cfg/reviewProvisional.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START reviewProvisional
+  GO TO L3
+L2: END PROCEDURE
+L3: await requireRole(actor);
+  GO TO L4
+L4: const { reason, version } = z .object({ reason: z.string().trim().min(3).max(500), version: z.number().int().positive(), }) .parse(input);
+  GO TO L5
+L5: BEGIN transaction
+  GO TO L7
+L6: COMMIT transaction
+  GO TO L2
+L7: const result = await rows( sql`UPDATE patients SET reviewed_by=${actor.id}::uuid,reviewed_at=now(),review_reason=${reason},version=version+1 WHERE id=
+  GO TO L8
+L8: IF result.length
+  THEN GO TO L10
+  ELSE GO TO L9
+L9: RAISE new AppError(409, "This provisional record changed. Reload it.")
+  GO TO L2
+L10: await event(tx, actor, "review", "provisional_patient", id, { reason });
+  GO TO L11
+L11: RETURN result[0]
+  GO TO L6
 ```
 
 ## schedule
@@ -1173,4 +1273,323 @@ L10: RETURN "image/jpeg"
   GO TO L2
 L11: RETURN null
   GO TO L2
+```
+
+## submitIntake
+
+Validate a public registration form and consent. Limit submissions, keep an idempotent reference, and store a pending intake without creating a patient MRN.
+
+Source: src/lib/intake.ts. Graph: [submitIntake](diagrams/cfg/submitIntake.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START submitIntake
+  GO TO L3
+L2: END PROCEDURE
+L3: const parsed = z .object({ submissionId: idSchema, consent: z.literal(true), website: z.literal("").default(""), }) .parse(input);
+  GO TO L4
+L4: const payload = patientInput.parse({ ...(input as object), provisionalReason: "", });
+  GO TO L5
+L5: IF process.env.DEMO_MODE === "true"
+  THEN GO TO L6
+  ELSE GO TO L8
+L6: IF Object.entries(demoIntake).some( ([k, v]) => payload[k as keyof typeof payload] !== v, )
+  THEN GO TO L7
+  ELSE GO TO L8
+L7: RAISE new AppError( 400, "The public demo accepts only the supplied fictional example. Select Use fictional example and try again.", )
+  GO TO L2
+L8: BEGIN transaction
+  GO TO L10
+L9: COMMIT transaction
+  GO TO L2
+L10: const bucket = digest(address + ":" + Math.floor(Date.now() / 3600000));
+  GO TO L11
+L11: const limit = await rows( sql`INSERT INTO public_form_limits(bucket,attempts,expires_at) VALUES(${bucket},1,now()+interval '2 hours') ON CONFLICT(buck
+  GO TO L12
+L12: IF Number(limit[0].attempts) > 10
+  THEN GO TO L13
+  ELSE GO TO L14
+L13: RAISE new AppError( 429, "Too many forms were sent. Try again later or contact reception.", )
+  GO TO L2
+L14: await tx.execute( sql`INSERT INTO registration_intakes(id,payload) VALUES(${parsed.submissionId},${JSON.stringify(payload)}::jsonb) ON CONFLICT(id) DO
+  GO TO L15
+L15: await tx.execute( sql`INSERT INTO audit_events(action,entity,entity_id) VALUES('submit','registration_intake',${parsed.submissionId})`, );
+  GO TO L16
+L16: RETURN { reference: parsed.submissionId, message: "Your form was received. Reception will check it. This does not confirm an appointment.", }
+  GO TO L9
+```
+
+## intakeList
+
+Require reception access and audit the pending registration form list.
+
+Source: src/lib/intake.ts. Graph: [intakeList](diagrams/cfg/intakeList.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START intakeList
+  GO TO L3
+L2: END PROCEDURE
+L3: await requireRole(actor, "front_desk");
+  GO TO L4
+L4: BEGIN transaction
+  GO TO L6
+L5: COMMIT transaction
+  GO TO L2
+L6: await event(tx, actor, "view", "registration_intakes");
+  GO TO L7
+L7: RETURN rows( sql`SELECT id,payload,status,version,created_at FROM registration_intakes WHERE status='pending' ORDER BY created_at LIMIT 100`, tx, )
+  GO TO L5
+```
+
+## reviewIntake
+
+Lock a pending form and check its version. Accept it with duplicate review or reject it with a reason. Commit the patient and review state together.
+
+Source: src/lib/intake.ts. Graph: [reviewIntake](diagrams/cfg/reviewIntake.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START reviewIntake
+  GO TO L3
+L2: END PROCEDURE
+L3: await requireRole(actor, "front_desk");
+  GO TO L4
+L4: const d = z .object({ version: z.number().int().positive(), action: z.enum(["accept", "reject"]), reason: z.string().trim().max(500).default(""), dupl
+  GO TO L5
+L5: BEGIN transaction
+  GO TO L7
+L6: COMMIT transaction
+  GO TO L2
+L7: const [intake] = await rows( sql`SELECT * FROM registration_intakes WHERE id=${idSchema.parse(id)}::uuid FOR UPDATE`, tx, );
+  GO TO L8
+L8: IF intake
+  THEN GO TO L9
+  ELSE GO TO L11
+L9: IF intake.status !== "pending"
+  THEN GO TO L11
+  ELSE GO TO L10
+L10: IF intake.version !== d.version
+  THEN GO TO L11
+  ELSE GO TO L12
+L11: RAISE new AppError( 409, "This form was already reviewed or changed. Reload the list.", )
+  GO TO L2
+L12: IF d.action === "reject"
+  THEN GO TO L13
+  ELSE GO TO L15
+L13: IF d.reason.length < 3
+  THEN GO TO L14
+  ELSE GO TO L15
+L14: RAISE new AppError(400, "Enter a reason to reject the form.")
+  GO TO L2
+L15: IF d.action === "accept"
+  THEN GO TO L16
+  ELSE GO TO L23
+L16: const result = d.action === "accept" ? await insertPatient(tx, actor, patientInput.parse(intake.payload), d) : null;
+  GO TO L17
+L17: IF d.action === "accept"
+  THEN GO TO L18
+  ELSE GO TO L24
+L18: IF result?.patient.id
+  THEN GO TO L19
+  ELSE GO TO L25
+L19: await tx.execute( sql`UPDATE registration_intakes SET status=${d.action === "accept" ? "accepted" : "rejected"},patient_id=${result?.patient.id || nul
+  GO TO L20
+L20: await event(tx, actor, d.action, "registration_intake", id);
+  GO TO L21
+L21: IF result?.patient
+  THEN GO TO L22
+  ELSE GO TO L26
+L22: RETURN { patient: result?.patient || null }
+  GO TO L6
+L23: Follow False branch
+  GO TO L16
+L24: Follow False branch
+  GO TO L18
+L25: Follow False branch
+  GO TO L19
+L26: Follow False branch
+  GO TO L22
+```
+
+## appointmentMessage
+
+Format a plain appointment message in Jamaica time without clinical details.
+
+Source: src/lib/notifications.ts. Graph: [appointmentMessage](diagrams/cfg/appointmentMessage.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START appointmentMessage
+  GO TO L3
+L2: END PROCEDURE
+L3: const date = new Intl.DateTimeFormat("en-JM", { dateStyle: "full", timeStyle: "short", timeZone: "America/Jamaica", }).format(start);
+  GO TO L4
+L4: IF kind === "reminder"
+  THEN GO TO L5
+  ELSE GO TO L7
+L5: IF kind === "reminder"
+  THEN GO TO L6
+  ELSE GO TO L8
+L6: RETURN { subject: kind === "reminder" ? "PracticeChart appointment reminder" : "PracticeChart appointment confirmation", text: `Your appointment is ${
+  GO TO L2
+L7: Follow False branch
+  GO TO L5
+L8: Follow False branch
+  GO TO L6
+```
+
+## queueEmailReminders
+
+Queue one reminder per confirmed appointment version due within 24 hours.
+
+Source: src/lib/notifications.ts. Graph: [queueEmailReminders](diagrams/cfg/queueEmailReminders.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START queueEmailReminders
+  GO TO L3
+L2: END PROCEDURE
+L3: await db.execute( sql`INSERT INTO notification_outbox(appointment_id,appointment_version,kind) SELECT id,version,'reminder' FROM appointments WHERE st
+  GO TO L2
+```
+
+## notificationList
+
+Require reception access and return administrative mail status without credentials or clinical text.
+
+Source: src/lib/notifications.ts. Graph: [notificationList](diagrams/cfg/notificationList.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START notificationList
+  GO TO L3
+L2: END PROCEDURE
+L3: await requireRole(actor, "front_desk");
+  GO TO L4
+L4: await event(db, actor, "view", "notification_outbox");
+  GO TO L5
+L5: RETURN rows( sql`SELECT n.id,n.kind,n.status,n.attempts,n.last_error,n.created_at,n.sent_at,p.mrn,p.first_name,p.last_name,a.start_at FROM notificatio
+  GO TO L2
+```
+
+## deliverQueuedEmails
+
+Claim due messages with locks. Skip ineligible bookings. Preserve the provider request and idempotency key across retries. Record acceptance or a safe failure.
+
+Source: src/lib/notifications.ts. Graph: [deliverQueuedEmails](diagrams/cfg/deliverQueuedEmails.svg).
+
+The following labelled pseudocode follows graph edges. Labels are not execution order. A callback RETURN sets its result; the COMMIT step must succeed before the service returns that result. A raised error ends the transaction with rollback. Long source operations are abbreviated here; use the indexed source listing for their full arguments.
+
+```text
+L1: START deliverQueuedEmails
+  GO TO L3
+L2: END PROCEDURE
+L3: const claimed = await db.transaction(async (tx) => rows( sql`UPDATE notification_outbox SET status='sending',attempts=attempts+1,next_attempt_at=now()
+  GO TO L4
+L4: let sent = 0, failed = 0, skipped = 0;
+  GO TO L5
+L5: IF More items in claimed
+  THEN GO TO L6
+  ELSE GO TO L41
+L6: const [a] = await rows( sql`SELECT a.*,p.email,p.email_opt_in FROM appointments a JOIN patients p ON p.id=a.patient_id WHERE a.id=${String(item.appoin
+  GO TO L7
+L7: IF a
+  THEN GO TO L8
+  ELSE GO TO L13
+L8: IF a.status !== "confirmed"
+  THEN GO TO L13
+  ELSE GO TO L9
+L9: IF Number(a.version) !== Number(item.appointment_version)
+  THEN GO TO L13
+  ELSE GO TO L10
+L10: IF a.email_opt_in
+  THEN GO TO L11
+  ELSE GO TO L13
+L11: IF a.email
+  THEN GO TO L12
+  ELSE GO TO L13
+L12: IF new Date(String(a.start_at)).valueOf() <= Date.now()
+  THEN GO TO L13
+  ELSE GO TO L16
+L13: await db.execute( sql`UPDATE notification_outbox SET status='skipped',last_error='Not eligible: changed booking, no consent, or no email.' WHERE id=${
+  GO TO L14
+L14: skipped++;
+  GO TO L15
+L15: continue;
+  GO TO L16
+L16: IF I/O operation succeeds
+  THEN GO TO L18
+  ELSE GO TO L17
+L17: Handle I/O failure
+  GO TO L36
+L18: IF process.env.RESEND_API_KEY
+  THEN GO TO L19
+  ELSE GO TO L20
+L19: IF process.env.EMAIL_FROM
+  THEN GO TO L21
+  ELSE GO TO L20
+L20: RAISE new Error("Email provider is not configured.")
+  GO TO L17
+L21: IF process.env.DEMO_MODE === "true"
+  THEN GO TO L22
+  ELSE GO TO L44
+L22: const to = process.env.DEMO_MODE === "true" ? "delivered@resend.dev" : String(a.email);
+  GO TO L23
+L23: const message = appointmentMessage( String(item.kind), new Date(String(a.start_at)), );
+  GO TO L24
+L24: const [snapshot]=await rows(sql`UPDATE notification_outbox SET delivery_payload=coalesce(delivery_payload,${JSON.stringify({from:process.env.EMAIL_FRO
+  GO TO L25
+L25: const response = await send("https://api.resend.com/emails", { method: "POST", signal: AbortSignal.timeout(15000), headers: { Authorization: `Bearer $
+  GO TO L26
+L26: IF response.ok
+  THEN GO TO L28
+  ELSE GO TO L27
+L27: RAISE new Error(`Email provider returned ${response.status}.`)
+  GO TO L17
+L28: const result = (await response.json()) as { id: string };
+  GO TO L29
+L29: IF result.id
+  THEN GO TO L31
+  ELSE GO TO L30
+L30: RAISE new Error("Email provider gave no receipt.")
+  GO TO L17
+L31: BEGIN transaction
+  GO TO L33
+L32: COMMIT transaction
+  GO TO L35
+L33: await tx.execute( sql`UPDATE notification_outbox SET status='sent',provider_id=${result.id},sent_at=now(),last_error='' WHERE id=${String(item.id)}::u
+  GO TO L34
+L34: await tx.execute( sql`INSERT INTO audit_events(action,entity,entity_id) VALUES('email_accepted','notification',${String(item.id)})`, );
+  GO TO L32
+L35: sent++;
+  GO TO L5
+L36: IF e instanceof Error
+  THEN GO TO L37
+  ELSE GO TO L38
+L37: IF /^(Email provider|The operation was aborted)/.test(e.message)
+  THEN GO TO L38
+  ELSE GO TO L45
+L38: const message = e instanceof Error && /^(Email provider|The operation was aborted)/.test(e.message) ? e.message : "Email delivery failed. Retry is sch
+  GO TO L39
+L39: await db.execute( sql`UPDATE notification_outbox SET status='failed',last_error=${message},next_attempt_at=now()+make_interval(mins=>least(60,power(2,
+  GO TO L40
+L40: failed++;
+  GO TO L5
+L41: await db.execute( sql`UPDATE notification_outbox SET status='failed',last_error='Retry window ended. Contact the operator.' WHERE status IN('queued','
+  GO TO L42
+L42: const [pending] = await rows( sql`SELECT count(*) AS remaining FROM notification_outbox WHERE status IN('queued','failed','sending') AND attempts<5 AN
+  GO TO L43
+L43: RETURN { sent, failed, skipped, remaining: Number(pending.remaining) }
+  GO TO L2
+L44: Follow False branch
+  GO TO L22
+L45: Follow False branch
+  GO TO L38
 ```

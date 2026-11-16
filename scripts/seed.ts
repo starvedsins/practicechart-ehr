@@ -131,7 +131,7 @@ await pool.query(
 );
 const file = await storeFile(samplePdf, "application/pdf");
 await pool.query(
-  "INSERT INTO documents(patient_id,title,kind,pathname,mime,size,sha256,author_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+  "INSERT INTO documents(patient_id,title,kind,pathname,mime,size,sha256,author_id,visit_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,(SELECT id FROM visits WHERE patient_id=$1 ORDER BY visit_at DESC LIMIT 1))",
   [
     ids[0],
     "Fictional lab report",

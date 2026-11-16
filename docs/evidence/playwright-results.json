@@ -127,12 +127,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7066,
+                  "duration": 6628,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:00:30.825Z",
+                  "startTime": "2026-11-16T04:50:38.986Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -161,12 +161,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1197,
+                  "duration": 992,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:00:38.033Z",
+                  "startTime": "2026-11-16T04:50:45.715Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -195,12 +195,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1308,
+                  "duration": 1005,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:00:39.244Z",
+                  "startTime": "2026-11-16T04:50:46.716Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,12 +229,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2961,
+                  "duration": 2600,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:00:40.565Z",
+                  "startTime": "2026-11-16T04:50:47.729Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -244,7 +244,7 @@
           ],
           "id": "26aa48cee8983222f549-ffdfa350d58aa7bd52d4",
           "file": "workflows.spec.ts",
-          "line": 248,
+          "line": 255,
           "column": 1
         },
         {
@@ -263,12 +263,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7513,
+                  "duration": 7440,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:00:43.541Z",
+                  "startTime": "2026-11-16T04:50:50.337Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -278,7 +278,7 @@
           ],
           "id": "26aa48cee8983222f549-9d4c7683561ab7873b54",
           "file": "workflows.spec.ts",
-          "line": 317,
+          "line": 324,
           "column": 1
         },
         {
@@ -297,12 +297,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2229,
+                  "duration": 2246,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:00:51.066Z",
+                  "startTime": "2026-11-16T04:50:57.787Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -312,7 +312,7 @@
           ],
           "id": "26aa48cee8983222f549-627f1c3b061aeab1ac88",
           "file": "workflows.spec.ts",
-          "line": 367,
+          "line": 389,
           "column": 1
         },
         {
@@ -331,12 +331,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 469,
+                  "duration": 499,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:00:53.303Z",
+                  "startTime": "2026-11-16T04:51:00.041Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -346,7 +346,7 @@
           ],
           "id": "26aa48cee8983222f549-6095fd52255d4b7d4f52",
           "file": "workflows.spec.ts",
-          "line": 421,
+          "line": 443,
           "column": 1
         },
         {
@@ -365,12 +365,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2932,
+                  "duration": 2962,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:00:53.779Z",
+                  "startTime": "2026-11-16T04:51:00.547Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -380,7 +380,7 @@
           ],
           "id": "26aa48cee8983222f549-a4242659c7681a08f429",
           "file": "workflows.spec.ts",
-          "line": 434,
+          "line": 456,
           "column": 1
         },
         {
@@ -399,12 +399,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1150,
+                  "duration": 1117,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-16T04:00:56.718Z",
+                  "startTime": "2026-11-16T04:51:03.516Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -414,7 +414,41 @@
           ],
           "id": "26aa48cee8983222f549-4de507a03b38e0c19c4e",
           "file": "workflows.spec.ts",
-          "line": 488,
+          "line": 510,
+          "column": 1
+        },
+        {
+          "title": "patient completes registration and reception reviews it before an MRN is created",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3174,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-16T04:51:04.642Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "26aa48cee8983222f549-ee015037b63294540141",
+          "file": "workflows.spec.ts",
+          "line": 572,
           "column": 1
         }
       ]
@@ -422,9 +456,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-11-16T04:00:29.694Z",
-    "duration": 28294.964,
-    "expected": 9,
+    "startTime": "2026-11-16T04:50:37.963Z",
+    "duration": 29985.451,
+    "expected": 10,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

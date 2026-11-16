@@ -1,0 +1,8 @@
+digraph notificationList { graph [label="notificationList",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: await requireRole(actor, \"front_desk\");"];
+n4[shape=box,label="4: await event(db, actor, \"view\", \"notificati\non_outbox\");"];
+n5[shape=box,label="5: RETURN rows( sql`SELECT n.id,n.kind,n.stat\nus,n.attempts,n.last_error,n.created_at,n.\nsent_at,p.mrn,p.first_name,p.last_name,a.s\ntart_at FROM notificatio"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n5[label=""];
+n5->n2[label=""];}

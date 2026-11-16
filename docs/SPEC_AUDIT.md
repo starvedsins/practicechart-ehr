@@ -1,4 +1,6 @@
-# Brief and specification audit
+# Initial brief and specification audit
+
+This is the initial audit record, kept for traceability. Its gap descriptions refer to the code before the latest implementation. Read [AUDIT_RESOLUTION.md](AUDIT_RESOLUTION.md) for current status. The patient form, email, visit-linked lab uploads, pre-save duplicate checks, interim review, combined history, audit reads, and operator commands have now been implemented.
 
 Review date: November 15, 2026. This review checks the current source brief against the code and recorded evidence. The application does not meet every source statement without exceptions. Passing tests do not prove full compliance.
 

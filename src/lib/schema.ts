@@ -38,6 +38,11 @@ export const patients = pgTable("patients", {
   lastName: text("last_name").notNull(),
   dob: date().notNull(),
   phone: text().notNull(),
+  email: text().notNull().default(""),
+  emailOptIn: boolean("email_opt_in").notNull().default(false),
+  reviewedBy: uuid("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  reviewReason: text("review_reason").notNull().default(""),
   address: text().notNull(),
   gender: text().notNull().default("Not stated"),
   emergencyContact: text("emergency_contact").notNull().default(""),
@@ -98,6 +103,7 @@ export const clinicalRevisions = pgTable("clinical_revisions", {
 });
 export const documents = pgTable("documents", {
   id: uuid().primaryKey().defaultRandom(),
+  visitId: uuid("visit_id").references(() => visits.id),
   patientId: uuid("patient_id")
     .notNull()
     .references(() => patients.id),
