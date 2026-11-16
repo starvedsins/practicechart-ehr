@@ -1,10 +1,10 @@
 {
-  "testedAt": "2026-10-31T05:54:26.595Z",
+  "testedAt": "2026-11-16T04:11:49.926Z",
   "deployment": "https://practicechart-ehr.vercel.app",
   "access": "Public deployment",
   "checks": [
-    "doctor clinical history and exact private cloud file round trip",
-    "front desk demographic access with denied clinical, file, staff, and audit routes"
+    "doctor clinical history and private file retrieval",
+    "receptionist upload allowed; clinical notes, diagnostic bytes, staff management, and audit denied"
   ],
   "status": "passed"
 }

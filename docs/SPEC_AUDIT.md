@@ -36,7 +36,7 @@ The current Markdown file contains 54 embedded images. Images 25 to 33 contain t
 | Source | Evidence | Status and limit |
 | --- | --- | --- |
 | N1: login within 3 seconds | Local login browser measurements in performance.json and cold-performance.json. | Historical local evidence dated October 31. No new cloud performance pass is claimed for this role revision. |
-| N2: role restrictions | Server service checks, filtered responses, session role checks, direct denied requests, and both role browser tests. | Corrected and tested locally. Current release checks must confirm the same behavior on the hosted site. |
+| N2: role restrictions | Server service checks, filtered responses, session role checks, direct denied requests, and both role browser tests. | Corrected and tested locally. Both hosted role workflows and direct denied requests passed after automatic deployment of commit 03a9e5f. See cloud-smoke-production.json. |
 | N3: audit every view and change | Transactional record changes, searches, record views, document retrieval, exports, and denied access are recorded. Clinical revisions and audit events cannot be overwritten. | Partial against “all user activities.” Staff list and schedule configuration reads such as /api/doctors and /api/hours do not each write an audit event. Health and session identity reads are also excluded. |
 | N4: 99 percent operational availability | Health route and controlled failure responses. | Unverified. A short benchmark cannot establish this target. |
 | N5: complete record display in less than 2 seconds | Recorded local browser retrieval results, including the full display measurement. | Environment-limited historical evidence. No production guarantee or new role-revision benchmark. |
