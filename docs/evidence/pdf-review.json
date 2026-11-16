@@ -4,14 +4,14 @@
   "files": [
     {
       "file": "docs/submission/development-report.pdf",
-      "pages": 22,
-      "renderedPages": 22,
+      "pages": 21,
+      "renderedPages": 21,
       "textFindings": []
     },
     {
       "file": "docs/submission/indexed-source-listing.pdf",
-      "pages": 221,
-      "renderedPages": 221,
+      "pages": 227,
+      "renderedPages": 227,
       "textFindings": []
     },
     {
@@ -34,20 +34,20 @@
     },
     {
       "file": "docs/submission/user-manual.pdf",
-      "pages": 22,
-      "renderedPages": 22,
+      "pages": 23,
+      "renderedPages": 23,
       "textFindings": []
     },
     {
       "file": ".private/submission/development-report.pdf",
-      "pages": 22,
-      "renderedPages": 22,
+      "pages": 21,
+      "renderedPages": 21,
       "textFindings": []
     },
     {
       "file": ".private/submission/indexed-source-listing.pdf",
-      "pages": 221,
-      "renderedPages": 221,
+      "pages": 227,
+      "renderedPages": 227,
       "textFindings": []
     },
     {
@@ -70,8 +70,8 @@
     },
     {
       "file": ".private/submission/user-manual.pdf",
-      "pages": 22,
-      "renderedPages": 22,
+      "pages": 23,
+      "renderedPages": 23,
       "textFindings": []
     }
   ]
