@@ -1,4 +1,13 @@
-import { beforeAll, afterAll, describe, it, expect } from "vitest";
+import { beforeAll, afterAll, describe, it, expect, vi } from "vitest";
+import { randomUUID } from "node:crypto";
+import { demoIntake } from "../src/lib/demo-intake";
+import { submitIntake, intakeList, reviewIntake } from "../src/lib/intake";
+import {
+  appointmentMessage,
+  queueEmailReminders,
+  deliverQueuedEmails,
+  notificationList,
+} from "../src/lib/notifications";
 import { sql, eq } from "drizzle-orm";
 import { db, pool } from "../src/lib/db";
 import { users, sessions, type Staff } from "../src/lib/schema";
@@ -342,12 +351,16 @@ describe("patient changes and appointment concurrency", () => {
       phone: "876-555-0100",
       address: "Sample Road",
     };
-    const [a, b] = await Promise.all([
+    const outcomes = await Promise.allSettled([
       s.savePatient(desk, input),
       s.savePatient(desk, input),
     ]);
-    expect(a.patient.mrn).not.toBe(b.patient.mrn);
-    const c = await s.savePatient(desk, input);
+    expect(outcomes.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(outcomes.filter((r) => r.status === "rejected")).toHaveLength(1);
+    const c = await s.savePatient(desk, {
+      ...input,
+      duplicateReason: "Confirmed separate fictional patient",
+    });
     expect(c.duplicates!.length).toBeGreaterThan(0);
   });
   it("permits one of two stale demographic changes", async () => {
@@ -535,6 +548,16 @@ describe("clinical corrections, filing, documents, and invoices", () => {
         provisionalReason: "Primary record needs review",
       })
     ).patient;
+    await expect(
+      s.reconcilePatient(desk, p.id, {
+        targetId: patientId,
+        reason: "Link primary",
+      }),
+    ).rejects.toThrow("doctor must review");
+    await s.reviewProvisional(doctor, p.id, {
+      version: p.version,
+      reason: "Checked the provisional record",
+    });
     await s.reconcilePatient(desk, p.id, {
       targetId: patientId,
       reason: "Identity checked in fictional test",
@@ -605,5 +628,297 @@ describe("clinical corrections, filing, documents, and invoices", () => {
     expect(
       (await s.rows(sql`SELECT count(*) FROM audit_events`))[0].count,
     ).not.toBe("0");
+  });
+});
+describe("patient intake, linked history, visit files, and email", () => {
+  it("accepts only the fixed fictional intake in public demo mode", async () => {
+    const old = process.env.DEMO_MODE;
+    process.env.DEMO_MODE = "true";
+    try {
+      await expect(
+        submitIntake(
+          {
+            ...demoIntake,
+            firstName: "Unapproved",
+            submissionId: randomUUID(),
+            consent: true,
+          },
+          "192.0.2.5",
+        ),
+      ).rejects.toThrow("fictional example");
+      await expect(
+        submitIntake(
+          { ...demoIntake, submissionId: randomUUID(), consent: true },
+          "192.0.2.5",
+        ),
+      ).resolves.toHaveProperty("reference");
+    } finally {
+      process.env.DEMO_MODE = old;
+    }
+  });
+  const details = {
+    firstName: "Intake",
+    lastName: "Fictional",
+    dob: "2001-01-01",
+    phone: "876-555-0199",
+    address: "Fictional Intake Road",
+    email: "patient@example.test",
+    emailOptIn: true,
+  };
+  it("accepts a public form without creating an MRN and deduplicates retries", async () => {
+    const submissionId = randomUUID();
+    const before = (await s.rows(sql`SELECT count(*) FROM patients`))[0].count;
+    await submitIntake(
+      {
+        ...details,
+        submissionId,
+        consent: true,
+        provisionalReason: "Cannot set this publicly",
+      },
+      "192.0.2.1",
+    );
+    await submitIntake(
+      { ...details, submissionId, consent: true },
+      "192.0.2.1",
+    );
+    expect((await s.rows(sql`SELECT count(*) FROM patients`))[0].count).toBe(
+      before,
+    );
+    const forms = await intakeList(desk);
+    const row = forms.find((r) => r.id === submissionId)!;
+    expect((row.payload as Record<string, unknown>).provisionalReason).toBe("");
+    await expect(intakeList(doctor)).rejects.toThrow("cannot use");
+    const accepted = await Promise.allSettled([
+      reviewIntake(desk, submissionId, { version: 1, action: "accept" }),
+      reviewIntake(desk, submissionId, { version: 1, action: "accept" }),
+    ]);
+    expect(accepted.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(accepted.filter((r) => r.status === "rejected")).toHaveLength(1);
+  });
+  it("rejects bad consent, invalid fields, spam traps, and excessive forms", async () => {
+    await expect(
+      submitIntake(
+        { ...details, submissionId: randomUUID(), consent: false },
+        "192.0.2.2",
+      ),
+    ).rejects.toThrow();
+    await expect(
+      submitIntake(
+        {
+          ...details,
+          dob: "2050-01-01",
+          submissionId: randomUUID(),
+          consent: true,
+        },
+        "192.0.2.2",
+      ),
+    ).rejects.toThrow();
+    await expect(
+      submitIntake(
+        {
+          ...details,
+          website: "bot",
+          submissionId: randomUUID(),
+          consent: true,
+        },
+        "192.0.2.2",
+      ),
+    ).rejects.toThrow();
+    for (let i = 0; i < 10; i++)
+      await submitIntake(
+        { ...details, submissionId: randomUUID(), consent: true },
+        "192.0.2.3",
+      );
+    await expect(
+      submitIntake(
+        { ...details, submissionId: randomUUID(), consent: true },
+        "192.0.2.3",
+      ),
+    ).rejects.toThrow("Too many");
+  });
+  it("reviews duplicates before acceptance and requires a reason for rejection", async () => {
+    const id = randomUUID();
+    await submitIntake(
+      { ...details, submissionId: id, consent: true },
+      "192.0.2.4",
+    );
+    await expect(
+      reviewIntake(doctor, id, { version: 1, action: "accept" }),
+    ).rejects.toThrow();
+    await expect(
+      reviewIntake(desk, id, { version: 1, action: "accept" }),
+    ).rejects.toThrow("matching name");
+    expect(
+      (
+        await s.rows(
+          sql`SELECT status FROM registration_intakes WHERE id=${id}::uuid`,
+        )
+      )[0].status,
+    ).toBe("pending");
+    await expect(
+      reviewIntake(desk, id, { version: 1, action: "reject" }),
+    ).rejects.toThrow("reason");
+    await reviewIntake(desk, id, {
+      version: 1,
+      action: "reject",
+      reason: "Existing patient file located",
+    });
+  });
+  it("shows linked clinical histories without overwriting the source MRN", async () => {
+    const p = (
+      await s.savePatient(desk, {
+        ...details,
+        firstName: "Interim",
+        provisionalReason: "File unavailable at reception",
+      })
+    ).patient;
+    const v = await s.startVisit(desk, { patientId: p.id, doctorId });
+    await s.saveClinical(doctor, v.id, {
+      ...emptyClinical,
+      expectedRevision: 0,
+      state: "final",
+      diagnosis: "Fictional history entry",
+    });
+    await s.reviewProvisional(doctor, p.id, {
+      version: p.version,
+      reason: "Clinical identity reviewed",
+    });
+    await s.reconcilePatient(desk, p.id, {
+      targetId: patientId,
+      reason: "Primary file found",
+    });
+    const primary = await s.patientDetail(doctor, patientId);
+    expect(primary.clinical?.some((c) => c.visit_id === v.id)).toBe(true);
+    expect((await s.patientDetail(desk, p.id)).patient.mrn).toBe(p.mrn);
+    expect(await s.patientDetail(desk, patientId)).not.toHaveProperty(
+      "clinical",
+    );
+  });
+  it("rejects document links to a different patient's visit", async () => {
+    const v = await s.startVisit(desk, { patientId, doctorId });
+    const other = (
+      await s.savePatient(desk, { ...details, firstName: "File Boundary" })
+    ).patient;
+    const f = await storeFile(samplePdf, "application/pdf");
+    await expect(
+      db.execute(
+        sql`INSERT INTO documents(patient_id,visit_id,title,kind,pathname,mime,size,sha256,author_id) VALUES(${other.id}::uuid,${v.id}::uuid,'Fictional lab','Lab report',${f.pathname},${f.mime},${f.size},${f.sha256},${desk.id}::uuid)`,
+      ),
+    ).rejects.toThrow();
+    await db.execute(
+      sql`INSERT INTO documents(patient_id,visit_id,title,kind,pathname,mime,size,sha256,author_id) VALUES(${patientId}::uuid,${v.id}::uuid,'Fictional lab','Lab report',${f.pathname},${f.mime},${f.size},${f.sha256},${desk.id}::uuid)`,
+    );
+    expect(
+      (await s.patientDetail(doctor, patientId)).documents.some(
+        (d) => d.visitId === v.id,
+      ),
+    ).toBe(true);
+  });
+  it("queues each booking event atomically and skips cancelled bookings", async () => {
+    await db.execute(sql`DELETE FROM notification_outbox`);
+    const p = (
+      await s.savePatient(desk, { ...details, firstName: "Email Queue" })
+    ).patient;
+    const a = await s.bookAppointment(desk, {
+      ...booking(p.id, 0),
+      startAt: "2033-01-03T08:00:00-05:00",
+      endAt: "2033-01-03T08:30:00-05:00",
+    });
+    expect(
+      await s.rows(
+        sql`SELECT * FROM notification_outbox WHERE appointment_id=${a.id}::uuid`,
+      ),
+    ).toHaveLength(1);
+    await s.appointmentStatus(desk, a.id, {
+      version: a.version,
+      status: "cancelled",
+    });
+    const fetcher = vi.fn();
+    await deliverQueuedEmails(fetcher);
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(
+      (
+        await s.rows(
+          sql`SELECT status FROM notification_outbox WHERE appointment_id=${a.id}::uuid`,
+        )
+      )[0].status,
+    ).toBe("skipped");
+    await expect(notificationList(doctor)).rejects.toThrow();
+  });
+  it("sends minimal messages, retries failures with the same key, and isolates demo recipients", async () => {
+    await db.execute(sql`DELETE FROM notification_outbox`);
+    const p = (
+      await s.savePatient(desk, { ...details, firstName: "Email Retry" })
+    ).patient;
+    const a = await s.bookAppointment(desk, {
+      ...booking(p.id, 30),
+      startAt: "2033-01-03T09:00:00-05:00",
+      endAt: "2033-01-03T09:30:00-05:00",
+    });
+    const oldKey = process.env.RESEND_API_KEY,
+      oldFrom = process.env.EMAIL_FROM,
+      oldDemo = process.env.DEMO_MODE;
+    process.env.RESEND_API_KEY = "test-only-key";
+    process.env.EMAIL_FROM = "PracticeChart <test@example.test>";
+    process.env.DEMO_MODE = "true";
+    const requests: RequestInit[] = [];
+    const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      requests.push(init!);
+      return requests.length === 1
+        ? new Response("Unavailable", { status: 503 })
+        : Response.json({ id: "fictional-provider-id" });
+    }) as typeof fetch;
+    try {
+      expect((await deliverQueuedEmails(fetcher)).failed).toBe(1);
+      await db.execute(
+        sql`UPDATE notification_outbox SET next_attempt_at=now() WHERE appointment_id=${a.id}::uuid`,
+      );
+      expect((await deliverQueuedEmails(fetcher)).sent).toBe(1);
+      expect(new Headers(requests[0].headers).get("Idempotency-Key")).toBe(
+        new Headers(requests[1].headers).get("Idempotency-Key"),
+      );
+      expect(JSON.parse(String(requests[1].body)).to).toEqual([
+        "delivered@resend.dev",
+      ]);
+      expect(String(requests[1].body)).not.toContain("diagnosis");
+      expect((await deliverQueuedEmails(fetcher)).sent).toBe(0);
+    } finally {
+      if (oldKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = oldKey;
+      if (oldFrom === undefined) delete process.env.EMAIL_FROM;
+      else process.env.EMAIL_FROM = oldFrom;
+      process.env.DEMO_MODE = oldDemo;
+    }
+  });
+  it("creates one reminder per confirmed appointment version within 24 hours", async () => {
+    const p = (
+      await s.savePatient(desk, { ...details, firstName: "Email Reminder" })
+    ).patient;
+    const at = new Date(Date.now() + 12 * 3600000),
+      end = new Date(at.valueOf() + 1800000);
+    // A separate active doctor with all-day hours makes the relative date valid.
+    const u = await s.manageUser(operatorActor, {
+      username: "reminder-doctor",
+      name: "Fictional Reminder Doctor",
+      role: "doctor",
+      password: "ReminderTest!2026",
+    });
+    await db.execute(
+      sql`INSERT INTO doctor_hours(doctor_id,weekday,start_min,end_min) SELECT ${u.id}::uuid,n,0,1440 FROM generate_series(1,7)n ON CONFLICT(doctor_id,weekday) DO UPDATE SET start_min=0,end_min=1440`,
+    );
+    const a = await s.bookAppointment(desk, {
+      patientId: p.id,
+      doctorId: u.id,
+      startAt: at.toISOString(),
+      endAt: end.toISOString(),
+    });
+    await queueEmailReminders();
+    await queueEmailReminders();
+    expect(
+      await s.rows(
+        sql`SELECT * FROM notification_outbox WHERE appointment_id=${a.id}::uuid AND kind='reminder'`,
+      ),
+    ).toHaveLength(1);
+    expect(appointmentMessage("reminder", at).subject).toContain("reminder");
   });
 });

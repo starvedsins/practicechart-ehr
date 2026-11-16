@@ -12,6 +12,26 @@ type Tail = { from: number; label: string };
 const viz = await instance();
 await mkdir("docs/diagrams/cfg", { recursive: true });
 const narratives: Record<string, string> = {
+  duplicatePatients:
+    "Require reception access. Check matching names and birth dates before a new record is saved.",
+  insertPatient:
+    "Serialize matching registrations. Require a reason for a separate matching person. Create the MRN and audit event in the caller's transaction.",
+  reviewProvisional:
+    "Require a doctor and the current version. Record the review reason before reception links an interim record.",
+  submitIntake:
+    "Validate a public registration form and consent. Limit submissions, keep an idempotent reference, and store a pending intake without creating a patient MRN.",
+  intakeList:
+    "Require reception access and audit the pending registration form list.",
+  reviewIntake:
+    "Lock a pending form and check its version. Accept it with duplicate review or reject it with a reason. Commit the patient and review state together.",
+  appointmentMessage:
+    "Format a plain appointment message in Jamaica time without clinical details.",
+  queueEmailReminders:
+    "Queue one reminder per confirmed appointment version due within 24 hours.",
+  notificationList:
+    "Require reception access and return administrative mail status without credentials or clinical text.",
+  deliverQueuedEmails:
+    "Claim due messages with locks. Skip ineligible bookings. Preserve the provider request and idempotency key across retries. Record acceptance or a safe failure.",
   patientList:
     "Search demographic records with parameters and record the search event.",
   patientDetail:
@@ -67,6 +87,8 @@ const files = [
   "src/lib/auth.ts",
   "src/lib/storage.ts",
   "src/lib/validation.ts",
+  "src/lib/intake.ts",
+  "src/lib/notifications.ts",
 ];
 const graphs = [];
 let moduleText =
@@ -446,8 +468,8 @@ console.log(
 );
 
 const diagrams: Record<string, string> = {
-  use_case: `graph UseCases{graph[label="PracticeChart role use cases",labelloc=t,rankdir=LR];node[fontname="Arial",fontsize=12];desk[shape=plaintext,label="Receptionist"];doctor[shape=plaintext,label="Doctor"];subgraph cluster_system{label="PracticeChart EHR";node[shape=ellipse];login[label="Log in / log out"];patient[label="Register and update patient"];find[label="Find patient / interim record"];schedule[label="Manage appointments"];schedreport[label="Print schedule"];file[label="Start and file ready visit"];invoice[label="Create manual invoice"];upload[label="Upload medical documents"];counts[label="Review visit counts"];clinical[label="Record and correct care"];lab[label="Enter lab results"];report[label="Print clinical reports"];retrieve[label="Retrieve diagnostic report"];prescription[label="Create prescription"];certificate[label="Create medical certificate"];}desk--{login patient find schedule schedreport file invoice upload counts};doctor--{login clinical lab report retrieve prescription certificate};}`,
-
+  use_case:
+    'graph UseCases{graph[label="PracticeChart proposed-system roles",labelloc=t,rankdir=LR];node[fontname="Arial",fontsize=12];patientActor[shape=plaintext,label="Patient"];desk[shape=plaintext,label="Receptionist"];doctor[shape=plaintext,label="Doctor"];email[shape=plaintext,label="Email notification system"];subgraph cluster_system{label="PracticeChart EHR";node[shape=ellipse];form[label="Complete registration form"];login[label="Staff login / logout"];patient[label="Register and update patient"];intake[label="Review patient registration"];find[label="Retrieve file / interim record"];schedule[label="Manage appointments"];schedreport[label="Generate schedule report"];file[label="Record and file visit"];invoice[label="Generate digital invoice"];upload[label="Upload medical documents"];counts[label="Track visit analytics"];clinical[label="Record diagnosis and treatment"];lab[label="Add lab results"];retrieve[label="Retrieve diagnostic report"];prescription[label="Generate prescription"];certificate[label="Generate medical certificate"];confirmation[label="Generate appointment email confirmation"];reminder[label="Send appointment reminders"];}patientActor--form;desk--{login form patient intake find schedule schedreport file invoice upload counts};doctor--{login clinical lab retrieve prescription certificate};email--{confirmation reminder};}',
   sequence: `digraph Sequence{graph[label="Appointment confirmation sequence",labelloc=t,rankdir=LR];node[shape=box,fontname="Arial",style=filled,fillcolor="#f3f6fa"];user[label="1 Front desk\nSelect patient and time"];ui[label="2 Booking form\nCheck availability\nShow review"];api[label="3 Server\nAuthenticate and validate"];db[label="4 PostgreSQL transaction\nCheck hours and exclusions\nInsert booking and audit"];response[label="5 Return committed result\nShow confirmation or conflict"];user->ui[label="request"];ui->api[label="confirm"];api->db[label="transaction"];db->response[label="commit or rollback"];response->user[label="result"];}`,
   swimlane: `digraph Swimlane{graph[label="Visit workflow by role",labelloc=t,rankdir=LR];node[shape=box,fontname="Arial"];subgraph cluster_desk{label="Front desk";register[label="Register or find patient"];arrival[label="Mark arrival and start visit"];file[label="File ready visit"];invoice[label="Create invoice or attendance slip"];}subgraph cluster_doctor{label="Doctor";review[label="Review patient history"];record[label="Enter notes, diagnosis, and treatment"];final[label="Save final clinical revision"];}subgraph cluster_system{label="System and PostgreSQL";guard[label="Require final diagnosis"];log[label="Commit filed state and audit"];}register->arrival;arrival->review;review->record;record->final;final->guard;guard->file[label="ready state only"];file->log;log->invoice;}`,
   data: `digraph Data{graph[label="PracticeChart data relationships",labelloc=t,rankdir=LR];node[shape=record,fontname="Arial",fontsize=11];users[label="users|id PK|username UNIQUE|role and password hash"];patients[label="patients|id PK|mrn UNIQUE|demographics and version"];appointments[label="appointments|id PK|patient_id FK|doctor_id FK|start_at and end_at|overlap exclusions"];visits[label="visits|id PK|patient_id FK|doctor_id FK|appointment_id FK UNIQUE|revision and status"];revisions[label="clinical_revisions|id PK|visit_id FK|author_id FK|revision UNIQUE per visit|content JSONB and state"];prescriptions[label="prescriptions|revision_id FK|visit_id FK|patient_id FK|doctor-entered content"];documents[label="documents|id PK|patient_id FK|replaces_id FK|private path and SHA256"];invoices[label="invoices|id PK|number UNIQUE|patient_id FK|lines and integer cents"];audit[label="audit_events|id PK|actor_id FK|action and record reference"];sessions[label="sessions|token hash PK|user_id FK|expiry"];users->sessions[label="1 to many"];patients->appointments[label="1 to many"];users->appointments[label="doctor"];patients->visits[label="1 to many"];appointments->visits[label="0 or 1"];users->visits[label="doctor"];visits->revisions[label="1 to many"];revisions->prescriptions[label="0 to many"];patients->documents[label="1 to many"];patients->invoices[label="1 to many"];users->audit[label="actor"];}`,
@@ -455,6 +477,18 @@ const diagrams: Record<string, string> = {
   ipo: `digraph Modules{graph[label="Input processing and output modules",labelloc=t,rankdir=TB];node[shape=box,fontname="Arial",style=filled,fillcolor="#f3f6fa"];ehr[label="PracticeChart EHR"];input[label="INPUT"];process[label="PROCESSING"];output[label="OUTPUT"];ehr->{input process output};credentials[label="User credentials"];demographics[label="Patient demographics"];requests[label="Appointment requests"];files[label="Diagnostic files"];clinicalInput[label="Doctor clinical entries"];input->{credentials demographics requests files clinicalInput};auth[label="Authentication and role checks"];patient[label="Patient management"];appointment[label="Appointment transactions"];care[label="Clinical revisions and filing"];billing[label="Invoice calculation"];recovery[label="Backup and recovery"];process->{auth patient appointment care billing recovery};docs[label="Clinical documents and patient history"];admin[label="Schedules, attendance, and invoices"];audit[label="Audit history and recovery evidence"];output->{docs admin audit};}`,
   dfd: `digraph DFD{graph[label="Level 1 data flow",labelloc=t,rankdir=LR];node[shape=box,fontname="Arial"];staff[label="Staff"];auth[label="1 Authenticate",shape=ellipse];patient[label="2 Manage patient",shape=ellipse];booking[label="3 Manage appointment",shape=ellipse];care[label="4 Record and retrieve care",shape=ellipse];report[label="5 Produce report",shape=ellipse];database[label="EHR PostgreSQL",shape=cylinder];blob[label="Private diagnostic storage",shape=cylinder];staff->auth[label="credentials"];auth->patient[label="server identity"];auth->booking[label="server identity"];auth->care[label="doctor identity"];patient->database[label="demographics"];booking->database[label="booking and audit"];care->database[label="clinical revisions"];care->blob[label="private document bytes"];database->report[label="authorised records"];blob->report[label="authorised document"];report->staff[label="reading or print output"];}`,
 };
+diagrams.data =
+  diagrams.data.slice(0, -1) +
+  'intakes[label="registration_intakes|id PK|payload JSONB|status and version|patient_id FK after review"];outbox[label="notification_outbox|appointment_id FK|version and kind UNIQUE|delivery snapshot and retry status"];intakes->patients;appointments->outbox;visits->documents[label="visit_id optional for diagnostic files"]; }';
+diagrams.dfd =
+  diagrams.dfd.slice(0, -1) +
+  'publicPatient[label="Patient"];intake[label="6 Submit and review intake",shape=ellipse];mail[label="7 Process appointment mail",shape=ellipse];provider[label="Email notification provider"];publicPatient->intake[label="form and consent"];intake->publicPatient[label="reference only"];staff->intake[label="receptionist review"];intake->database[label="pending form or accepted registration"];database->mail[label="queued booking IDs"];mail->provider[label="appointment time, no clinical text"];provider->mail[label="acceptance or failure"];mail->database[label="queue status"]; }';
+diagrams.class =
+  diagrams.class.slice(0, -1) +
+  'Intake[label="Registration intake|payload, status, version|submitIntake()\\nreviewIntake()"];Notification[label="Appointment notification|booking version, kind, status|queueEmailReminders()\\ndeliverQueuedEmails()"];Intake->Patient[label="accepted as"];Appointment->Notification[label="queues"];Visit->Document[label="lab association"]; }';
+diagrams.ipo =
+  diagrams.ipo.slice(0, -1) +
+  'intakeInput[label="Patient form and consent"];invoiceInput[label="Manual invoice lines"];input->{intakeInput invoiceInput};intakeProcess[label="Reception review and duplicate checks"];mailProcess[label="Email queue and retries"];process->{intakeProcess mailProcess};reference[label="Public submission reference"];mailOutput[label="Appointment confirmations and reminders"];output->{reference mailOutput}; }';
 for (const [name, dot] of Object.entries(diagrams)) {
   await writeFile(`docs/diagrams/${name}.dot`, dot);
   await writeFile(

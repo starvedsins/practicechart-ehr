@@ -1,0 +1,16 @@
+digraph appointmentMessage { graph [label="appointmentMessage",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: const date = new Intl.DateTimeFormat(\"en-J\nM\", { dateStyle: \"full\", timeStyle: \"short\n\", timeZone: \"America/Jamaica\", }).format(\nstart);"];
+n4[shape=diamond,label="4: kind === \"reminder\""];
+n5[shape=diamond,label="5: kind === \"reminder\""];
+n6[shape=box,label="6: RETURN { subject: kind === \"reminder\" ? \"P\nracticeChart appointment reminder\" : \"Prac\nticeChart appointment confirmation\", text:\n `Your appointment is ${"];
+n7[shape=box,label="7: Follow False branch"];
+n8[shape=box,label="8: Follow False branch"];n1->n3[label=""];
+n3->n4[label=""];
+n4->n5[label="True"];
+n4->n7[label="False"];
+n5->n6[label="True"];
+n5->n8[label="False"];
+n6->n2[label=""];
+n7->n5[label=""];
+n8->n6[label=""];}

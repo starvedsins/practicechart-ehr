@@ -154,3 +154,39 @@ Training is planned, not completed. Demonstrate each task, let the trainee pract
 Use the attendance records, task checklists, and blank acceptance forms in TRAINING_AND_ACCEPTANCE.md. Record actual participant, date, role, result, and issues after the session. Do not mark staff trained or accepted before they complete the tasks. Keep follow-up support and an issue register.
 
 Browser checks use emulated phone layouts. A real phone check, human usability testing, and signed acceptance remain group tasks.
+
+## 18. Complete registration as a patient
+
+Open /register, or select Patient registration form on the login page. Enter the name, birth date, phone, and address. Enter an email only if needed. Select email consent only if appointment mail is wanted. Agree to reception review, then select Send registration form. Keep the reference shown after submission.
+
+On the public demo, select Use fictional example first. The server accepts only that example. The local presentation copy permits other fictional test records. A submitted form has no MRN and does not confirm an appointment. Patients cannot search or read records.
+
+![Patient registration form](screenshots/patient-self-registration.png)
+
+![Patient registration on a phone](screenshots/phone-patient-registration.png)
+
+## 19. Review patient registration forms (receptionist)
+
+Open Registration forms. Check the submitted details. Select Accept and register. If a matching name and birth date exist, open the existing file before creating a new one. Enter a reason only when this is a separate patient. For an incorrect or repeated form, enter a rejection reason and select Reject form. The accepted record receives a unique MRN. Two staff members cannot accept the same form twice.
+
+![Receptionist review of a submitted form](screenshots/reception-registration-review.png)
+
+The receptionist can still use Register patient to enter a form directly. A possible duplicate is checked before that save too. For an interim record, give a provisional reason. A doctor must review the interim record before reception links it to the primary file. Both MRNs and their original entries remain available.
+
+## 20. Check appointment email (receptionist)
+
+Enter the patient's email and appointment email consent in demographics. Booking or rescheduling queues a confirmation. The notification system also queues reminders for confirmed appointments within 24 hours. Open Email status to check the result. Select Refresh status after a worker runs. Select Retry due email to start processing due retries.
+
+Sent means the provider accepted the request. Queued, failed, and skipped have different meanings. No clinical details are sent. Public demo mail always goes to a provider test inbox. Do not expect a message at the address entered into the demo.
+
+![Appointment email queue](screenshots/email-status.png)
+
+For a lab report upload, choose Report type set to Lab report and select the matching visit. The server rejects a visit belonging to another patient. Other diagnostic documents can be stored at patient level. Earlier files remain available when a replacement is added.
+
+## 21. Create and review an interim record
+
+Reception opens Patients and selects Create interim record. Complete the demographic fields and the required provisional reason. A possible name and birth-date match still needs review before saving. The doctor opens the provisional record and selects Review provisional record. The doctor enters an administrative review reason, with no clinical details. Reception can then select Link to primary record, choose the primary MRN, give a linking reason, and select Link records.
+
+Changing demographics clears an earlier doctor review. The doctor must review the record again before linking. Linking keeps both MRNs and shows their combined clinical history to the doctor. Reception sees visit state and demographic information only.
+
+![Doctor review of a fictional interim record](screenshots/doctor-interim-review.png)

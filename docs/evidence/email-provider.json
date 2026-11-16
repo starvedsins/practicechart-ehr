@@ -1,0 +1,17 @@
+{
+  "verifiedAt": "2026-11-16T05:03:36.851Z",
+  "environment": "isolated preview",
+  "destination": "Provider test inbox only",
+  "provider": "Resend",
+  "events": [
+    {
+      "kind": "confirmation",
+      "lastEvent": "delivered"
+    },
+    {
+      "kind": "reminder",
+      "lastEvent": "delivered"
+    }
+  ],
+  "humanRecipient": false
+}

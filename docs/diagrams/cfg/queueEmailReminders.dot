@@ -1,0 +1,4 @@
+digraph queueEmailReminders { graph [label="queueEmailReminders",labelloc=t,rankdir=TB,bgcolor="white"];node [fontname="Arial",fontsize=10,style=filled,fillcolor="#f5f7fb",color="#8c9bb4"];edge [fontname="Arial",fontsize=9,color="#63748d"];n1[shape=oval,label="1: START"];
+n2[shape=oval,label="2: END"];
+n3[shape=box,label="3: await db.execute( sql`INSERT INTO notifica\ntion_outbox(appointment_id,appointment_ver\nsion,kind) SELECT id,version,'reminder' FR\nOM appointments WHERE st"];n1->n3[label=""];
+n3->n2[label=""];}

@@ -1,10 +1,10 @@
 {
-  "testedAt": "2026-10-31T02:16:07.549Z",
-  "deployment": "https://campusfix-cljo3h6kh-campusfix7.vercel.app",
+  "testedAt": "2026-11-16T04:56:27.112Z",
+  "deployment": "https://practicechart-25sx6lnh9-practicechart7.vercel.app",
   "access": "Deployment protection bypass used for preview checks",
   "checks": [
-    "doctor clinical history and exact private cloud file round trip",
-    "front desk demographic access with denied clinical, file, staff, and audit routes"
+    "doctor clinical history and private file retrieval",
+    "receptionist upload allowed; clinical notes, diagnostic bytes, staff management, and audit denied"
   ],
   "status": "passed"
 }

@@ -80,3 +80,7 @@ workflows.json records two actual cloud Workflow runs. They produced one reminde
 ## November 15 role regression
 
 The proposed-system diagram is now the role authority. Direct service and HTTP tests reject doctor registration, appointment changes, visit creation and filing, invoice access, visit analytics, staff management, and office schedule changes. Receptionists can upload documents and read metadata but cannot retrieve diagnostic bytes or clinical notes. Browser checks cover both roles, phone navigation, and the receptionist-to-doctor-to-receptionist visit handoff. Nine desktop role/page combinations and an emulated phone page are checked with axe. Staff provisioning test fixtures use a trusted operator context; no operator login role is added to the database.
+
+## Patient intake and mail regression
+
+The integration suite covers public form consent, field validation, fictional-only demo input, idempotent submissions, rate limits, simultaneous staff review, rejection reasons, and duplicate review before insertion. It checks linked clinical history, doctor review before reconciliation, visit-file association, appointment outbox events, cancelled sends, provider failures, retry keys, test inbox routing, and reminder uniqueness. The patient browser flow covers form completion, no MRN before review, receptionist acceptance, denied doctor access, phone width, and axe checks on the new pages.

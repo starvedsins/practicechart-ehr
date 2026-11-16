@@ -41,6 +41,9 @@ import {
 } from "lucide-react";
 import type { Staff } from "@/lib/schema";
 import { emptyClinical, type ClinicalContent } from "@/lib/validation";
+import { IntakeReview } from "./intake-review";
+import { EmailQueue } from "./email-queue";
+import { VisitPatterns } from "./visit-patterns";
 type Patient = {
   id: string;
   mrn: string;
@@ -49,6 +52,9 @@ type Patient = {
   dob: string;
   phone: string;
   address: string;
+  email?: string;
+  emailOptIn?: boolean;
+  reviewedAt?: string;
   gender: string;
   emergencyContact?: string;
   insurance?: string;
@@ -500,15 +506,38 @@ function PatientSelect({
 function PatientForm({
   patient,
   done,
+  interim = false,
 }: {
   patient?: Patient;
+  interim?: boolean;
   done: (message: string, id?: string) => void;
 }) {
+  const [duplicates, setDuplicates] = useState<Patient[]>([]);
   return (
     <Form
-      label={patient ? "Save changes" : "Register patient"}
+      label={
+        patient
+          ? "Save changes"
+          : interim
+            ? "Create interim record"
+            : "Register patient"
+      }
       submit={async (d) => {
-        const values = Object.fromEntries(d);
+        const values = {
+          ...Object.fromEntries(d),
+          emailOptIn: d.get("emailOptIn") === "on",
+        };
+        if (!patient) {
+          const matches = await api<Patient[]>(
+            "patients/check-duplicates",
+            values,
+          );
+          setDuplicates(matches);
+          if (matches.length && !field(d, "duplicateReason"))
+            throw new Error(
+              "Review the possible matches below before you create a separate record.",
+            );
+        }
         const r = await api<{ patient: Patient; duplicates?: Patient[] }>(
           "patients" + (patient ? "/" + patient.id : ""),
           { ...values, ...(patient ? { version: patient.version } : {}) },
@@ -576,6 +605,44 @@ function PatientForm({
           />
         </label>
         <label>
+          Email (optional)
+          <input
+            name="email"
+            type="email"
+            maxLength={254}
+            defaultValue={patient?.email}
+          />
+        </label>
+        <label className="check-row">
+          <input
+            name="emailOptIn"
+            type="checkbox"
+            defaultChecked={patient?.emailOptIn}
+          />{" "}
+          Appointment email consent
+        </label>
+        {duplicates.length > 0 && (
+          <div className="full note-box">
+            <strong>Possible existing records</strong>
+            {duplicates.map((p) => (
+              <p key={p.id}>
+                <Link href={"/app/patients/" + p.id}>
+                  {p.firstName} {p.lastName} / {p.mrn}
+                </Link>
+              </p>
+            ))}
+            <label>
+              Reason for a separate record
+              <textarea
+                name="duplicateReason"
+                required
+                minLength={3}
+                maxLength={500}
+              />
+            </label>
+          </div>
+        )}
+        <label>
           Gender
           <select name="gender" defaultValue={patient?.gender || "Not stated"}>
             {["Not stated", "Female", "Male", "Other"].map((v) => (
@@ -600,9 +667,11 @@ function PatientForm({
           />
         </label>
         <label className="full">
-          Provisional record reason (optional)
+          Provisional record reason {interim?"(required)":"(optional)"}
           <textarea
             name="provisionalReason"
+            required={interim}
+            minLength={interim ? 3 : undefined}
             defaultValue={patient?.provisionalReason}
             maxLength={500}
           />
@@ -810,7 +879,7 @@ function ClinicalEditor({
 }: {
   visit: Visit;
   revision?: Revision;
-  saved: () => void;
+  saved: (warning?: string) => void;
 }) {
   const [meds, setMeds] = useState<ClinicalContent["medications"]>(
     revision?.content.medications || [],
@@ -835,7 +904,11 @@ function ClinicalEditor({
           reason: field(d, "reason"),
           medications: meds,
         });
-        saved();
+        saved(
+          !field(d, "diagnosis").trim()
+            ? "Draft saved without a diagnosis. The visit cannot be filed yet."
+            : undefined,
+        );
       }}
     >
       <div className="note-box">
@@ -1017,11 +1090,21 @@ export default function Workspace({
   const [tab, setTab] = useState("Overview");
   const [visitId, setVisitId] = useState("");
   const [modal, setModal] = useState<Modal | null>(null);
+  const [uploadVisits, setUploadVisits] = useState<Visit[]>([]);
   const [toast, setToast] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
   const [mobileMenu, setMobileMenu] = useState(false);
+  useEffect(() => {
+    if (modal?.kind === "document") {
+      setUploadVisits([]);
+      if (modal.patient)
+        void api<Detail>("patients/" + modal.patient.id, undefined, "GET").then(
+          (d) => setUploadVisits(d.visits),
+        );
+    }
+  }, [modal]);
   const notify = (s: string) => {
     setToast(s);
     setTimeout(() => setToast(""), 6000);
@@ -1149,6 +1232,12 @@ export default function Workspace({
     { id: "overview", label: "Today", icon: LayoutDashboard },
     { id: "patients", label: "Patients", icon: Users },
     { id: "appointments", label: "Appointments", icon: CalendarDays },
+    ...(reception
+      ? [{ id: "intakes", label: "Registration forms", icon: ClipboardList }]
+      : []),
+    ...(reception
+      ? [{ id: "notifications", label: "Email status", icon: Clock3 }]
+      : []),
     { id: "documents", label: "Documents", icon: Files },
     ...(reception
       ? [{ id: "invoices", label: "Invoices", icon: ReceiptText }]
@@ -1184,6 +1273,8 @@ export default function Workspace({
           patients: "Patient directory",
           appointments: "Appointments",
           documents: "Diagnostic documents",
+          intakes: "Patient registration forms",
+          notifications: "Appointment email status",
           invoices: "Manual invoices",
           reports: "Practice reports",
           accounts: "Staff accounts",
@@ -1352,7 +1443,7 @@ export default function Workspace({
         </div>
       </header>
       <div className="app-main">
-        <div className="topbar">
+        <div className="topbar" role="region" aria-label="Workspace context">
           <div className="topbar-location">
             <span>PracticeChart</span>
             <ChevronRight size={13} />
@@ -1437,6 +1528,14 @@ export default function Workspace({
                   Register patient
                 </button>
               )}
+              {page === "patients" && !patientId && reception && (
+                <button
+                  className="button"
+                  onClick={() => setModal({ kind: "interim" })}
+                >
+                  Create interim record
+                </button>
+              )}
               {patientId && current && reception && (
                 <button
                   className="button"
@@ -1456,7 +1555,7 @@ export default function Workspace({
                   Add report
                 </button>
               )}
-              {page === "invoices" && !reception && (
+              {page === "invoices" && reception && (
                 <button
                   className="button primary"
                   onClick={() => setModal({ kind: "invoice" })}
@@ -1886,6 +1985,24 @@ export default function Workspace({
                             {current.provisionalReason && (
                               <div className="note-box">
                                 Provisional record: {current.provisionalReason}
+                                {doctor &&
+                                  !current.reviewedAt &&
+                                  !current.mergedInto && (
+                                    <button
+                                      className="button"
+                                      onClick={() =>
+                                        setModal({
+                                          kind: "review-provisional",
+                                          patient: current,
+                                        })
+                                      }
+                                    >
+                                      Review provisional record
+                                    </button>
+                                  )}
+                                {current.reviewedAt && (
+                                  <p>Doctor review completed.</p>
+                                )}
                                 {reception && !current.mergedInto && (
                                   <button
                                     className="text-button"
@@ -2130,8 +2247,10 @@ export default function Workspace({
                                     }
                                     visit={activeVisit}
                                     revision={latest}
-                                    saved={() => {
-                                      notify("Clinical revision saved.");
+                                    saved={(warning) => {
+                                      notify(
+                                        warning || "Clinical revision saved.",
+                                      );
                                       setRefresh((n) => n + 1);
                                       setTimeout(
                                         () => setTab("Clinical record"),
@@ -2236,6 +2355,8 @@ export default function Workspace({
                   </div>
                 </>
               )}
+              {page === "intakes" && reception && <IntakeReview />}
+              {page === "notifications" && reception && <EmailQueue />}
               {page === "documents" && (
                 <>
                   <p className="note-box" style={{ marginBottom: 24 }}>
@@ -2417,6 +2538,7 @@ export default function Workspace({
                       </div>
                     </Panel>
                   </div>
+                  <VisitPatterns />
                   <p className="note-box" style={{ marginTop: 24 }}>
                     A patient report is a reading copy. It is not a full
                     database backup. Backups and restores use separate operator
@@ -2700,6 +2822,8 @@ export default function Workspace({
                   ? "Reschedule appointment"
                   : "Book appointment",
                 "appointment-actions": "Appointment actions",
+                interim: "Create interim record",
+                "review-provisional": "Review provisional record",
                 invoice: "Create manual invoice",
                 void: "Void invoice",
                 user: "Add staff account",
@@ -2718,8 +2842,12 @@ export default function Workspace({
           }
           close={() => setModal(null)}
         >
-          {modal.kind === "patient" && (
-            <PatientForm patient={modal.patient} done={done} />
+          {(modal.kind === "patient" || modal.kind === "interim") && (
+            <PatientForm
+              patient={modal.patient}
+              interim={modal.kind === "interim"}
+              done={done}
+            />
           )}
           {modal.kind === "appointment" && (
             <BookingForm
@@ -3113,6 +3241,28 @@ export default function Workspace({
               </p>
             </Form>
           )}
+          {modal.kind === "review-provisional" && modal.patient && (
+            <Form
+              label="Confirm doctor review"
+              submit={async (d) => {
+                await api("patients/" + modal.patient!.id + "/review", {
+                  version: modal.patient!.version,
+                  reason: field(d, "reason"),
+                });
+                done("Provisional record reviewed.");
+              }}
+            >
+              <label>
+                Review reason
+                <textarea
+                  name="reason"
+                  required
+                  minLength={3}
+                  maxLength={500}
+                />
+              </label>
+            </Form>
+          )}
           {modal.kind === "document" && (
             <Form
               label="Store private report"
@@ -3121,16 +3271,40 @@ export default function Workspace({
                 done("Private report stored.");
               }}
             >
-              <PatientSelect patients={patients} selected={modal.patient} />
+              <PatientSelect
+                patients={patients}
+                selected={modal.patient}
+                onSelect={(p) => {
+                  setUploadVisits([]);
+                  if (p)
+                    void api<Detail>("patients/" + p.id, undefined, "GET").then(
+                      (d) => setUploadVisits(d.visits),
+                    );
+                }}
+              />
               <label>
                 Report title
                 <input name="title" maxLength={160} required />
               </label>
               <label>
                 Report type
-                <select name="kind">
-                  <option>Lab report</option>
+                <select name="kind" aria-label="Report type">
                   <option>Diagnostic report</option>
+                  <option>Lab report</option>
+                </select>
+              </label>
+              <label>
+                Visit (required for a lab report)
+                <select
+                  name="visitId"
+                  aria-label="Visit (required for a lab report)"
+                >
+                  <option value="">Patient-level diagnostic document</option>
+                  {uploadVisits.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {dateText(v.visitAt)} / {v.status}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label>

@@ -168,6 +168,7 @@ export default function Login() {
             <ShieldCheck size={16} /> Your role controls which records you can
             use.
           </p>
+          <a className="text-button" href="/register">Patient registration form</a>
         </div>
         <span className="login-copyright">
           PracticeChart EHR <span>Records with purpose.</span>

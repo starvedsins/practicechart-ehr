@@ -7,6 +7,8 @@ Revised on November 15, 2026, to follow the group's proposed-system diagram and 
 | Function | Receptionist | Doctor |
 | --- | --- | --- |
 | Register patients, change demographics, create interim records | Yes | No |
+| Review submitted patient registration forms and email status | Yes | No |
+| Review an interim record before linking | No | Yes |
 | Find patient records and view demographics | Yes | Yes, for care |
 | Archive or reconcile patient records | Yes | No |
 | Book, confirm, reschedule, cancel, and mark arrival | Yes | No |
@@ -29,6 +31,6 @@ The receptionist prepares the visit. The doctor records care and marks the entry
 
 Staff provisioning, audit investigation, full backups, and restores are operator tasks outside the two employee login roles. There is no third employee login role. The SQL role constraint still permits only doctor and front_desk. Account-management APIs reject both employee roles. Tests may construct a trusted operator context only for fixture provisioning.
 
-The source diagram gives the patient a separate registration-form action. UC01 instead says the receptionist completes it. This release follows the earlier no-portal decision and has no patient-facing intake form. That is a gap against the diagram, not proof that a patient can use the current staff form. See SPEC_AUDIT.md. Email delivery remains deferred by the earlier user decision. In-app confirmations and reminders remain available. There is no payment processing or external medical integration.
+Patients complete the public /register form. Reception can also register directly and can review patient submissions. Patients have no staff login, search, or record access. Email confirmations and reminders now run through the notification system. In-app reminders remain available. The public demo accepts the fixed fictional intake and sends only to a provider test inbox. Read AUDIT_RESOLUTION.md for current status. There is no payment processing or external medical integration.
 
 The earlier broader doctor permissions are superseded by this matrix. UI controls and server checks must agree. A hidden control alone is not a permission check.

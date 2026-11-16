@@ -78,4 +78,8 @@ Next.js, TypeScript, Tailwind CSS, PostgreSQL 18, Neon, Drizzle ORM, Zod, privat
 
 Commit source, migrations, lockfile, safe documentation, and fictional test evidence. Never commit `.env`, `.private`, backups, recovery keys, database files, private uploads, `node_modules`, course interviews, or private chat exports. The old application was deleted. Its business logic and test results are not evidence for this build.
 
-The source-by-source review is in [SPEC_AUDIT.md](docs/SPEC_AUDIT.md). It lists partial requirements and unverified targets. Patient self-registration is not implemented, although the source diagram shows a separate patient form action.
+The source-by-source review is in [SPEC_AUDIT.md](docs/SPEC_AUDIT.md). It lists partial requirements and unverified targets. Patient registration is available at /register. Reception reviews public intakes. Read AUDIT_RESOLUTION.md for the current feature and evidence status.
+
+## Patient registration and notification system
+
+Open /register to complete a patient form. Reception reviews it in Registration forms. Reception can also register directly. The public demo accepts only the supplied fictional example. Appointment confirmations and reminders use server-side mail settings and a retry queue. Public demo mail goes only to a provider test inbox. Read docs/EMAIL_AND_OPERATOR_SETUP.md for mail and operator setup. Read docs/AUDIT_RESOLUTION.md for closed gaps and evidence limits.

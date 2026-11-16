@@ -1,4 +1,4 @@
-import { and, eq, sql, type SQL } from "drizzle-orm";
+import { and, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Executor } from "./db";
 import {
@@ -60,12 +60,22 @@ export async function patientDetail(actor: Staff, id: string) {
       await tx.select().from(patients).where(eq(patients.id, id)),
     );
     await event(tx, actor, "view", "patient", id);
+    const family = (
+      await rows(
+        sql`WITH RECURSIVE edges(a,b) AS (SELECT id,merged_into FROM patients WHERE merged_into IS NOT NULL UNION SELECT merged_into,id FROM patients WHERE merged_into IS NOT NULL), family(id) AS (SELECT ${id}::uuid UNION SELECT e.b FROM edges e JOIN family f ON e.a=f.id) SELECT id FROM family`,
+        tx,
+      )
+    ).map((r) => String(r.id));
+    const ids = sql.join(
+      family.map((p) => sql`${p}::uuid`),
+      sql`, `,
+    );
     const visitList = await rows(
-      sql`SELECT v.id,v.patient_id,v.doctor_id,v.status,v.revision,v.visit_at,v.filed_at,u.name AS doctor_name FROM visits v JOIN users u ON u.id=v.doctor_id WHERE patient_id=${id} ORDER BY visit_at DESC`,
+      sql`SELECT v.id,v.patient_id,v.doctor_id,v.status,v.revision,v.visit_at,v.filed_at,u.name AS doctor_name FROM visits v JOIN users u ON u.id=v.doctor_id WHERE patient_id IN (${ids}) ORDER BY visit_at DESC`,
       tx,
     );
     const appointmentList = await rows(
-      sql`SELECT a.*,u.name AS doctor_name FROM appointments a JOIN users u ON u.id=a.doctor_id WHERE patient_id=${id} ORDER BY start_at DESC`,
+      sql`SELECT a.*,u.name AS doctor_name FROM appointments a JOIN users u ON u.id=a.doctor_id WHERE patient_id IN (${ids}) ORDER BY start_at DESC`,
       tx,
     );
     const files = await tx
@@ -77,9 +87,10 @@ export async function patientDetail(actor: Staff, id: string) {
         size: documents.size,
         createdAt: documents.createdAt,
         replacesId: documents.replacesId,
+        visitId: documents.visitId,
       })
       .from(documents)
-      .where(eq(documents.patientId, id));
+      .where(inArray(documents.patientId, family));
     if (actor.role !== "doctor")
       return {
         patient: p,
@@ -88,7 +99,7 @@ export async function patientDetail(actor: Staff, id: string) {
         documents: files,
       };
     const clinical = await rows(
-      sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.visit_id WHERE v.patient_id=${id} ORDER BY c.created_at DESC,c.revision DESC`,
+      sql`SELECT c.*,u.name AS author_name FROM clinical_revisions c JOIN users u ON u.id=c.author_id JOIN visits v ON v.id=c.visit_id WHERE v.patient_id IN (${ids}) ORDER BY c.created_at DESC,c.revision DESC`,
       tx,
     );
     return {
@@ -111,7 +122,13 @@ export async function savePatient(actor: Staff, input: unknown, id?: string) {
         .parse(input).version;
       const [p] = await tx
         .update(patients)
-        .set({ ...data, version: version + 1 })
+        .set({
+          ...data,
+          reviewedBy: null,
+          reviewedAt: null,
+          reviewReason: "",
+          version: version + 1,
+        })
         .where(and(eq(patients.id, id), eq(patients.version, version)))
         .returning();
       if (!p)
@@ -120,19 +137,48 @@ export async function savePatient(actor: Staff, input: unknown, id?: string) {
           "This patient changed. Reload the record before you save.",
         );
       await event(tx, actor, "update", "patient", id, { version });
-      return { patient: p };
+      return { patient: p, duplicates: [] as Record<string, unknown>[] };
     }
-    const duplicates = await rows(
-      sql`SELECT id,mrn FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.lastName}) AND dob=${data.dob}::date LIMIT 5`,
-      tx,
-    );
-    const [p] = await tx
-      .insert(patients)
-      .values({ ...data, mrn: sql`DEFAULT` })
-      .returning();
-    await event(tx, actor, "create", "patient", p.id);
-    return { patient: p, duplicates };
+    return insertPatient(tx, actor, data, input);
   });
+}
+export async function duplicatePatients(actor: Staff, input: unknown) {
+  await requireRole(actor, "front_desk");
+  const data = patientInput.parse(input);
+  await event(db, actor, "search", "patient_duplicates");
+  return rows(
+    sql`SELECT id,mrn,first_name,last_name,dob FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.lastName}) AND dob=${data.dob}::date ORDER BY created_at LIMIT 10`,
+  );
+}
+export async function insertPatient(
+  tx: Executor,
+  actor: Staff,
+  data: z.infer<typeof patientInput>,
+  input: unknown,
+) {
+  await tx.execute(
+    sql`SELECT pg_advisory_xact_lock(hashtextextended(lower(${data.firstName})||':'||lower(${data.lastName})||':'||${data.dob},0))`,
+  );
+  const duplicates = await rows(
+    sql`SELECT id,mrn FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.lastName}) AND dob=${data.dob}::date LIMIT 10`,
+    tx,
+  );
+  const { duplicateReason } = z
+    .object({ duplicateReason: z.string().trim().max(500).default("") })
+    .parse(input);
+  if (duplicates.length && duplicateReason.length < 3)
+    throw new AppError(
+      409,
+      "A matching name and birth date already exist. Review the existing record, or enter a reason to create a separate record.",
+    );
+  const [p] = await tx
+    .insert(patients)
+    .values({ ...data, mrn: sql`DEFAULT` })
+    .returning();
+  await event(tx, actor, "create", "patient", p.id, {
+    ...(duplicates.length ? { duplicateReason } : {}),
+  });
+  return { patient: p, duplicates };
 }
 export async function archivePatient(actor: Staff, id: string, input: unknown) {
   await requireRole(actor, "front_desk");
@@ -174,11 +220,17 @@ export async function reconcilePatient(
     if (
       !source?.provisional_reason ||
       source.merged_into ||
-      target?.merged_into
+      target?.merged_into ||
+      target?.archived
     )
       throw new AppError(
         400,
         "Use an unresolved provisional record and an active primary record.",
+      );
+    if (!source.reviewed_at)
+      throw new AppError(
+        400,
+        "A doctor must review the provisional record before it can be linked.",
       );
     await tx
       .update(patients)
@@ -190,6 +242,29 @@ export async function reconcilePatient(
       .where(eq(patients.id, id));
     await event(tx, actor, "reconcile", "patient", id, { targetId, reason });
     return { targetId };
+  });
+}
+export async function reviewProvisional(
+  actor: Staff,
+  id: string,
+  input: unknown,
+) {
+  await requireRole(actor);
+  const { reason, version } = z
+    .object({
+      reason: z.string().trim().min(3).max(500),
+      version: z.number().int().positive(),
+    })
+    .parse(input);
+  return db.transaction(async (tx) => {
+    const result = await rows(
+      sql`UPDATE patients SET reviewed_by=${actor.id}::uuid,reviewed_at=now(),review_reason=${reason},version=version+1 WHERE id=${idSchema.parse(id)}::uuid AND version=${version} AND provisional_reason<>'' AND merged_into IS NULL RETURNING id`,
+      tx,
+    );
+    if (!result.length)
+      throw new AppError(409, "This provisional record changed. Reload it.");
+    await event(tx, actor, "review", "provisional_patient", id, { reason });
+    return result[0];
   });
 }
 export async function schedule(actor: Staff, date?: string) {
@@ -660,6 +735,15 @@ export async function reportData(actor: Staff, type: string, id: string) {
       type,
       counts: await rows(
         sql`SELECT (visit_at AT TIME ZONE 'America/Jamaica')::date AS day,count(*) AS visits,count(*) FILTER(WHERE status='filed') AS filed FROM visits GROUP BY day ORDER BY day DESC LIMIT 30`,
+      ),
+      monthly: await rows(
+        sql`SELECT to_char(visit_at AT TIME ZONE 'America/Jamaica','YYYY-MM') AS month,count(*) AS visits,count(*) FILTER(WHERE status='filed') AS filed FROM visits GROUP BY month ORDER BY month DESC LIMIT 12`,
+      ),
+      byRecord: await rows(
+        sql`SELECT p.id,p.mrn,p.first_name,p.last_name,count(*) AS visits,max(v.visit_at) AS last_visit FROM visits v JOIN patients p ON p.id=v.patient_id GROUP BY p.id ORDER BY count(*) DESC,p.mrn LIMIT 20`,
+      ),
+      states: await rows(
+        sql`SELECT status,count(*) AS visits FROM visits GROUP BY status ORDER BY status`,
       ),
     };
   }

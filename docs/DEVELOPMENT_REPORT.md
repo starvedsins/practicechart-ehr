@@ -10,7 +10,7 @@ The project brief defines the EHR business scope. The assignment guide defines t
 
 Support patient registration and retrieval, administrative updates, safe appointment scheduling, consultation records, diagnostic files, prescriptions, certificates, visit filing, manual invoices, and reports. Preserve earlier clinical entries and audit history. Provide an encrypted full backup and a measured restore test. Keep the local presentation data across restarts.
 
-There is no patient portal, payment processor, AI clinical advice, biometric authentication, external medical practice connection, Ministry of Health connection, pharmacy integration, or laboratory integration. Email delivery is deferred. In-app reminders are included. Hardware purchasing and staff training are not represented as completed work.
+Patients can complete a public registration form. Reception reviews submissions and can also register directly. There is no patient record portal, payment processor, AI clinical advice, biometric authentication, external medical practice connection, Ministry of Health connection, pharmacy integration, or laboratory integration. Email confirmations, email reminders, and in-app reminders are included. Hardware purchasing and staff training are not represented as completed work.
 
 ## Requirements and constraints
 
@@ -50,7 +50,7 @@ The group supplied the proposed-system use case diagram as the role authority. R
 
 ## Procedural design
 
-MODULES.md contains source-linked processing narratives and graph instructions for 26 functions. CONTROL_FLOW.md contains the three complexity calculations, planar face boundaries, and independent syntactic candidates. TEST_PLAN.md maps feasible state and input cases to executable tests. Database constraints are tested through PostgreSQL, rather than assigned invented JavaScript branch counts.
+MODULES.md contains source-linked processing narratives and graph instructions for 36 functions. CONTROL_FLOW.md contains the three complexity calculations, planar face boundaries, and independent syntactic candidates. TEST_PLAN.md maps feasible state and input cases to executable tests. Database constraints are tested through PostgreSQL, rather than assigned invented JavaScript branch counts.
 
 ## Interface design
 
@@ -62,27 +62,27 @@ The Today page leads with a patient worklist. The patient record separates demog
 
 ## Testing and actual results
 
-Vitest recorded 78 passing tests and 0 failed tests. Playwright recorded 9 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 92.35% of statements and 83.16% of branches. This is not a claim of full path coverage.
+Vitest recorded 87 passing tests and 0 failed tests. Playwright recorded 11 passing browser tests and 0 unexpected failures. The measured Vitest library coverage was 91.88% of statements and 85.27% of branches. This is not a claim of full path coverage.
 
 Unit and database tests cover valid and invalid partitions, boundaries, session and account states, simultaneous bookings, stale changes, clinical corrections, document rules, and invoices. Complete browser tests cover both roles. Direct clinical and file routes are denied to the front desk. Axe recorded zero violations on the nine checked desktop role/page combinations and the checked emulated phone page. Automated scans do not replace a full accessibility review or a real phone test.
 
 ### Performance
 
-The fixture contained 1016 fictional patients and 5 clinical revisions. Each load ran for 30 seconds. At loads above one, each background session requested a patient search and detail, then waited one second. One browser session measured complete record display. The first display is reported separately from later displays. The first display is not a claim of a cold server start.
+The fixture contained 1041 fictional patients and 29 clinical revisions. Each load ran for 30 seconds. At loads above one, each background session requested a patient search and detail, then waited one second. One browser session measured complete record display. The first display is reported separately from later displays. The first display is not a claim of a cold server start.
 
 | Active sessions | Seconds | Browser login ms | First record ms | Warm display p95 ms | API requests | Request errors |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 30 | 258.99 | 148.87 | 164.21 | 0 | 0 |
-| 10 | 30 | 255.45 | 138.26 | 190.66 | 522 | 0 |
-| 50 | 30 | 625.71 | 144.72 | 271.42 | 2818 | 0 |
+| 1 | 30 | 255.6 | 125.06 | 146.87 | 0 | 0 |
+| 10 | 30 | 241.4 | 142.95 | 145.09 | 528 | 0 |
+| 50 | 30 | 451.96 | 141.85 | 147.16 | 2842 | 0 |
 
 All measured browser logins were below three seconds. All measured warm record displays were below two seconds. Only one browser login was measured at each load. The server was a local production build. PostgreSQL ran in Docker on the same host. These results do not prove equivalent cloud performance or 99 percent availability.
 
-A separate process-cold check used three fresh local production Node processes and fresh browser sessions. A health probe preceded login. PostgreSQL and operating system caches remained warm. This is not a Vercel cold start test. The measured browser login times were 524.66, 528.83, 384.63 ms. First patient display times were 147.85, 152.11, 146.04 ms. Repeat display times were 176.09, 175.08, 185.18 ms. Three samples do not establish a percentile guarantee. The full method and results are in cold-performance.json.
+A separate process-cold check used three fresh local production Node processes and fresh browser sessions. A health probe preceded login. PostgreSQL and operating system caches remained warm. This is not a Vercel cold start test. The measured browser login times were 402.45, 375.64, 421.95 ms. First patient display times were 141.62, 161.64, 166.78 ms. Repeat display times were 161.15, 167.6, 127.28 ms. Three samples do not establish a percentile guarantee. The full method and results are in cold-performance.json.
 
 ### Recovery
 
-The full encrypted EHR recovery bundle from the successful GitHub backup job restored into an isolated local PostgreSQL 18 database. The actual result was passed. The test compared 16 tables and 2 uploaded documents. The measured restore phase took 1.269 seconds. It compared all restored row values, file hashes and bytes, MRN and invoice sequencing, immutable histories, and overlap rejection. This duration excludes download, decryption, and the separate browser drill. The restored application also passed both role logins, patient search, and private file checks. RECOVERY.md explains key custody, daily scheduling, retention, and limits.
+The full encrypted EHR recovery bundle from the successful GitHub backup job restored into an isolated local PostgreSQL 18 database. The actual result was passed. The test compared 19 tables and 15 uploaded documents. The measured restore phase took 1.053 seconds. It compared all restored row values, file hashes and bytes, MRN and invoice sequencing, immutable histories, and overlap rejection. This duration excludes download, decryption, and the separate browser drill. The restored application also passed both role logins, patient search, and private file checks. RECOVERY.md explains key custody, daily scheduling, retention, and limits.
 
 ### Defects found and corrected
 

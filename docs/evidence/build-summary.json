@@ -1,38 +1,38 @@
 {
   "application": "PracticeChart EHR",
-  "generatedAt": "2026-11-16T04:05:59.608Z",
+  "generatedAt": "2026-11-16T05:06:13.271Z",
   "unitTests": {
-    "passed": 78,
+    "passed": 87,
     "failed": 0
   },
   "browserTests": {
-    "passed": 9,
+    "passed": 11,
     "failed": 0
   },
   "coverage": {
     "lines": {
-      "total": 313,
-      "covered": 295,
+      "total": 404,
+      "covered": 378,
       "skipped": 0,
-      "pct": 94.24
+      "pct": 93.56
     },
     "statements": {
-      "total": 327,
-      "covered": 302,
+      "total": 419,
+      "covered": 385,
       "skipped": 0,
-      "pct": 92.35
+      "pct": 91.88
     },
     "functions": {
-      "total": 62,
-      "covered": 61,
+      "total": 82,
+      "covered": 80,
       "skipped": 0,
-      "pct": 98.38
+      "pct": 97.56
     },
     "branches": {
-      "total": 196,
-      "covered": 163,
+      "total": 258,
+      "covered": 220,
       "skipped": 0,
-      "pct": 83.16
+      "pct": 85.27
     },
     "branchesTrue": {
       "total": 0,
@@ -43,13 +43,13 @@
   },
   "restore": {
     "status": "passed",
-    "testedAt": "2026-10-31T05:33:54.741Z",
-    "sourceCreatedAt": "2026-10-31T02:15:26.996Z",
+    "testedAt": "2026-11-16T04:33:59.066Z",
+    "sourceCreatedAt": "2026-11-16T04:33:56.223Z",
     "kind": "Full EHR database and uploaded files",
     "restoreTarget": "isolated local PostgreSQL 18 database",
-    "durationSeconds": 1.269,
-    "tablesCompared": 16,
-    "documentsVerified": 2,
+    "durationSeconds": 1.053,
+    "tablesCompared": 19,
+    "documentsVerified": 15,
     "checks": [
       "table row counts",
       "all restored row values, including MRNs and clinical revisions",
@@ -60,7 +60,7 @@
       "MRN sequence",
       "invoice sequence"
     ],
-    "retainedLocalDatabase": "practicechart_restore_1793424833271"
+    "retainedLocalDatabase": "practicechart_restore_1794803637943"
   },
   "performanceSource": "performance.json",
   "humanAcceptance": "not performed",

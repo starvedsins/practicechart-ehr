@@ -229,6 +229,13 @@ test("receptionist uploads a sample report for the doctor", async ({
   await page
     .getByLabel("Report title", { exact: true })
     .fill("Fictional browser upload");
+  await page
+    .getByLabel("Report type", { exact: true })
+    .selectOption("Lab report");
+  const visits = await (await page.request.get("/api/patients/" + p)).json();
+  await page
+    .getByLabel("Visit (required for a lab report)", { exact: true })
+    .selectOption(visits.visits[0].id);
   const sample = await page.request.get("/api/sample-report");
   const bytes = await sample.body();
   await page.getByLabel("Report file", { exact: true }).setInputFiles({
@@ -351,11 +358,26 @@ test("keyboard forms and desktop pages pass axe checks", async ({ page }) => {
   }
   await page.context().clearCookies();
   await login(page, "frontdesk");
-  for (const path of ["/app", "/app/patients", "/app/invoices", "/app/reports"]) {
+  for (const path of [
+    "/app",
+    "/app/patients",
+    "/app/invoices",
+    "/app/reports",
+  ]) {
     await page.goto(path);
     await expect(page.getByText("Loading practice records...")).toHaveCount(0);
-    const a = await new AxeBuilder({page}).withTags(["wcag2a","wcag2aa","wcag21aa"]).analyze();
-    results.push({path: "receptionist:" + path, violations: a.violations.map((v) => ({id:v.id, impact:v.impact, description:v.description, nodes:v.nodes.map((n)=>n.target)}))});
+    const a = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    results.push({
+      path: "receptionist:" + path,
+      violations: a.violations.map((v) => ({
+        id: v.id,
+        impact: v.impact,
+        description: v.description,
+        nodes: v.nodes.map((n) => n.target),
+      })),
+    });
   }
   await mkdir("docs/evidence", { recursive: true });
   await writeFile(
@@ -546,4 +568,140 @@ test("doctor cannot use receptionist or operator actions through UI or direct re
   await expect(
     page.getByRole("link", { name: "Retrieve report", exact: true }),
   ).toHaveCount(0);
+});
+test("patient completes registration and reception reviews it before an MRN is created", async ({
+  page,
+}) => {
+  const name = "IntakeBrowser" + Date.now();
+  await page.goto("/register");
+  expect((await page.request.get("/api/intakes")).status()).toBe(401);
+  await page.getByLabel("First name", { exact: true }).fill("Avery");
+  await page.getByLabel("Last name", { exact: true }).fill(name);
+  await page.getByLabel("Date of birth", { exact: true }).fill("1997-03-12");
+  await page.getByLabel("Phone", { exact: true }).fill("876-555-0188");
+  await page
+    .getByLabel("Address", { exact: true })
+    .fill("Fictional Intake Lane, Demo Town");
+  await page
+    .getByLabel("Email (optional)", { exact: true })
+    .fill("fictional@example.test");
+  await page.getByRole("checkbox", { name: /I agree/ }).check();
+  await page.getByRole("checkbox", { name: /Send appointment/ }).check();
+  const access = await new AxeBuilder({ page }).analyze();
+  expect(access.violations).toEqual([]);
+  await screenshot(page, "patient-self-registration");
+  await page
+    .getByRole("button", { name: "Send registration form", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Form received", exact: true }),
+  ).toBeVisible();
+  await login(page, "doctor");
+  expect((await page.request.get("/api/intakes")).status()).toBe(403);
+  await page.context().clearCookies();
+  await login(page, "frontdesk");
+  const before = await (
+    await page.request.get("/api/patients?q=" + name)
+  ).json();
+  expect(before).toHaveLength(0);
+  await page.goto("/app/intakes");
+  const card = page.locator("article").filter({
+    has: page.getByRole("heading", { name: "Avery " + name, exact: true }),
+  });
+  await expect(card).toBeVisible();
+  await screenshot(page, "reception-registration-review");
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await card
+    .getByRole("button", { name: "Accept and register", exact: true })
+    .click();
+  await expect(card).toHaveCount(0);
+  const after = await (
+    await page.request.get("/api/patients?q=" + name)
+  ).json();
+  expect(after).toHaveLength(1);
+  expect(after[0].mrn).toMatch(/^PC-/);
+  await page.goto("/app/notifications");
+  await expect(
+    page.getByRole("heading", {
+      name: "Appointment email status",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await screenshot(page, "email-status");
+  await page.context().clearCookies();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/register");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await screenshot(page, "phone-patient-registration");
+});
+test("reception creates an interim file, doctor reviews it, and reception links the primary record", async ({
+  page,
+}) => {
+  await login(page, "frontdesk");
+  await page.goto("/app/patients");
+  await page
+    .getByRole("button", { name: "Create interim record", exact: true })
+    .click();
+  let dialog = page.getByRole("dialog");
+  const surname = "InterimBrowser" + Date.now();
+  await dialog.getByLabel("First name", { exact: true }).fill("Remy");
+  await dialog.getByLabel("Last name", { exact: true }).fill(surname);
+  await dialog.getByLabel("Date of birth", { exact: true }).fill("2000-01-01");
+  await dialog.getByLabel("Phone", { exact: true }).fill("876-555-0189");
+  await dialog
+    .getByLabel("Address", { exact: true })
+    .fill("Fictional Interim Lane");
+  await dialog
+    .getByLabel(/Provisional record reason/)
+    .fill("Primary file could not be located at reception");
+  await dialog
+    .getByRole("button", { name: "Create interim record", exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  const p = (
+    await (await page.request.get("/api/patients?q=" + surname)).json()
+  )[0];
+  await page.context().clearCookies();
+  await login(page, "doctor");
+  await page.goto("/app/patients/" + p.id);
+  await page
+    .getByRole("button", { name: "Review provisional record", exact: true })
+    .click();
+  dialog = page.getByRole("dialog");
+  await dialog
+    .getByLabel("Review reason")
+    .fill("Fictional identity checked before linking");
+  await screenshot(page, "doctor-interim-review");
+  await dialog
+    .getByRole("button", { name: "Confirm doctor review", exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  await page.context().clearCookies();
+  await login(page, "frontdesk");
+  await page.goto("/app/patients/" + p.id);
+  await page
+    .getByRole("button", { name: "Link to primary record", exact: true })
+    .click();
+  dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Find patient by name or MRN").fill("Lena");
+  const target = (
+    await (await page.request.get("/api/patients?q=Lena")).json()
+  )[0];
+  await dialog.getByLabel("Primary record").selectOption(target.id);
+  await dialog
+    .getByLabel("Reason", { exact: true })
+    .fill("Primary fictional record is available again");
+  await dialog
+    .getByRole("button", { name: "Link records", exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  const detail = await (await page.request.get("/api/patients/" + p.id)).json();
+  expect(detail.patient.mergedInto).toBe(target.id);
+  expect(detail.patient.mrn).toBe(p.mrn);
 });

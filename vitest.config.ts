@@ -13,6 +13,8 @@ export default defineConfig({
         "src/lib/auth.ts",
         "src/lib/service.ts",
         "src/lib/storage.ts",
+        "src/lib/intake.ts",
+        "src/lib/notifications.ts",
       ],
       reporter: ["text", "json-summary", "html"],
     },

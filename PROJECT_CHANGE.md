@@ -22,3 +22,7 @@ Final booking review checks added duration-aware availability, patient conflict 
 ## 2026-11-15
 
 The group requested the original proposed-system role split. The earlier broad doctor permissions are superseded. Receptionists perform registration, scheduling, filing, invoices, uploads, and visit analytics. Doctors perform clinical work and clinical outputs. Staff provisioning and global audit review are operator tasks. Direct API checks enforce the roles. The user manual, screenshots, diagrams, programme manual, processing narratives, and role tests were updated. Existing records and prior clinical revisions are preserved.
+
+## Patient form and email implementation, November 15, 2026
+
+The latest instruction enables patient form completion as a separate public action and provider email confirmations and reminders. Reception retains direct registration and office functions. Added pending intake review, pre-save duplicate guards, doctor interim review, combined linked history, visit-linked lab uploads, expanded read and failure audit, operator account commands, monthly and per-record visit analytics, and renewed load and restore evidence. Public demo intake is limited to a fictional example. Demo mail is routed to a provider test inbox. See AUDIT_RESOLUTION.md for current scope and external verification limits.

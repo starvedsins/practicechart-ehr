@@ -403,6 +403,20 @@ label {
   font-size: 13px;
   font-weight: 550;
 }
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+  line-height: 1.6;
+}
+.check-row input[type="checkbox"] {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+}
 input,
 select,
 textarea {

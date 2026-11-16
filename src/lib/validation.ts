@@ -2,37 +2,44 @@ import { z } from "zod";
 export const idSchema = z.string().uuid();
 const text = (max = 200) =>
   z.string().trim().min(1, "This field is required.").max(max);
-export const patientInput = z.object({
-  firstName: text(80),
-  lastName: text(80),
-  dob: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .refine((s) => {
-      const d = new Date(s + "T12:00:00Z");
-      return (
-        !Number.isNaN(d.valueOf()) &&
-        d.toISOString().slice(0, 10) === s &&
-        s <=
-          new Intl.DateTimeFormat("en-CA", {
-            timeZone: "America/Jamaica",
-          }).format(new Date())
-      );
-    }, "Use a valid date of birth that is not in the future."),
-  phone: z
-    .string()
-    .trim()
-    .min(7)
-    .max(30)
-    .regex(/^[+0-9 ()-]+$/, "Use a valid phone number."),
-  address: text(300),
-  gender: z
-    .enum(["Not stated", "Female", "Male", "Other"])
-    .default("Not stated"),
-  emergencyContact: z.string().trim().max(200).default(""),
-  insurance: z.string().trim().max(100).default(""),
-  provisionalReason: z.string().trim().max(500).default(""),
-});
+export const patientInput = z
+  .object({
+    firstName: text(80),
+    lastName: text(80),
+    dob: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .refine((s) => {
+        const d = new Date(s + "T12:00:00Z");
+        return (
+          !Number.isNaN(d.valueOf()) &&
+          d.toISOString().slice(0, 10) === s &&
+          s <=
+            new Intl.DateTimeFormat("en-CA", {
+              timeZone: "America/Jamaica",
+            }).format(new Date())
+        );
+      }, "Use a valid date of birth that is not in the future."),
+    phone: z
+      .string()
+      .trim()
+      .min(7)
+      .max(30)
+      .regex(/^[+0-9 ()-]+$/, "Use a valid phone number."),
+    address: text(300),
+    email: z.union([z.email().max(254), z.literal("")]).default(""),
+    emailOptIn: z.boolean().default(false),
+    gender: z
+      .enum(["Not stated", "Female", "Male", "Other"])
+      .default("Not stated"),
+    emergencyContact: z.string().trim().max(200).default(""),
+    insurance: z.string().trim().max(100).default(""),
+    provisionalReason: z.string().trim().max(500).default(""),
+  })
+  .refine(
+    (v) => !v.emailOptIn || Boolean(v.email),
+    "Enter an email address before you give email consent.",
+  );
 export const appointmentInput = z
   .object({
     patientId: idSchema,

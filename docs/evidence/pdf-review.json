@@ -4,74 +4,74 @@
   "files": [
     {
       "file": "docs/submission/development-report.pdf",
-      "pages": 18,
-      "renderedPages": 18,
+      "pages": 21,
+      "renderedPages": 21,
       "textFindings": []
     },
     {
       "file": "docs/submission/indexed-source-listing.pdf",
-      "pages": 188,
-      "renderedPages": 188,
+      "pages": 227,
+      "renderedPages": 227,
       "textFindings": []
     },
     {
       "file": "docs/submission/programme-manual.pdf",
-      "pages": 11,
-      "renderedPages": 11,
+      "pages": 12,
+      "renderedPages": 12,
       "textFindings": []
     },
     {
       "file": "docs/submission/testing-and-control-flow.pdf",
-      "pages": 33,
-      "renderedPages": 33,
+      "pages": 44,
+      "renderedPages": 44,
       "textFindings": []
     },
     {
       "file": "docs/submission/training-and-acceptance-forms.pdf",
-      "pages": 3,
-      "renderedPages": 3,
+      "pages": 4,
+      "renderedPages": 4,
       "textFindings": []
     },
     {
       "file": "docs/submission/user-manual.pdf",
-      "pages": 18,
-      "renderedPages": 18,
+      "pages": 23,
+      "renderedPages": 23,
       "textFindings": []
     },
     {
       "file": ".private/submission/development-report.pdf",
-      "pages": 18,
-      "renderedPages": 18,
+      "pages": 21,
+      "renderedPages": 21,
       "textFindings": []
     },
     {
       "file": ".private/submission/indexed-source-listing.pdf",
-      "pages": 188,
-      "renderedPages": 188,
+      "pages": 227,
+      "renderedPages": 227,
       "textFindings": []
     },
     {
       "file": ".private/submission/programme-manual.pdf",
-      "pages": 11,
-      "renderedPages": 11,
+      "pages": 12,
+      "renderedPages": 12,
       "textFindings": []
     },
     {
       "file": ".private/submission/testing-and-control-flow.pdf",
-      "pages": 33,
-      "renderedPages": 33,
+      "pages": 44,
+      "renderedPages": 44,
       "textFindings": []
     },
     {
       "file": ".private/submission/training-and-acceptance-forms.pdf",
-      "pages": 3,
-      "renderedPages": 3,
+      "pages": 4,
+      "renderedPages": 4,
       "textFindings": []
     },
     {
       "file": ".private/submission/user-manual.pdf",
-      "pages": 18,
-      "renderedPages": 18,
+      "pages": 23,
+      "renderedPages": 23,
       "textFindings": []
     }
   ]
