@@ -68,6 +68,10 @@ export default function Login() {
           <span className="eyebrow">YOUR PRACTICE WORKSPACE</span>
           <h2>Welcome back.</h2>
           <p className="muted">Log in to begin your day.</p>
+          <p className="field-help">
+            Usernames are case-sensitive. Use the exact username shown for your
+            account.
+          </p>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
@@ -168,7 +172,9 @@ export default function Login() {
             <ShieldCheck size={16} /> Your role controls which records you can
             use.
           </p>
-          <a className="text-button" href="/register">Patient registration form</a>
+          <a className="text-button" href="/register">
+            Patient registration form
+          </a>
         </div>
         <span className="login-copyright">
           PracticeChart EHR <span>Records with purpose.</span>

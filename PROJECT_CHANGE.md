@@ -26,3 +26,7 @@ The group requested the original proposed-system role split. The earlier broad d
 ## Patient form and email implementation, November 15, 2026
 
 The latest instruction enables patient form completion as a separate public action and provider email confirmations and reminders. Reception retains direct registration and office functions. Added pending intake review, pre-save duplicate guards, doctor interim review, combined linked history, visit-linked lab uploads, expanded read and failure audit, operator account commands, monthly and per-record visit analytics, and renewed load and restore evidence. Public demo intake is limited to a fictional example. Demo mail is routed to a provider test inbox. See AUDIT_RESOLUTION.md for current scope and external verification limits.
+
+## Case-sensitive login and duplicate patient guard
+
+Usernames now require the stored letter case. The login rate limit still groups case variants. A database identity key blocks identical normal registrations and demographic edits, including concurrent requests. A reason cannot override an identical record. Same-name patients with different contact or address details still require review. Explicit interim records remain supported. Historical duplicate rows are marked for doctor review and controlled receptionist linking. No records or clinical history were deleted. Local test suites were not run for this fix, as requested.

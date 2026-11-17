@@ -156,6 +156,17 @@ export async function insertPatient(
   data: z.infer<typeof patientInput>,
   input: unknown,
 ) {
+  if (!data.provisionalReason.trim()) {
+    const identical = await rows(
+      sql`SELECT id FROM patients WHERE identity_key=patient_identity_key(${data.firstName},${data.lastName},${data.dob}::date,${data.phone},${data.address}) LIMIT 1`,
+      tx,
+    );
+    if (identical.length)
+      throw new AppError(
+        409,
+        "An identical patient record already exists. Open the existing file. Use Create interim record only when the primary file is unavailable.",
+      );
+  }
   await tx.execute(
     sql`SELECT pg_advisory_xact_lock(hashtextextended(lower(${data.firstName})||':'||lower(${data.lastName})||':'||${data.dob},0))`,
   );
@@ -163,6 +174,17 @@ export async function insertPatient(
     sql`SELECT id,mrn FROM patients WHERE lower(first_name)=lower(${data.firstName}) AND lower(last_name)=lower(${data.lastName}) AND dob=${data.dob}::date LIMIT 10`,
     tx,
   );
+  if (!data.provisionalReason) {
+    const exact = await rows(
+      sql`SELECT id FROM patients WHERE merged_into IS NULL AND btrim(provisional_reason)='' AND patient_identity_key(first_name,last_name,dob,phone,address)=patient_identity_key(${data.firstName},${data.lastName},${data.dob}::date,${data.phone},${data.address}) LIMIT 1`,
+      tx,
+    );
+    if (exact.length)
+      throw new AppError(
+        409,
+        "An identical patient record already exists. Open the existing file. A duplicate override cannot create the same record again.",
+      );
+  }
   const { duplicateReason } = z
     .object({ duplicateReason: z.string().trim().max(500).default("") })
     .parse(input);
@@ -218,14 +240,14 @@ export async function reconcilePatient(
     const source = list.find((p) => p.id === id);
     const target = list.find((p) => p.id === targetId);
     if (
-      !source?.provisional_reason ||
+      (!source?.provisional_reason && !source?.duplicate_review) ||
       source.merged_into ||
       target?.merged_into ||
       target?.archived
     )
       throw new AppError(
         400,
-        "Use an unresolved provisional record and an active primary record.",
+        "Use an unresolved interim or flagged duplicate record and an active primary record.",
       );
     if (!source.reviewed_at)
       throw new AppError(
@@ -258,7 +280,7 @@ export async function reviewProvisional(
     .parse(input);
   return db.transaction(async (tx) => {
     const result = await rows(
-      sql`UPDATE patients SET reviewed_by=${actor.id}::uuid,reviewed_at=now(),review_reason=${reason},version=version+1 WHERE id=${idSchema.parse(id)}::uuid AND version=${version} AND provisional_reason<>'' AND merged_into IS NULL RETURNING id`,
+      sql`UPDATE patients SET reviewed_by=${actor.id}::uuid,reviewed_at=now(),review_reason=${reason},version=version+1 WHERE id=${idSchema.parse(id)}::uuid AND version=${version} AND (provisional_reason<>'' OR duplicate_review) AND merged_into IS NULL RETURNING id`,
       tx,
     );
     if (!result.length)

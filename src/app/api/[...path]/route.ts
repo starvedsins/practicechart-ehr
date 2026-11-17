@@ -506,7 +506,11 @@ async function handle(req: NextRequest) {
         { error: error.issues[0]?.message || "Check the form values." },
         400,
       );
-    let cause = error as { code?: string; cause?: unknown };
+    let cause = error as {
+      code?: string;
+      cause?: unknown;
+      constraint?: string;
+    };
     for (let i = 0; i < 5 && cause?.cause; i++)
       cause = cause.cause as typeof cause;
     const code = cause?.code;
@@ -522,7 +526,9 @@ async function handle(req: NextRequest) {
       return json(
         {
           error:
-            "This record already exists. Reload and check the existing record.",
+            cause.constraint === "patients_identity_unique"
+              ? "An identical patient record already exists. Open the existing file instead of creating or changing another record to match it."
+              : "This record already exists. Reload and check the existing record.",
         },
         409,
       );

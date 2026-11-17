@@ -34,6 +34,8 @@ export const sessions = pgTable("sessions", {
 export const patients = pgTable("patients", {
   id: uuid().primaryKey().defaultRandom(),
   mrn: text().notNull().unique(),
+  identityKey: text("identity_key"),
+  duplicateReview: boolean("duplicate_review").notNull().default(false),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   dob: date().notNull(),

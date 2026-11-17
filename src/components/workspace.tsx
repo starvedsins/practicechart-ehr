@@ -55,6 +55,7 @@ type Patient = {
   email?: string;
   emailOptIn?: boolean;
   reviewedAt?: string;
+  duplicateReview?: boolean;
   gender: string;
   emergencyContact?: string;
   insurance?: string;
@@ -667,7 +668,7 @@ function PatientForm({
           />
         </label>
         <label className="full">
-          Provisional record reason {interim?"(required)":"(optional)"}
+          Provisional record reason {interim ? "(required)" : "(optional)"}
           <textarea
             name="provisionalReason"
             required={interim}
@@ -1982,6 +1983,40 @@ export default function Workspace({
                                 </div>
                               ))}
                             </dl>
+                            {current.duplicateReview && (
+                              <p className="note-box">
+                                Possible duplicate from an earlier registration.
+                                Reception must review the matching files before
+                                making changes. Existing records and clinical
+                                history have been kept.
+                                {doctor && !current.reviewedAt && (
+                                  <button
+                                    className="button"
+                                    onClick={() =>
+                                      setModal({
+                                        kind: "review-provisional",
+                                        patient: current,
+                                      })
+                                    }
+                                  >
+                                    Review duplicate record
+                                  </button>
+                                )}
+                                {current.reviewedAt && reception && (
+                                  <button
+                                    className="button"
+                                    onClick={() =>
+                                      setModal({
+                                        kind: "reconcile",
+                                        patient: current,
+                                      })
+                                    }
+                                  >
+                                    Link to existing record
+                                  </button>
+                                )}
+                              </p>
+                            )}
                             {current.provisionalReason && (
                               <div className="note-box">
                                 Provisional record: {current.provisionalReason}

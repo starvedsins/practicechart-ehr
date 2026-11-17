@@ -360,6 +360,7 @@ describe("patient changes and appointment concurrency", () => {
     const c = await s.savePatient(desk, {
       ...input,
       duplicateReason: "Confirmed separate fictional patient",
+      phone: "876-555-0199",
     });
     expect(c.duplicates!.length).toBeGreaterThan(0);
   });
@@ -747,7 +748,7 @@ describe("patient intake, linked history, visit files, and email", () => {
     ).rejects.toThrow();
     await expect(
       reviewIntake(desk, id, { version: 1, action: "accept" }),
-    ).rejects.toThrow("matching name");
+    ).rejects.toThrow(/matching name|identical patient/);
     expect(
       (
         await s.rows(

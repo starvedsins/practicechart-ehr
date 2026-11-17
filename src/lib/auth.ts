@@ -64,7 +64,7 @@ export async function login(username: string, password: string, ip: string) {
   const [u] = await db
     .select()
     .from(users)
-    .where(eq(users.username, username.toLowerCase().trim()))
+    .where(eq(users.username, username.trim()))
     .limit(1);
   dummy ??= hashPassword(randomBytes(32).toString("hex"));
   const valid = await verify(u?.passwordHash ?? (await dummy), password).catch(
@@ -78,13 +78,11 @@ export async function login(username: string, password: string, ip: string) {
   }
   const token = randomBytes(32).toString("hex");
   await db.transaction(async (tx) => {
-    await tx
-      .insert(sessions)
-      .values({
-        id: digest(token),
-        userId: u.id,
-        expiresAt: new Date(Date.now() + 8 * 3600000),
-      });
+    await tx.insert(sessions).values({
+      id: digest(token),
+      userId: u.id,
+      expiresAt: new Date(Date.now() + 8 * 3600000),
+    });
     await tx.execute(sql`DELETE FROM login_attempts WHERE key=${key}`);
     await tx
       .insert(auditEvents)
